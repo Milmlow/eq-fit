@@ -32,7 +32,7 @@ TYPE_MAP = {
     "treadmill_running": "Treadmill Running",
     "indoor_running": "Treadmill Running",
 }
-LOCAL_TIME = re.compile(r"^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$")
+LOCAL_TIME = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$")
 
 
 def to_row(item: object) -> list[str] | None:
@@ -112,7 +112,7 @@ def gather_runs(client, start_date: str, end_date: str) -> list[list[str]]:
 
 def csv_bytes(rows: list[list[str]]) -> bytes:
     output = io.StringIO(newline="")
-    writer = csv.writer(output, lineterminator="\\r\\n")
+    writer = csv.writer(output, lineterminator="\r\n")
     writer.writerow(HEADERS)
     writer.writerows(rows)
     return output.getvalue().encode("utf-8")
