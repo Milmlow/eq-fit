@@ -1,4 +1,4 @@
-# Private Garmin sync — activation pending
+# Private Garmin sync — live
 
 ## Implemented infrastructure
 
@@ -6,14 +6,15 @@ Dedicated project `eq-fit` in EQ Solutions, Sydney (`hihqnnxnlkjfbixhcgaa`). Pub
 
 GitHub Actions authenticates using short-lived OIDC, verified against GitHub signing keys, issuer, exact audience, immutable repository and owner IDs, main branch, exact workflow path, and allowed event types. The gateway JWT check is disabled because the function performs its own GitHub JWT authentication. The function's built-in service credential never leaves Supabase. GitHub needs only the already-configured Garmin secret, plus `id-token: write`; no new privileged secret needs copying.
 
-## Remaining activation work
+## Activation status
 
-1. Obtain the user's chosen sign-in email and establish their private Supabase Auth account through supported Auth controls. Do not invent an email, read unrelated business accounts, or assign the first arbitrary signup as owner. Bind the verified auth UUID in `eqfit_sync_owner` using the administration connection.
-2. Set non-secret client build configuration: project URL, the enabled modern publishable key, and that owner's UUID. These may be committed as public configuration or supplied as build variables; never include privileged keys. Authentication and RLS protect data even though these values are public.
-3. Replace the disabled schedule gate with explicit activation only after the owner is bound and tests pass. Add a trusted main-branch push trigger or run the workflow manually to verify actual OIDC authentication and a real Garmin import. The current connected GitHub tools do not provide workflow dispatch or repository-variable writes, so do not depend on those tools for activation.
-4. Confirm owner sign-in and actual private records in the browser, repeated sync produces one run, and offline reopening on the user's phone. Only then claim automatic sync is complete.
+The configured owner is bound to the requested private account. The hourly schedule is enabled and the production Pages bundle has its public project URL, publishable key and owner UUID. The first live GitHub OIDC-authenticated import completed successfully with 473 runs and 473 distinct Garmin IDs on 3 November 2026 (Sydney).
 
-The migration tests use synthetic identities. The production project currently has no configured owner and no fitness data. The OIDC worker, browser identity and real Garmin path have not yet been demonstrated end to end. Keep PR #6 in draft until verified.
+GitHub now emits immutable-ID subjects for this repository. Both the exact original and immutable-ID subject forms are supported, while repository ID, owner ID, ref, workflow path, audience, issuer and signature checks remain mandatory. The initial 403 was fixed by accepting this exact authenticated subject, not by relaxing repository/workflow checks.
+
+A one-time account setup function is used only for the authorized account and is protected by a random credential whose hash is deployed server-side. It must be disabled after delivering the user's activation link. No account-setup credential or login token belongs in this repository. The user can set their own password inside EQ Fit after activating the one-time link; it is never entered in chat.
+
+A real phone/offline test and the user's first browser sign-in remain user-device verification steps. Existing CSV overlaps are deliberately held for explicit reconciliation, so some devices may show a review prompt rather than immediately including every incoming record.
 
 ## Behaviour and limitations
 
@@ -30,6 +31,6 @@ The migration tests use synthetic identities. The production project currently h
 
 ## Verification
 
-Unit tests cover 100 repeated syncs, edits and links, overlap review, missing values, local dates, retained deletions, owner mismatch, CSV re-import, retries and failed-cursor preservation. PostgreSQL policy tests run using PGlite with synthetic owner identities. They validate the SQL itself, not the hosted Supabase Auth configuration. Existing regression tests and production build must pass. Real Garmin-to-database-to-browser verification remains required.
+Unit tests cover 100 repeated syncs, edits and links, overlap review, missing values, local dates, retained deletions, owner mismatch, CSV re-import, retries and failed-cursor preservation. PostgreSQL policy tests run using PGlite with synthetic owner identities. They validate the SQL itself, not the hosted Supabase Auth configuration. Existing regression tests and production build must pass. The first real Garmin-to-database import and an authenticated owner snapshot are verified: 473 rows with 473 unique IDs. Browser and phone-specific verification must still be reported separately.
 
 Security reference: https://supabase.com/docs/guides/database/postgres/row-level-security
