@@ -27,7 +27,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test            # real-data tests skip themselves: data-local/ is never in the repo
-      - run: npm run build       # base is './', so the app works from /<repo-name>/
+      - run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_EQFIT_OWNER_ID: ${{ vars.VITE_EQFIT_OWNER_ID }}
+      # base is './', so the app works from /<repo-name>/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

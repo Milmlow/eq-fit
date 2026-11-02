@@ -82,9 +82,11 @@ export async function buildPreview(bytes: Uint8Array, repo: Repo, fileName: stri
     }
     const isSwim = type === 'Pool Swim'; // distance is metres and pace is per 100 m: not km / sec-per-km
     const num = (h: string) => (typeof cells[h] === 'number' ? (cells[h] as number) : null);
+    const sourceId = rawFields['Garmin Activity ID']?.trim();
+    const stableId = sourceId && /^[1-9]\d{0,29}$/.test(sourceId) ? sourceId : null;
     prepared.push({
       id: newId(), owner_id: null,
-      source_file_sha256: parsed.fileSha256, row_index: i, row_hash: rowHash, dedupe_key: `${rowHash}#${occ}`,
+      source_file_sha256: parsed.fileSha256, row_index: i, row_hash: rowHash, dedupe_key: stableId ? `garmin:${stableId}` : `${rowHash}#${occ}`,
       raw_row: row, raw_fields: rawFields, parsed: cells,
       timestamp_local: ts, date: ts.slice(0, 10), original_type: type, mapping_override: null,
       title: row[idx('Title')] ?? '',
@@ -97,6 +99,13 @@ export async function buildPreview(bytes: Uint8Array, repo: Repo, fileName: stri
   }
 
   const existing = prepared.length ? await repo.existingDedupeKeys(prepared.map((p) => p.dedupe_key)) : new Set<string>();
+  // A later ID-less CSV must not silently duplicate already synced history.
+  const synced = await repo.db.activities.filter(a => a.dedupe_key.startsWith('garmin:')).toArray();
+  for (const p of prepared) {
+    if (!p.raw_fields['Garmin Activity ID'] && !existing.has(p.dedupe_key) && /run/i.test(p.original_type) && synced.some(a => a.date === p.date)) {
+      rowErrors.push({ row: p.row_index + 1, column: 'Date', message: 'This ID-less CSV overlaps a synced running date. Keep the existing data and reconcile the source before importing.' });
+    }
+  }
   const maps = await repo.getTypeMappings();
   const counts = new Map<string, number>();
   for (const p of prepared) counts.set(p.original_type, (counts.get(p.original_type) ?? 0) + 1);

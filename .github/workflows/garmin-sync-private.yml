@@ -1,0 +1,29 @@
+name: Sync Garmin privately
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: garmin-private-sync
+  cancel-in-progress: false
+jobs:
+  sync:
+    # Deliberately dormant until private storage and RLS have been verified.
+    if: vars.EQFIT_PRIVATE_SYNC_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check 'garmin-connect-personal-api-python==1.0.0' 'cryptography>=44,<47'
+      - name: Synchronise into private storage
+        env:
+          GARMIN_PERSONAL_API_KEY: ${{ secrets.GARMIN_PERSONAL_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          EQFIT_OWNER_ID: ${{ secrets.EQFIT_OWNER_ID }}
+        run: python scripts/sync_garmin_private.py

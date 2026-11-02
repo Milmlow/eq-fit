@@ -55,7 +55,14 @@ export class Repo {
     await this.db.transaction('rw', this.db.batches, this.db.activities, async () => {
       // Re-check inside the transaction so concurrent imports cannot create duplicates.
       const have = await this.existingDedupeKeys(activities.map((a) => a.dedupe_key));
-      const fresh = activities.filter((a) => !have.has(a.dedupe_key));
+      const knownIds = new Set((await this.db.activities.toArray()).map(a => a.raw_fields['Garmin Activity ID']?.trim()).filter(Boolean));
+      const fresh = activities.filter(a => {
+        const sourceId = a.raw_fields['Garmin Activity ID']?.trim();
+        if (have.has(a.dedupe_key) || (sourceId && knownIds.has(sourceId))) return false;
+        have.add(a.dedupe_key);
+        if (sourceId) knownIds.add(sourceId);
+        return true;
+      });
       full.new_row_count = fresh.length;
       full.skipped_duplicate_count = batch.source_row_count - fresh.length;
       if (fresh.length === 0) return; // nothing to add: no batch record either
