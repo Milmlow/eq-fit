@@ -86,21 +86,28 @@ class PrivateStore:
 
 def main():
     store = None
+    stage = 'configuration'
     try:
         key = os.environ['GARMIN_PERSONAL_API_KEY']
         store = PrivateStore()
+        stage = 'private-store-authentication'
         state = store.request('state')['state']
         now = datetime.now(timezone.utc)
         start, end, full = sync_window(state, now)
         from garmin_personal_api import GarminPersonalApiClient, PersonalApiAuthenticator
+        stage = 'garmin-authentication'
         with PersonalApiAuthenticator(timeout=30) as auth:
             token = retry(lambda: auth.obtain_token(key))
+        stage = 'garmin-download'
         with GarminPersonalApiClient(token.access_token, timeout=30) as client:
             rows = gather(client, start, end)
+        stage = 'private-store-write'
         store.request('commit', rows=rows, full=full)
         print('Private Garmin sync completed. No activity data was logged.')
         return 0
-    except Exception:
+    except Exception as exc:
+        status = getattr(exc, 'code', None) or getattr(exc, 'status_code', None)
+        print(f'Sync stage failed: {stage}; error type: {type(exc).__name__}; HTTP status: {status if isinstance(status, int) else "none"}.', file=sys.stderr)
         if store:
             try:
                 store.request('failed')
