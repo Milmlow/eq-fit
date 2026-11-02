@@ -101,7 +101,7 @@ export function TodayHero({ data, theme, onStart, starting, demo }: HeroProps) {
         <div className="beat-name-row">
           {data.exerciseName && <p className="ex-name safe" data-testid="hero-exercise">{data.exerciseName}</p>}
           {showPr && (
-            <span className="pr" role="img" aria-label="New PR. It would be a new personal record if you hit today's target." data-testid="hero-pr">New PR</span>
+            <span className="pr" role="img" aria-label="Possible estimated PR. It would be a new estimated personal record if you hit today's target." data-testid="hero-pr">Possible e1RM PR</span>
           )}
         </div>
         {explain && <Explainer id={eid} />}
