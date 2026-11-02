@@ -70,7 +70,7 @@ export function RecentView({ repo, version }: { repo: Repo; version: number }) {
       </table>
       <p>Active dates (any activity type): <strong data-testid="active-dates">{data.total.activeDates}</strong></p>
 
-      <h3>By week (Monday to Sunday)</h3>
+      <h3>By week (Monday to Sunday, dates are MM-DD)</h3>
       <div className="scroll">
         <table data-testid="weeks">
           <thead>
@@ -79,7 +79,7 @@ export function RecentView({ repo, version }: { repo: Repo; version: number }) {
           <tbody>
             {data.weeks.map((w) => (
               <tr key={w.start} data-testid={`week-${w.start}`}>
-                <th scope="row">{w.start} to {w.end}</th>
+                <th scope="row" className="nowrap" title={`${w.start} to ${w.end}`}>{w.start.slice(5)} to {w.end.slice(5)}</th>
                 <td className="num">{w.weights.entries}</td><td className="num">{w.outdoor_run.entries}</td>
                 <td className="num">{w.outdoor_run.km.toFixed(2)}</td><td className="num">{w.treadmill_run.entries}</td>
               </tr>
@@ -96,9 +96,9 @@ export function RecentView({ repo, version }: { repo: Repo; version: number }) {
             {list.length === 0 ? <p className="muted">None in this window.</p> : (
               <ul className="acts">
                 {list.map((r) => (
-                  <li key={r.id}>
-                    <span className="mono">{r.timestamp_local}</span> {r.title}{' '}
-                    <span className="muted">
+                  <li key={r.id} className="act">
+                    <span><span className="mono nowrap">{r.timestamp_local}</span> {r.title}</span>
+                    <span className="muted nowrap">
                       [{r.original_type}] {r.duration_seconds !== null ? `${(r.duration_seconds / 60).toFixed(1)} min` : 'no duration'}
                       {r.distance_km ? `, ${r.distance_km.toFixed(2)} km` : ''}
                     </span>

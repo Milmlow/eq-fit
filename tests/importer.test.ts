@@ -64,7 +64,7 @@ describe('commit and field preservation', () => {
   });
   it('records the migration ledger', async () => {
     const repo = await freshRepo();
-    expect((await repo.listMigrations()).map((m) => m.version)).toEqual([1]);
+    expect((await repo.listMigrations()).map((m) => m.version)).toEqual([1, 2]);
   });
 });
 

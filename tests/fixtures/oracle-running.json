@@ -1,0 +1,108 @@
+{
+  "today": "2026-11-02",
+  "month_label": "2026-10",
+  "outdoor_only": {
+    "weeks": [
+      {
+        "start": "2026-10-05",
+        "end": "2026-10-11",
+        "runs": 2,
+        "runs_with_pace": 2,
+        "km": 7.37,
+        "pace_sec_per_km": 333.07
+      },
+      {
+        "start": "2026-10-12",
+        "end": "2026-10-18",
+        "runs": 1,
+        "runs_with_pace": 1,
+        "km": 3.05,
+        "pace_sec_per_km": 339.0
+      },
+      {
+        "start": "2026-10-19",
+        "end": "2026-10-25",
+        "runs": 1,
+        "runs_with_pace": 1,
+        "km": 10.01,
+        "pace_sec_per_km": 341.0
+      },
+      {
+        "start": "2026-10-26",
+        "end": "2026-11-01",
+        "runs": 3,
+        "runs_with_pace": 3,
+        "km": 26.49,
+        "pace_sec_per_km": 357.5
+      }
+    ],
+    "four_weeks": {
+      "start": "2026-10-05",
+      "end": "2026-11-01",
+      "runs": 7,
+      "runs_with_pace": 7,
+      "km": 46.92,
+      "pace_sec_per_km": 348.94
+    },
+    "month": {
+      "start": "2026-10-01",
+      "end": "2026-10-31",
+      "runs": 8,
+      "runs_with_pace": 8,
+      "km": 46.55,
+      "pace_sec_per_km": 336.62
+    }
+  },
+  "outdoor_plus_treadmill": {
+    "weeks": [
+      {
+        "start": "2026-10-05",
+        "end": "2026-10-11",
+        "runs": 2,
+        "runs_with_pace": 2,
+        "km": 7.37,
+        "pace_sec_per_km": 333.07
+      },
+      {
+        "start": "2026-10-12",
+        "end": "2026-10-18",
+        "runs": 1,
+        "runs_with_pace": 1,
+        "km": 3.05,
+        "pace_sec_per_km": 339.0
+      },
+      {
+        "start": "2026-10-19",
+        "end": "2026-10-25",
+        "runs": 3,
+        "runs_with_pace": 3,
+        "km": 15.69,
+        "pace_sec_per_km": 355.51
+      },
+      {
+        "start": "2026-10-26",
+        "end": "2026-11-01",
+        "runs": 3,
+        "runs_with_pace": 3,
+        "km": 26.49,
+        "pace_sec_per_km": 357.5
+      }
+    ],
+    "four_weeks": {
+      "start": "2026-10-05",
+      "end": "2026-11-01",
+      "runs": 9,
+      "runs_with_pace": 9,
+      "km": 52.6,
+      "pace_sec_per_km": 352.41
+    },
+    "month": {
+      "start": "2026-10-01",
+      "end": "2026-10-31",
+      "runs": 10,
+      "runs_with_pace": 10,
+      "km": 52.23,
+      "pace_sec_per_km": 341.45
+    }
+  }
+}
