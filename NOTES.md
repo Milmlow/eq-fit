@@ -10,3 +10,10 @@
 - Layout at 390 px: week labels and activity lines wrap (readable, not broken); disabled import button has low contrast.
 - vite build empties dist/; in this build session deletes were not permitted, so the final verification build used --emptyOutDir false.
 - Keyboard navigation was not properly tested.
+
+## Stage 2 notes
+- Running comparison uses the stored (rounded-to-the-second) exported pace, weighted by distance, as briefed. Duration/distance would give slightly different pace values; not used.
+- "Today" is the browser's local date. `?today=YYYY-MM-DD` in the URL overrides it (used for checks only).
+- Completion today = done workouts + imported weights/run activities not linked to any workout. A done manual workout plus an unlinked watch activity on the same day counts as 2 until you link them.
+- Sets can be added and removed but not edited. Workout removal deletes its sets (app records only).
+- Baseline per week uses the 4 complete weeks before the selected week; rounds to 1 decimal.
