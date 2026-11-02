@@ -25,28 +25,24 @@ The GitHub Garmin connection check has passed. The next step deliberately
    The contents are protected by the separate passphrase, not by GitHub visibility.
    Retention is one day.
 
-## Decrypt and import (on your computer)
+## Unlock and import in EQ Fit (no Python required)
 
-Install Python 3.12+ and `py -3 -m pip install cryptography`.
+1. Open EQ Fit in your usual browser and navigate to **More > Import**.
+2. Choose the `garmin-runs.eqfit` file from the downloaded GitHub artifact ZIP.
+3. Enter your **EQ Fit export passphrase**, not the Garmin API key, and click
+   **Unlock and preview**. All decryption takes place locally in the browser.
+4. Check the dates, activity types, and duplicates. Click Import only if the
+   preview is valid and has no existing-run date overlap.
 
-From a local checkout of EQ Fit, run:
+**Important:** The importer refuses encrypted Garmin uploads when an existing run
+has the same calendar date. This conservative safety guard avoids some duplicate
+kilometres until true Garmin activity ID reconciliation is implemented. It
+can reject legitimate separate runs on the same day. This is intentional.
+The CSV still contains Garmin Activity ID for a future stable dedupe system.
 
-```powershell
-py -3 scripts/decrypt_garmin_export.py "C:\path\garmin-runs.eqfit" --output "C:\path\garmin-runs.csv"
-```
-
-Enter the **EQ Fit export passphrase**, not the Garmin key. Open the EQ Fit
-app in your usual browser > More > Import and select `garmin-runs.csv`.
-Review the preview before saving. This uses existing local-first CSV
-import; the browser never sees your Garmin secret.
-
-**Important:** The existing importer's duplicate detection is based on CSV
-row contents, not Garmin activity IDs across formats. If you have already
-imported a Garmin Connect Activities.csv export covering the same dates,
-do **not** import overlapping runs until a cross-source activity-ID
-reconciliation feature has been implemented and tested. Use a later,
-non-overlapping date range or a separate test browser profile for now.
-The new export includes a `Garmin Activity ID` column for future stable dedupe.
+For advanced users only, `scripts/decrypt_garmin_export.py` can decrypt
+locally with Python `cryptography`, but it is no longer needed for ordinary
+use.
 
 ## Safety and limitations
 
