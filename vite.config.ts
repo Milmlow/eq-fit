@@ -12,6 +12,6 @@ export default defineConfig({
   base: './',
   define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   plugins: [react(), pwaPlugin(fileURLToPath(new URL('./scripts/sw-template.js', import.meta.url)))],
-  server: { host: '127.0.0.1' },
+  server: { host: '127.0.0.1', allowedHosts: ['terminal.local'] },
   test: { environment: 'node', include: ['tests/**/*.test.ts'] },
 });

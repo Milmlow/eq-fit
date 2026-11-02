@@ -53,3 +53,26 @@ details.add-ex { margin: 12px 0; }
 .sets li:has(.edit-set) { display: block; }
 .sets li button { white-space: nowrap; flex: none; }
 .sets li > .row { flex: none; }
+
+/* Progress uses the existing contrast-tested theme tokens. */
+.progress-panel { margin: 20px 0; padding: 24px; border: 1px solid var(--line); border-radius: 18px; background: var(--card); }
+.progress-panel h2 { margin: 4px 0 12px; font-size: clamp(1.3rem, 3vw, 1.75rem); letter-spacing: -.035em; }
+.eyebrow { color: var(--acc); font-size: .75rem; font-weight: 800; letter-spacing: .16em; margin: 0; }
+.progress-metrics { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; margin: 24px 0; }
+.progress-metrics > div { display: flex; flex-direction: column; gap: 6px; }
+.progress-metrics span, .small { color: var(--muted); font-size: .85rem; }
+.progress-metrics strong { font-size: clamp(1.7rem, 4vw, 2.6rem); line-height: 1.1; font-variant-numeric: tabular-nums; letter-spacing: -.05em; }
+.progress-metrics strong small { font-size: .85rem; font-weight: 500; letter-spacing: 0; }
+.progress-metrics .pace-metric { font-size: clamp(1.2rem, 3vw, 1.9rem); }
+.progress-note { padding-top: 16px; border-top: 1px solid var(--line); font-size: .9rem; }
+.trend { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 24px; }
+.trend-col { display:flex; flex-direction:column; gap:8px; text-align:center; font-size:.85rem; font-variant-numeric:tabular-nums; }
+.trend-track { height: 72px; display:flex; align-items:flex-end; border-bottom:1px solid var(--line); background:var(--bg); border-radius:6px 6px 0 0; overflow:hidden; }
+.trend-track > div { width:100%; background:var(--acc); border-radius:6px 6px 0 0; }
+.day-strip { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
+.day-strip > div { border:1px solid var(--line); border-radius:10px; display:flex; flex-direction:column; text-align:center; padding:8px 0; color:var(--muted); }
+.day-strip b { font-size:1.25rem; }
+.day-strip .recorded { border-color:var(--acc); color:var(--acc); }
+.quick-lifts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.quick-lifts button { display:flex; justify-content:space-between; text-align:left; min-height:58px; }
+@media(max-width:520px) { .progress-panel { padding:18px 14px; } .progress-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } .progress-metrics > div:last-child { grid-column:1/-1; } .day-strip { gap:4px; } .trend { gap:10px; } }

@@ -3,11 +3,15 @@ import type { Repo } from '../db/repo';
 import { formatPace, lastCompleteMonth, recentCompleteWeeks, summariseRuns, type RunInput, type RunPeriod } from '../lib/running';
 import { addDays } from '../lib/summary';
 import { Badge } from './Badge';
+import { RunProgress } from './RunProgress';
+import type { Activity } from '../db/types';
+import type { Group } from '../lib/mapping';
 
 interface Custom { id: number; start: string; end: string }
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
 
 export function Running({ repo, today, version }: { repo: Repo; today: string; version: number }) {
+  const [recent, setRecent] = useState<(Activity & { group: Group })[]>([]);
   const [rows, setRows] = useState<RunInput[] | null>(null);
   const [treadmill, setTreadmill] = useState(false);
   const [customs, setCustoms] = useState<Custom[]>([]);
@@ -19,12 +23,13 @@ export function Running({ repo, today, version }: { repo: Repo; today: string; v
     let live = true;
     (async () => {
       const all = await repo.activitiesBetween(addDays(today, -800), today);
+      if (live) setRecent(all.filter(a => a.group === 'outdoor_run' || a.group === 'treadmill_run'));
       if (live) setRows(all.map((a) => ({ date: a.date, group: a.group, distance_km: a.distance_km, avg_pace_sec_per_km: a.avg_pace_sec_per_km })));
-    })();
+    })().catch(() => { if (live) setErr('Could not load running history. Please reopen the app.'); });
     return () => { live = false; };
   }, [repo, today, version]);
 
-  if (!rows) return <p>Loading...</p>;
+  if (!rows) return <p role={err ? "alert" : undefined}>{err || "Loading..."}</p>;
 
   const weeks = recentCompleteWeeks(today, 4);
   const month = lastCompleteMonth(today);
@@ -44,10 +49,14 @@ export function Running({ repo, today, version }: { repo: Repo; today: string; v
 
   return (
     <section aria-labelledby="run-h">
-      <h2 id="run-h">Running by period</h2>
+      <h2 id="run-h">Your running</h2>
       <p className="muted">Complete weeks and months before {today}. Figures from imported watch data <Badge kind="measured" /> combined by this app <Badge kind="computed" />.</p>
       <label className="check"><input type="checkbox" checked={treadmill} onChange={(e) => setTreadmill(e.target.checked)} /> Include treadmill runs (off = outdoor only)</label>
 
+      <RunProgress rows={rows} today={today} treadmill={treadmill} />
+      <h3>Recent runs</h3>
+      <ul className="items">{recent.filter(a => treadmill || a.group === 'outdoor_run').slice(0, 5).map(a => <li key={a.id}><span><strong>{a.title || a.original_type}</strong><br/><span className="muted">{a.timestamp_local} · {a.original_type}</span></span><span>{a.distance_km?.toFixed(2) ?? '—'} km · {formatPace(a.avg_pace_sec_per_km)}</span></li>)}</ul>
+      <h3>Compare complete periods</h3>
       <div className="scroll">
         <table data-testid="run-table">
           <caption>{treadmill ? 'Outdoor and treadmill runs' : 'Outdoor runs only'}</caption>

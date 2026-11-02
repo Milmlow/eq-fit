@@ -8,6 +8,7 @@ import type { ThemeName } from '../lib/theme';
 import { Badge } from './Badge';
 import { TodayHero } from './TodayHero';
 import { WorkoutEditor } from './WorkoutEditor';
+import { TrainingMomentum } from './TrainingMomentum';
 
 type Act = Activity & { group: string };
 
@@ -44,7 +45,7 @@ export function Today({ repo, today, version, onChanged, theme }: { repo: Repo; 
     setLoaded(true);
   }, [repo, today]);
 
-  useEffect(() => { void load(); }, [load, version]);
+  useEffect(() => { void load().catch(() => setError('Could not load your training history. Please reopen the app.')); }, [load, version]);
 
   // When a workout opens (Start or Open), bring it into view and move focus to it so keyboard users land in it.
   useEffect(() => {
@@ -82,6 +83,7 @@ export function Today({ repo, today, version, onChanged, theme }: { repo: Repo; 
       {hero && <TodayHero data={hero} theme={theme} onStart={() => void start()} starting={starting} demo={false} />}
       {!hero && <p>Loading...</p>}
       {error && <p role="alert" className="error">{error}</p>}
+      <TrainingMomentum repo={repo} today={today} version={version} onOpen={(id) => { setOpen(id); void load(); onChanged(); }} />
       <section aria-labelledby="today-h" className="today-log">
         <h2 id="today-h">Today <span className="muted">{today}</span></h2>
         {loaded && (
