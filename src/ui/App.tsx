@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { RecompDB } from '../db/db';
 import { Repo } from '../db/repo';
 import { demoFromSearch } from '../lib/demo';
@@ -9,6 +9,7 @@ import { TabBar, type Tab } from './TabBar';
 import { DemoToday, Today } from './Today';
 import { useTheme } from './useTheme';
 import { Week } from './Week';
+import { CloudSync } from './CloudSync';
 import { localToday } from '../lib/today';
 import { loadLastBackup, requestPersistence, saveLastBackup, watchStorageErrors, type PersistState } from '../lib/storage';
 import { BackupBanner, StorageWarning, UpdateBanner } from './Banners';
@@ -25,7 +26,7 @@ export function App() {
   const [lastBackup, setLastBackup] = useState<string | null>(() => loadLastBackup(ls()));
   const [persist, setPersist] = useState<PersistState | null>(null);
   const today = localToday();
-  const bump = () => setVersion((v) => v + 1);
+  const bump = useCallback(() => setVersion((v) => v + 1), []);
 
   useEffect(() => {
     Repo.open(new RecompDB()).then((r) => setRepo(watchStorageErrors(r)), (e: unknown) => setError(e instanceof Error ? e.message : String(e)));
@@ -41,6 +42,7 @@ export function App() {
       <main id="main">
         <UpdateBanner />
         <StorageWarning />
+        {repo && !demo && <CloudSync repo={repo} onChanged={bump} />}
         {repo && !demo && tab === 'today' && <BackupBanner repo={repo} version={version} lastBackup={lastBackup} onGo={() => setTab('more')} />}
         {error && (
           <p role="alert" className="error">
