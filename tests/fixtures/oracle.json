@@ -1,0 +1,55 @@
+{
+  "file_sha256": "48438a6ffaa434e81bb6473696195b912de0f102c3100b5acc01fa1c17259dd6",
+  "data_rows": 2698,
+  "columns": 41,
+  "latest_timestamp": "2026-11-01 06:28:42",
+  "window": {
+    "start": "2026-10-05",
+    "end": "2026-11-01",
+    "weights": {
+      "entries": 17,
+      "distinct_days": 15,
+      "km": 0.0,
+      "minutes": 797.87
+    },
+    "outdoor": {
+      "entries": 7,
+      "distinct_days": 7,
+      "km": 46.92,
+      "minutes": 272.88
+    },
+    "treadmill": {
+      "entries": 2,
+      "distinct_days": 2,
+      "km": 5.68,
+      "minutes": 36.1
+    },
+    "active_dates": 20,
+    "active_dates_by_group_only": 20
+  },
+  "last_full_week": {
+    "start": "2026-10-26",
+    "end": "2026-11-01",
+    "weights": {
+      "entries": 5,
+      "distinct_days": 4,
+      "km": 0.0,
+      "minutes": 247.0
+    },
+    "outdoor": {
+      "entries": 3,
+      "distinct_days": 3,
+      "km": 26.49,
+      "minutes": 157.88
+    },
+    "treadmill": {
+      "entries": 0,
+      "distinct_days": 0,
+      "km": 0.0,
+      "minutes": 0.0
+    },
+    "active_dates": 6,
+    "active_dates_by_group_only": 6
+  },
+  "active_date_definition": "a date with at least one activity of any type"
+}

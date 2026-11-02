@@ -1,0 +1,11 @@
+node_modules
+dist
+data-local/
+*.csv
+*.CSV
+backup*.json
+*-backup.json
+recomp-backup*.json
+screenshots/
+*.log
+.DS_Store
