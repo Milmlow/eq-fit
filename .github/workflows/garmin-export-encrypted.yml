@@ -1,0 +1,39 @@
+name: Export Garmin runs (encrypted)
+
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: Number of recent days to export (1-365)
+        required: true
+        default: '90'
+        type: choice
+        options: ['7', '30', '90', '365']
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Garmin client and cryptography
+        run: python -m pip install --disable-pip-version-check 'garmin-connect-personal-api-python==1.0.0' 'cryptography>=44,<47'
+      - name: Export running data encrypted before upload
+        env:
+          GARMIN_PERSONAL_API_KEY: ${{ secrets.GARMIN_PERSONAL_API_KEY }}
+          EQFIT_EXPORT_PASSPHRASE: ${{ secrets.EQFIT_EXPORT_PASSPHRASE }}
+          EXPORT_DAYS: ${{ inputs.days }}
+        run: python scripts/export_garmin_encrypted.py --days "$EXPORT_DAYS"
+      - name: Upload encrypted file only
+        uses: actions/upload-artifact@v4
+        with:
+          name: garmin-runs-encrypted
+          path: data-local/garmin-runs.eqfit
+          if-no-files-found: error
+          retention-days: 1
