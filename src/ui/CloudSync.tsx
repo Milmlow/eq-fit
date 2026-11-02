@@ -9,6 +9,7 @@ export function CloudSync({ repo, onChanged }: { repo: Repo; onChanged: () => vo
   const [signedIn, setSignedIn] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [message, setMessage] = useState('');
   const [state, setState] = useState<SyncState | null>(() => {
     try { return parseSyncState(JSON.parse(localStorage.getItem(`eqfit.sync-status:${cloudOwner}`) || 'null')); } catch { return null; }
@@ -45,7 +46,17 @@ export function CloudSync({ repo, onChanged }: { repo: Repo; onChanged: () => vo
       setSignedIn(owner.current !== null);
       if (id && id !== cloudOwner) setMessage('This account is not the configured EQ Fit owner.');
     };
-    void cloud.auth.getSession().then(({ data }) => accept(data.session?.user.id ?? null));
+    const url = new URL(window.location.href);
+    const token = url.searchParams.get('token_hash');
+    if (token) {
+      // Remove the one-time credential from the address before making any request.
+      url.searchParams.delete('token_hash');
+      window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+      void cloud.auth.verifyOtp({ token_hash: token, type: 'magiclink' }).then(({ data, error }) => {
+        if (live && error) setMessage('This sign-in link has expired or was already used. Use your password or request a fresh link.');
+        accept(data.session?.user.id ?? null);
+      });
+    } else void cloud.auth.getSession().then(({ data }) => accept(data.session?.user.id ?? null));
     const { data } = cloud.auth.onAuthStateChange((_event, session) => accept(session?.user.id ?? null));
     return () => { live = false; owner.current = null; data.subscription.unsubscribe(); };
   }, []);
@@ -87,6 +98,7 @@ export function CloudSync({ repo, onChanged }: { repo: Repo; onChanged: () => vo
       {(stale || state?.status === 'failed') && <p className="warn">Garmin updates are overdue or the last attempt failed. Saved runs are still available.</p>}
       <button disabled={busy} onClick={() => void refresh()}>Refresh private records</button>{' '}
       <button disabled={busy} onClick={() => { owner.current = null; setSignedIn(false); setState(null); setPending([]); void cloud!.auth.signOut({ scope: 'local' }); }}>Sign out</button><p className="muted small">Sign-out keeps downloaded history for offline use. Use this app only on devices you trust.</p>
+      <details><summary>Set a password for your other devices</summary><form onSubmit={e => { e.preventDefault(); setBusy(true); void cloud!.auth.updateUser({ password: newPassword }).then(({ error }) => { setMessage(error ? 'Could not save the password. Please retry.' : 'Password saved. You can now sign in on your other devices.'); setNewPassword(''); }).catch(() => setMessage('Could not save the password. Please retry when online.')).finally(() => setBusy(false)); }}><label className="field">New password<input type="password" autoComplete="new-password" minLength={12} required value={newPassword} onChange={e => setNewPassword(e.target.value)} /></label><button disabled={busy}>Save password</button></form></details>
     </>}
     {message && <p role="alert" className="error">{message}</p>}
     {signedIn && pending.length > 0 && <section><h3>Review {pending.length} possible overlaps</h3><p>These incoming runs are held out of totals. Your existing records remain. Choose only when you recognise the same run.</p>

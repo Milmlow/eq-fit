@@ -29,9 +29,9 @@ jobs:
       - run: npm test            # real-data tests skip themselves: data-local/ is never in the repo
       - run: npm run build
         env:
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
-          VITE_EQFIT_OWNER_ID: ${{ vars.VITE_EQFIT_OWNER_ID }}
+          VITE_SUPABASE_URL: https://hihqnnxnlkjfbixhcgaa.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_Sua-_BE2Bnjq9c_V9siXUQ_BBe5j99J
+          VITE_EQFIT_OWNER_ID: 51f91a0d-c975-4702-b4e8-5a9afce5d1f5
       # base is './', so the app works from /<repo-name>/
       - uses: actions/upload-pages-artifact@v3
         with:
