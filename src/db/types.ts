@@ -49,3 +49,43 @@ export interface TypeMapping extends Base {
   target: Group;
   updated_at: string;
 }
+
+// ---- Stage 2 ------------------------------------------------------------------------
+
+export interface Exercise extends Base {
+  name: string;
+  equipment: string; // '' when not stated. Different equipment = different exercise (never equivalent).
+  primary_muscles: string[];
+  /** Optional user-entered rep range for double progression. Absent/null = no progression hint. */
+  rep_min?: number | null;
+  rep_max?: number | null;
+  exercise_key: string; // lower(name) + '|' + lower(equipment): uniqueness and comparability key
+  created_at: string;
+}
+
+export type WorkoutKind = 'weights' | 'run' | 'other';
+export type WorkoutStatus = 'planned' | 'done';
+
+export interface Workout extends Base {
+  date: string; // YYYY-MM-DD (date-only; multiple workouts per date allowed)
+  name: string;
+  kind: WorkoutKind;
+  status: WorkoutStatus;
+  notes: string;
+  planned_exercise_ids: string[]; // blank until the user enters them
+  /** Linked watch/imported activity. A given activity can be linked to at most one workout (unique index). */
+  linked_activity_id: string | null;
+  created_at: string; // ISO; orders workouts within a date
+}
+
+export interface SetRecord extends Base {
+  workout_id: string;
+  exercise_id: string;
+  ordinal: number; // 1-based position within the workout
+  load_kg: number | null;
+  reps: number | null;
+  rir: number | null;
+  warmup: boolean;
+  pain_note: string | null;
+  created_at: string;
+}
