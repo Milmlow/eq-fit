@@ -7,8 +7,7 @@ import time
 from datetime import datetime, timedelta, timezone
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
-from urllib.parse import urlparse
-from uuid import UUID
+from urllib.parse import urlparse, quote
 from requests.exceptions import Timeout as RequestsTimeout, ConnectionError as RequestsConnectionError
 from export_garmin_encrypted import to_row
 
@@ -56,46 +55,55 @@ def gather(client, start, end):
     raise ValueError('Pagination incomplete; cursor not advanced')
 
 
-class PrivateStore:
-    def __init__(self, url, key):
-        parsed = urlparse(url)
-        if parsed.scheme != 'https' or not parsed.hostname or not parsed.hostname.endswith('.supabase.co') or parsed.username or parsed.password or parsed.path not in ('', '/') or parsed.query or parsed.fragment:
-            raise ValueError('Expected a hosted Supabase project URL')
-        self.url, self.key = url.rstrip('/'), key
+INGEST_URL = 'https://hihqnnxnlkjfbixhcgaa.supabase.co/functions/v1/garmin-ingest'
 
-    def request(self, path, body=None, prefer=None):
-        headers = {'apikey': self.key, 'Authorization': f'Bearer {self.key}', 'Content-Type': 'application/json'}
-        if prefer:
-            headers['Prefer'] = prefer
-        req = Request(self.url + '/rest/v1/' + path, headers=headers, data=None if body is None else json.dumps(body).encode())
+
+class PrivateStore:
+    # Workload identity avoids distributing any Supabase privileged key to GitHub.
+    def __init__(self, url=INGEST_URL):
+        if url != INGEST_URL:
+            raise ValueError('Unexpected private sync destination')
+        self.url = url
+
+    def request(self, action, **fields):
+        identity_url = os.environ['ACTIONS_ID_TOKEN_REQUEST_URL']
+        parsed = urlparse(identity_url)
+        if parsed.scheme != 'https' or not parsed.hostname or not parsed.hostname.endswith('.actions.githubusercontent.com'):
+            raise ValueError('Unexpected GitHub identity provider')
+        identity_req = Request(identity_url + '&audience=' + quote(self.url, safe=''), headers={
+            'Authorization': 'Bearer ' + os.environ['ACTIONS_ID_TOKEN_REQUEST_TOKEN']})
+        def identity():
+            with urlopen(identity_req, timeout=30) as response:
+                return json.load(response)['value']
+        token = retry(identity)
+        req = Request(self.url, data=json.dumps(dict(action=action, **fields)).encode(), headers={
+            'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'})
         def call():
             with urlopen(req, timeout=45) as response:
-                data = response.read()
-                return json.loads(data) if data else None
+                return json.load(response)
         return retry(call)
 
 
 def main():
-    store, owner = None, None
+    store = None
     try:
         key = os.environ['GARMIN_PERSONAL_API_KEY']
-        owner = str(UUID(os.environ['EQFIT_OWNER_ID']))
-        store = PrivateStore(os.environ['SUPABASE_URL'], os.environ['SUPABASE_SERVICE_ROLE_KEY'])
-        states = store.request(f'eqfit_sync_state?owner_id=eq.{owner}&select=last_success,last_full_sync')
+        store = PrivateStore()
+        state = store.request('state')['state']
         now = datetime.now(timezone.utc)
-        start, end, full = sync_window(states[0] if states else None, now)
+        start, end, full = sync_window(state, now)
         from garmin_personal_api import GarminPersonalApiClient, PersonalApiAuthenticator
         with PersonalApiAuthenticator(timeout=30) as auth:
             token = retry(lambda: auth.obtain_token(key))
         with GarminPersonalApiClient(token.access_token, timeout=30) as client:
             rows = gather(client, start, end)
-        store.request('rpc/eqfit_commit_sync', {'p_owner': owner, 'p_rows': rows, 'p_full': full})
+        store.request('commit', rows=rows, full=full)
         print('Private Garmin sync completed. No activity data was logged.')
         return 0
     except Exception:
-        if store and owner:
+        if store:
             try:
-                store.request('rpc/eqfit_fail_sync', {'p_owner': owner})
+                store.request('failed')
             except Exception:
                 pass
         print('Private Garmin sync failed. Check configuration or service availability. Cached history is retained.', file=sys.stderr)

@@ -1,20 +1,19 @@
-# Private Garmin sync — implemented, activation pending
+# Private Garmin sync — activation pending
 
-## Decision
+## Implemented infrastructure
 
-Keep GitHub Pages and the current `recomp` IndexedDB database. Reuse the working Garmin Personal API client in an hourly GitHub Actions worker. Add one Supabase project for authentication and private running records. Do not move the app to a different origin: that would strand the existing browser's lifting history until manually restored.
+Dedicated project `eq-fit` in EQ Solutions, Sydney (`hihqnnxnlkjfbixhcgaa`). Public app URL and existing IndexedDB history are retained. The private tables and migrations are applied. RLS is enabled for all three tables; anonymous reads and browser writes are denied. The deployed `garmin-ingest` Edge Function rejects anonymous requests (HTTP 401 verified).
 
-Supabase is not connected in this authoring session. No live project, policies, credentials, account or real-data pipeline has been provisioned or verified. The scheduled job is gated off by `EQFIT_PRIVATE_SYNC_ENABLED`. Keep this change in draft until activation checks pass.
+GitHub Actions authenticates using short-lived OIDC, verified against GitHub signing keys, issuer, exact audience, immutable repository and owner IDs, main branch, exact workflow path, and allowed event types. The gateway JWT check is disabled because the function performs its own GitHub JWT authentication. The function's built-in service credential never leaves Supabase. GitHub needs only the already-configured Garmin secret, plus `id-token: write`; no new privileged secret needs copying.
 
-## One-time provisioning (operator task, not a daily user workflow)
+## Remaining activation work
 
-1. Connect the Supabase plugin and select/create a dedicated personal EQ Fit project. Confirm any cost before creating paid resources. Disable public signup; create the owner's account through supported auth management, with credential entry outside chat.
-2. Apply `supabase/migrations/20261103_private_running.sql`. Verify anonymous reads fail, a different authenticated user sees no records, and the owner can read only their own. Users have no writes; only the server worker can call the sync writer.
-3. Set GitHub Actions secrets using the secure settings interface: existing `GARMIN_PERSONAL_API_KEY`, plus `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (legacy server JWT key), and `EQFIT_OWNER_ID`. Never put these values in chat, source, PRs, artifacts or logs. Do not retrieve the existing Garmin key.
-4. Set non-secret build variables `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (modern `sb_publishable_` key only) and `VITE_EQFIT_OWNER_ID`. These are intentionally public configuration, not privileged credentials.
-5. Verify RLS and then set repository variable `EQFIT_PRIVATE_SYNC_ENABLED=true`. Run the private worker once, check the successful timestamp and private row, deploy the app, sign in as the owner, and check that the actual run appears. Re-run and prove the same Garmin ID remains one run. Verify offline reopening on the owner's phone. Only then claim automatic sync works.
+1. Obtain the user's chosen sign-in email and establish their private Supabase Auth account through supported Auth controls. Do not invent an email, read unrelated business accounts, or assign the first arbitrary signup as owner. Bind the verified auth UUID in `eqfit_sync_owner` using the administration connection.
+2. Set non-secret client build configuration: project URL, the enabled modern publishable key, and that owner's UUID. These may be committed as public configuration or supplied as build variables; never include privileged keys. Authentication and RLS protect data even though these values are public.
+3. Replace the disabled schedule gate with explicit activation only after the owner is bound and tests pass. Add a trusted main-branch push trigger or run the workflow manually to verify actual OIDC authentication and a real Garmin import. The current connected GitHub tools do not provide workflow dispatch or repository-variable writes, so do not depend on those tools for activation.
+4. Confirm owner sign-in and actual private records in the browser, repeated sync produces one run, and offline reopening on the user's phone. Only then claim automatic sync is complete.
 
-GitHub repository secret/variable write operations are not exposed by the connected GitHub tools in this session. If still unavailable, secure settings entry is a second activation dependency; do not tell the user that connecting Supabase alone completes activation.
+The migration tests use synthetic identities. The production project currently has no configured owner and no fitness data. The OIDC worker, browser identity and real Garmin path have not yet been demonstrated end to end. Keep PR #6 in draft until verified.
 
 ## Behaviour and limitations
 

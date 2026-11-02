@@ -62,7 +62,7 @@ class SyncTests(unittest.TestCase):
 
     def test_restricts_destination_before_sending_secret(self):
         for url in ['http://x.supabase.co', 'https://evil.example', 'https://x.supabase.co.evil.example', 'https://x.supabase.co/?leak=1']:
-            with self.assertRaises(ValueError): PrivateStore(url, 'synthetic')
+            with self.assertRaises(ValueError): PrivateStore(url)
 
 
 if __name__ == '__main__': unittest.main()

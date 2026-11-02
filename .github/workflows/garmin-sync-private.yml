@@ -5,6 +5,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  id-token: write
 concurrency:
   group: garmin-private-sync
   cancel-in-progress: false
@@ -23,7 +24,4 @@ jobs:
       - name: Synchronise into private storage
         env:
           GARMIN_PERSONAL_API_KEY: ${{ secrets.GARMIN_PERSONAL_API_KEY }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          EQFIT_OWNER_ID: ${{ secrets.EQFIT_OWNER_ID }}
         run: python scripts/sync_garmin_private.py
