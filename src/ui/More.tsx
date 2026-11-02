@@ -1,16 +1,28 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { Repo } from '../db/repo';
-import { THEME_PREFS, type ThemePref } from '../lib/theme';
+import type { ThemeName, ThemePref } from '../lib/theme';
 import { ImportScreen } from './ImportScreen';
 import { RecentView } from './RecentView';
 import { BackupSection } from './BackupSection';
 import { CheckIn } from './CheckIn';
 import { BackupBanner } from './Banners';
+import { ScreenHead } from './Screen';
 import { usePwa } from '../pwa';
 import { APP_VERSION } from '../lib/backup';
 import type { PersistState } from '../lib/storage';
 
 type Sub = 'menu' | 'import' | 'recent' | 'checkin';
+
+const PREVIEWS: { pref: ThemeName; label: string }[] = [{ pref: 'light', label: 'Light' }, { pref: 'dark', label: 'Dark' }, { pref: 'crazy', label: 'Crazy' }];
+
+function Row({ title, note, children }: { title: string; note: string; children: ReactNode }) {
+  return (
+    <li className="rrow">
+      <div className="rrow-t"><p className="rrow-n">{title}</p><p className="muted small flush">{note}</p></div>
+      {children}
+    </li>
+  );
+}
 
 export function More({ repo, version, onChanged, pref, onPref, persisted, demo, onDemo, today, lastBackup, onBackedUp, persist, onAskPersist }: {
   repo: Repo | null; version: number; onChanged: () => void; pref: ThemePref; onPref: (p: ThemePref) => void; persisted: boolean; demo: boolean; onDemo: (d: boolean) => void;
@@ -20,7 +32,8 @@ export function More({ repo, version, onChanged, pref, onPref, persisted, demo, 
   const pwa = usePwa();
   if (sub !== 'menu') {
     return (
-      <section aria-label={sub === 'import' ? 'Import' : sub === 'recent' ? 'Recent' : 'Check-in'}>
+      <section aria-labelledby="more-h" className="screen">
+        <ScreenHead id="more-h" title={sub === 'import' ? 'Import' : sub === 'recent' ? 'Recent' : 'Check-in'} today={today} />
         <button type="button" onClick={() => setSub('menu')}>Back to More</button>
         {repo && sub === 'import' && <ImportScreen repo={repo} onCommitted={onChanged} />}
         {repo && sub === 'recent' && <RecentView repo={repo} version={version} />}
@@ -29,41 +42,51 @@ export function More({ repo, version, onChanged, pref, onPref, persisted, demo, 
       </section>
     );
   }
+
+  const rowsBefore = (
+    <>
+      <Row title="Import activities" note="Garmin CSV, duplicates skipped"><button type="button" className="b44" onClick={() => setSub('import')}>Import</button></Row>
+      <Row title="Recent, last 28 days" note="Lifts, runs and totals"><button type="button" className="b44" onClick={() => setSub('recent')}>Recent</button></Row>
+      <Row title="Check-in" note="Weight and waist"><button type="button" className="b44" onClick={() => setSub('checkin')}>Check-in</button></Row>
+    </>
+  );
+  const rowsAfter = (
+    <Row title="Demo mode" note="Reference numbers, writes nothing">
+      <label className="chip demo-chip"><input type="checkbox" role="switch" checked={demo} onChange={(e) => onDemo(e.target.checked)} /><span>{demo ? 'On' : 'Off'}<span className="sr"> (demo mode)</span></span></label>
+    </Row>
+  );
+
   return (
-    <section aria-labelledby="more-h">
-      <h2 id="more-h">More</h2>
+    <section aria-labelledby="more-h" className="screen">
+      <ScreenHead id="more-h" title="More" today={today} />
       {repo && <BackupBanner repo={repo} version={version} lastBackup={lastBackup} />}
-      <fieldset className="card themes">
-        <legend>Theme</legend>
-        <div className="seg" role="radiogroup" aria-label="Theme">
-          {THEME_PREFS.map((t) => (
-            <label key={t.pref} className={`seg-item${pref === t.pref ? ' on' : ''}`}>
+
+      <fieldset className="look">
+        <legend>Look</legend>
+        <div className="tpv-grid" role="radiogroup" aria-label="Theme">
+          {PREVIEWS.map((t) => (
+            <label key={t.pref} className={`tpv${pref === t.pref ? ' on' : ''}`}>
               <input type="radio" name="theme" value={t.pref} checked={pref === t.pref} onChange={() => onPref(t.pref)} />
-              <span>{t.label}</span>
+              <span className={`tp tp-${t.pref}`}>
+                <span className="tp-bar" aria-hidden="true" />
+                <span className="tp-name">{t.label}{pref === t.pref ? ' · on' : ''}</span>
+              </span>
             </label>
           ))}
         </div>
-        <p className="muted">System follows your device's light or dark setting. Dark is used until you choose.</p>
+        <label className={`tpv-sys${pref === 'system' ? ' on' : ''}`}>
+          <input type="radio" name="theme" value="system" checked={pref === 'system'} onChange={() => onPref('system')} />
+          <span>Follow my device's light or dark setting{pref === 'system' ? ' · on' : ''}</span>
+        </label>
+        <p className="muted small">System follows your device's light or dark setting (never Crazy). Dark is used until you choose.</p>
         {!persisted && <p role="alert" className="error">This browser would not save the choice; it applies until you close the page.</p>}
       </fieldset>
 
-      <ul className="items more-list">
-        <li><span>Import activities (CSV)</span><button type="button" onClick={() => setSub('import')}>Import</button></li>
-        <li><span>Recent (28 days)</span><button type="button" onClick={() => setSub('recent')}>Recent</button></li>
-        <li><span>Check-in (weight and waist)</span><button type="button" onClick={() => setSub('checkin')}>Check-in</button></li>
-      </ul>
+      {repo
+        ? <BackupSection repo={repo} today={today} lastBackup={lastBackup} onBackedUp={onBackedUp} onRestored={onChanged} persist={persist} onAskPersist={onAskPersist} rowsBefore={rowsBefore} rowsAfter={rowsAfter} />
+        : <><p>Opening local database... Backup is available once it opens.</p><ul className="rows">{rowsBefore}{rowsAfter}</ul></>}
 
-      {repo && <BackupSection repo={repo} today={today} lastBackup={lastBackup} onBackedUp={onBackedUp} onRestored={onChanged} persist={persist} onAskPersist={onAskPersist} />}
-      {!repo && <p>Opening local database... Backup is available once it opens.</p>}
-
-      <div className="card">
-        <label className="check">
-          <input type="checkbox" checked={demo} onChange={(e) => onDemo(e.target.checked)} />
-          Demo mode (reference values for screenshots; writes nothing)
-        </label>
-      </div>
-
-      <p className="muted" data-testid="app-info">
+      <p className="muted small" data-testid="app-info">
         EQ Fit version {APP_VERSION}.{' '}
         {!pwa.supported ? 'Offline install is not supported by this browser.' : pwa.offlineReady ? 'Ready to work offline.' : 'Offline copy not stored yet (it is stored after the first load over http(s), not in development).'}
       </p>

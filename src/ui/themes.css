@@ -2,9 +2,11 @@
   Design tokens, one block per theme, switched by data-theme on <html> (see src/lib/theme.ts).
   Every colour token is a plain #rrggbb so tests/contrast.test.ts can read this file directly and check WCAG AA.
   Non-colour tokens (fonts, radii) are shared at the bottom. Dark is the default until Royce picks.
+  The .tp-* classes apply a theme's tokens to one element (the theme preview cards on More), so a card shows its own colours.
 */
 :root,
-[data-theme="dark"] {
+[data-theme="dark"],
+.tp-dark {
   color-scheme: dark;
   --bg: #0a0e1a;          /* page */
   --paper: #0a0e1a;       /* solid fill behind text blocks (matters in Crazy) */
@@ -18,6 +20,7 @@
   --on-accent: #ffffff;
   --blue: #2f50f0;        /* Last time panel */
   --on-blue: #ffffff;
+  --bar: #4f6fff;           /* bar-chart fill (>= 3:1 on --card and --bg) */
   --pr-ink: #ff8a5c;      /* New PR stamp */
   --tab-bg: #14249e;
   --tab-ink: #ffffff;
@@ -30,7 +33,8 @@
   --disabled-fg: #c4ccd8;
 }
 
-[data-theme="light"] {
+[data-theme="light"],
+.tp-light {
   color-scheme: light;
   --bg: #fbf4e6;
   --paper: #fbf4e6;
@@ -44,6 +48,7 @@
   --on-accent: #ffffff;
   --blue: #0b1b7a;
   --on-blue: #ffffff;
+  --bar: #1f3fd6;           /* bar-chart fill (>= 3:1 on --card and --bg) */
   --pr-ink: #c93305;
   --tab-bg: #0b1b7a;
   --tab-ink: #ffffff;
@@ -56,7 +61,8 @@
   --disabled-fg: #4a5590;
 }
 
-[data-theme="crazy"] {
+[data-theme="crazy"],
+.tp-crazy {
   color-scheme: light;
   --bg: #f1e2c0;          /* printed paper */
   --paper: #fff8e6;       /* every text block sits on this solid fill */
@@ -70,6 +76,7 @@
   --on-accent: #ffffff;
   --blue: #0b1b7a;
   --on-blue: #ffffff;
+  --bar: #1f3fd6;           /* bar-chart fill (>= 3:1 on --card and --bg) */
   --pr-ink: #b83000;
   --tab-bg: #0b1b7a;
   --tab-ink: #ffffff;

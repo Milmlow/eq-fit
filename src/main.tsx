@@ -7,6 +7,7 @@ import './ui/styles.css';
 import './ui/today.css';
 import './ui/backup.css';
 import './ui/push.css';
+import './ui/screens.css';
 import { registerServiceWorker } from './pwa';
 import { initTheme } from './ui/useTheme';
 

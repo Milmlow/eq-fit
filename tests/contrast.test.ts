@@ -39,6 +39,8 @@ const PAIRS: [string, string, number, string][] = [
   ['blue', 'bg', 3, 'Last time panel edge against page'], ['acc', 'bg', 3, 'primary button edge against page'],
   ['tab-active', 'tab-bg', 3, 'active tab marker bar'],
   ['acc', 'paper', 3, 'Stage 5 progress bar fill on its track'],
+  ['bar', 'card', 3, 'Stage 6 bar fill on its track (card)'], ['bar', 'bg', 3, 'Stage 6 bar fill against page'],
+  ['accent', 'card', 3, 'Stage 6 highlighted bar and Today marker against card'],
   ['fg', 'accent', 3, 'Stage 5 achieved-PR block border against its fill'], ['line', 'paper', 3, 'Stage 5 progress bar outline'],
 ];
 

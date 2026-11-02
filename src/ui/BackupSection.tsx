@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Repo } from '../db/repo';
 import { MAX_BACKUP_BYTES, TABLE_NAMES, backupFileName, serializeBackup, validateBackup, type BackupCounts, type ValidationResult } from '../lib/backup';
 import { canShareFile, dated, saveTextFile, shareTextFile } from '../lib/download';
@@ -12,10 +12,13 @@ const CSV_MIME = 'text/csv;charset=utf-8';
 
 interface Picked { name: string; size: number; result: ValidationResult; current: BackupCounts }
 
-export function BackupSection({ repo, today, lastBackup, onBackedUp, onRestored, persist, onAskPersist }: {
+export function BackupSection({ repo, today, lastBackup, onBackedUp, onRestored, persist, onAskPersist, rowsBefore, rowsAfter }: {
   repo: Repo; today: string; lastBackup: string | null; onBackedUp: (iso: string) => void; onRestored: () => void;
   persist: PersistState | null; onAskPersist: () => void;
+  /** Extra <li> rows placed before and after the Export and Storage rows (the More screen's own rows). */
+  rowsBefore?: ReactNode; rowsAfter?: ReactNode;
 }) {
+  const [exportOpen, setExportOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const [picked, setPicked] = useState<Picked | null>(null);
@@ -88,79 +91,90 @@ export function BackupSection({ repo, today, lastBackup, onBackedUp, onRestored,
 
   const shareable = canShareFile('x.json', JSON_MIME);
   const ok = picked?.result.ok ? picked.result : null;
+  const days = status.days;
+  const big = days === null ? 'Never' : days === 0 ? 'Today' : `${days} ${days === 1 ? 'day' : 'days'}`;
+  const sub = days === null ? 'no backup file made yet' : days === 0 ? 'last backup' : 'since your last backup';
+  const persistLabel = persist === null ? 'Checking...' : persist === 'granted' ? 'Granted' : persist === 'denied' ? 'Not granted' : 'Not supported';
 
   return (
-    <section className="card backup" aria-labelledby="backup-h">
-      <h3 id="backup-h">Backup and restore</h3>
-      <p className="privacy" data-testid="privacy-warning"><strong>Keep the backup file private.</strong> It holds your full activity, training history and body measurements. Do not share it, email it, or put it anywhere public.</p>
-      <p data-testid="last-backup">
-        {status.days === null
-          ? <>Last backup: <strong>never</strong>.</>
-          : <>Last backup: <strong>{describeAge(status.days)}</strong>.</>}
-      </p>
-      <div className="row gap wrap actions">
-        <button type="button" className="primary" disabled={busy} onClick={() => void download(false)}>Download backup</button>
-        {shareable && <button type="button" disabled={busy} onClick={() => void download(true)}>Share or save backup</button>}
-      </div>
-
-
-      {msg && <p role={msg.kind === 'error' ? 'alert' : 'status'} className={msg.kind === 'error' ? 'error' : ''} data-testid="backup-message">{msg.text}</p>}
-
-      <h4>Restore from a backup file</h4>
-      <p className="muted">Restoring replaces everything stored in this browser. The file is checked completely first; if anything is wrong, nothing changes.</p>
-      <label className="file">
-        Choose backup file
-        <input type="file" accept=".json,application/json" data-testid="restore-input" disabled={busy}
-          onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; void onFile(f); }} />
-      </label>
-
-      {picked && !picked.result.ok && (
-        <div role="alert" className="error problem" data-testid="restore-rejected">
-          <p><strong>This file cannot be restored. Nothing was changed.</strong> ({picked.name})</p>
-          <ul>{picked.result.errors.map((m, i) => <li key={i}>{m}</li>)}</ul>
+    <>
+      <section className="bk" aria-labelledby="backup-h" data-testid="backup-card">
+        <h2 id="backup-h" className="bk-h">Backup</h2>
+        <p className="bk-big" data-testid="last-backup"><span className="sr">Last backup: {days === null ? 'never' : describeAge(days)}. </span><span aria-hidden="true">{big} <span className="bk-sub">{sub}</span></span></p>
+        <div className="bk-actions actions">
+          <button type="button" className="slant-go" disabled={busy} onClick={() => void download(false)}>Download backup</button>
+          <label className="file restore-btn">
+            Restore<span className="sr"> from a backup file</span>
+            <input type="file" accept=".json,application/json" data-testid="restore-input" disabled={busy}
+              onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; void onFile(f); }} />
+          </label>
         </div>
-      )}
+        {shareable && <p className="flush"><button type="button" className="b44" disabled={busy} onClick={() => void download(true)}>Share or save backup</button></p>}
+        <p className="privacy small" data-testid="privacy-warning"><strong>Keep the backup file private.</strong> It holds your full activity, training history and body measurements. Do not share it, email it, or put it anywhere public. Restoring checks the whole file first and changes nothing if anything is wrong; it then replaces everything stored in this browser.</p>
 
-      {picked && ok && (
-        <div className="confirm" role="region" aria-labelledby="confirm-h" data-testid="restore-confirm">
-          <h4 id="confirm-h" tabIndex={-1} ref={confirmRef}>Replace your data with this backup?</h4>
-          <p>
-            File <span className="mono">{picked.name}</span>, made {new Date(ok.backup.exportedAt).toLocaleString()} by app version {ok.backup.appVersion}
-            {ok.sourceVersion < ok.backup.schemaVersion && ` (older format v${ok.sourceVersion}, upgraded on restore)`}.
-          </p>
-          <div className="scroll">
-            <table>
-              <caption>What will be replaced</caption>
-              <thead><tr><th scope="col">Stored now</th><th scope="col" className="num">Now</th><th scope="col" className="num">After restore</th></tr></thead>
-              <tbody>{TABLE_NAMES.map((t) => (
-                <tr key={t}><th scope="row">{LABELS[t]}</th><td className="num">{picked.current[t]}</td><td className="num">{ok.counts[t]}</td></tr>
-              ))}</tbody>
-            </table>
+        {msg && <p role={msg.kind === 'error' ? 'alert' : 'status'} className={msg.kind === 'error' ? 'error' : ''} data-testid="backup-message">{msg.text}</p>}
+
+        {picked && !picked.result.ok && (
+          <div role="alert" className="error problem" data-testid="restore-rejected">
+            <p><strong>This file cannot be restored. Nothing was changed.</strong> ({picked.name})</p>
+            <ul>{picked.result.errors.map((m, i) => <li key={i}>{m}</li>)}</ul>
           </div>
-          <p className="warnline"><strong>This cannot be undone.</strong> Everything listed under "Now" is deleted and replaced by the file. The theme choice is not affected.</p>
-          <div className="row gap wrap"><button type="button" disabled={busy} onClick={() => void download(false)}>Download my current data first</button></div>
-          <label className="check"><input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} data-testid="restore-agree" />
-            I understand my current data will be permanently replaced.</label>
-          <div className="row gap wrap">
-            <button type="button" className="danger" disabled={!agree || busy} onClick={() => void doRestore()} data-testid="restore-go">Replace my data with this backup</button>
-            <button type="button" disabled={busy} onClick={() => { setPicked(null); setAgree(false); }}>Cancel</button>
+        )}
+
+        {picked && ok && (
+          <div className="confirm" role="region" aria-labelledby="confirm-h" data-testid="restore-confirm">
+            <h4 id="confirm-h" tabIndex={-1} ref={confirmRef}>Replace your data with this backup?</h4>
+            <p>
+              File <span className="mono">{picked.name}</span>, made {new Date(ok.backup.exportedAt).toLocaleString()} by app version {ok.backup.appVersion}
+              {ok.sourceVersion < ok.backup.schemaVersion && ` (older format v${ok.sourceVersion}, upgraded on restore)`}.
+            </p>
+            <div className="scroll">
+              <table>
+                <caption>What will be replaced</caption>
+                <thead><tr><th scope="col">Stored now</th><th scope="col" className="num">Now</th><th scope="col" className="num">After restore</th></tr></thead>
+                <tbody>{TABLE_NAMES.map((t) => (
+                  <tr key={t}><th scope="row">{LABELS[t]}</th><td className="num">{picked.current[t]}</td><td className="num">{ok.counts[t]}</td></tr>
+                ))}</tbody>
+              </table>
+            </div>
+            <p className="warnline"><strong>This cannot be undone.</strong> Everything listed under "Now" is deleted and replaced by the file. The theme choice is not affected.</p>
+            <div className="row gap wrap"><button type="button" disabled={busy} onClick={() => void download(false)}>Download my current data first</button></div>
+            <label className="check"><input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} data-testid="restore-agree" />
+              I understand my current data will be permanently replaced.</label>
+            <div className="row gap wrap">
+              <button type="button" className="danger" disabled={!agree || busy} onClick={() => void doRestore()} data-testid="restore-go">Replace my data with this backup</button>
+              <button type="button" disabled={busy} onClick={() => { setPicked(null); setAgree(false); }}>Cancel</button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </section>
 
-      <h4>Export to a spreadsheet (CSV)</h4>
-      <p className="muted">A CSV cannot be restored. It is for reading in a spreadsheet.</p>
-      <div className="row gap wrap actions">
-        <button type="button" disabled={busy} onClick={() => void exportCsv('sets')}>Workouts and sets (CSV)</button>
-        <button type="button" disabled={busy} onClick={() => void exportCsv('running')}>Running periods (CSV)</button>
-        <button type="button" disabled={busy} onClick={() => void exportCsv('checkins')}>Check-ins (CSV)</button>
-        <button type="button" disabled={busy} onClick={() => void exportCsv('goals')}>Goals (CSV)</button>
-      </div>
-
-      <h4>Storage</h4>
-      <p data-testid="persist-state">{describePersistence(persist)}</p>
-      {persist !== 'granted' && persist !== 'unsupported' && <button type="button" onClick={onAskPersist}>Ask the browser again</button>}
-
-    </section>
+      <ul className="rows">
+        {rowsBefore}
+        <li className="rrow rrow-col">
+          <div className="rrow-line">
+            <div className="rrow-t"><p className="rrow-n">Export to spreadsheet</p><p className="muted small flush">Sets, running periods, check-ins, goals (CSV, cannot be restored)</p></div>
+            <button type="button" className="b44" aria-expanded={exportOpen} onClick={() => setExportOpen(!exportOpen)}>Export</button>
+          </div>
+          {exportOpen && (
+            <div className="rrow-panel actions" data-testid="export-panel">
+              <button type="button" disabled={busy} onClick={() => void exportCsv('sets')}>Workouts and sets (CSV)</button>
+              <button type="button" disabled={busy} onClick={() => void exportCsv('running')}>Running periods (CSV)</button>
+              <button type="button" disabled={busy} onClick={() => void exportCsv('checkins')}>Check-ins (CSV)</button>
+              <button type="button" disabled={busy} onClick={() => void exportCsv('goals')}>Goals (CSV)</button>
+            </div>
+          )}
+        </li>
+        <li className="rrow rrow-col">
+          <div className="rrow-line">
+            <div className="rrow-t"><p className="rrow-n">Storage protection</p><p className="muted small flush">Browser asked to keep your data</p></div>
+            <span className="rrow-state">{persistLabel}</span>
+          </div>
+          <p className="muted small flush" data-testid="persist-state">{describePersistence(persist)}</p>
+          {persist !== 'granted' && persist !== 'unsupported' && <p className="flush"><button type="button" className="b44" onClick={onAskPersist}>Ask the browser again</button></p>}
+        </li>
+        {rowsAfter}
+      </ul>
+    </>
   );
 }

@@ -52,6 +52,17 @@ Everything here is optional and yours; nothing is created for you, there are no 
 
 Checks: `python3 -I tests/oracle/oracle_push.py` builds synthetic fixtures with hand-worked arithmetic (`tests/fixtures/oracle-push.json`, `synthetic-backup-v4.json`); `python3 -I tests/oracle/oracle_push_real.py data-local/Activities.csv data-local/oracle-push-real.json` computes the real running bests independently (output stays in data-local, gitignored).
 
+## Screens redesign (Stage 6, branch stage-6-screens)
+
+Run, Lift, Week and More now match the Today screen's look (heavy italic type, slanted colour panels, big numerals, simple bars) in Light, Dark and Crazy. Behaviour, data and storage are unchanged; every colour is a token in `src/ui/themes.css` (one new token, `--bar`, for bar fills; the `.tp-light/.tp-dark/.tp-crazy` classes apply a theme's tokens to one element so the More preview cards show their own colours). Styles: `src/ui/screens.css`; shared header, segmented control and chip: `src/ui/Screen.tsx`.
+
+- **Run**: Weeks / 4 weeks / Month control plus a Custom period chip; hero distance and average pace; km-per-week bars (scaled to the biggest week, every value printed, plus a text alternative for screen readers); period rows; Outdoor only chip (treadmill rule unchanged); Stage 5 goals progress and bests below.
+- **Lift**: Weekly sets (bars per muscle, newest week open, older weeks collapsed, "unassigned" always visible, counting note kept) and Exercise history (estimated-max card with Epley, Brzycki, the source set and the confidence note; the progression idea as a "proposed" chip using the existing rules; history rows with 48 px Edit buttons per set).
+- **Week**: panels for the week before and your usual rhythm, Stage 5 goals, seven day rows (Today marker, Move, Remove, Add weights, Add run; empty days are dashed), and the optional 3-day busy week chip.
+- **More**: three theme preview cards plus a System option, Backup card (days since the last backup, Download backup, Restore), rows for Import, Recent, Check-in, Export, Storage protection and Demo mode.
+- The design boards' "SAMPLE" badges and sample numbers are not used: the app shows real values or "-".
+- Also fixed: `src/pwa.ts` threw `Cannot read properties of undefined (reading 'waiting')` on load when service workers were blocked/unavailable; it now treats that as "not supported" (`tests/pwaLoad.test.ts`).
+
 ## Commands
 
     npm install

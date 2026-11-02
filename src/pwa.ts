@@ -20,19 +20,36 @@ export function applyUpdate(): void {
   waiting.postMessage({ type: 'SKIP_WAITING' });
 }
 
-export function registerServiceWorker(): void {
-  if (!import.meta.env.PROD || !state.supported) return;
-  navigator.serviceWorker.addEventListener('controllerchange', () => { if (applying) window.location.reload(); });
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').then((reg) => {
-      const flag = () => { if (reg.waiting && navigator.serviceWorker.controller) { waiting = reg.waiting; set({ updateReady: true }); } };
+/** The browser objects registerServiceWorker touches, injectable so tests can simulate a browser without service workers. */
+export interface PwaEnv {
+  prod: boolean;
+  nav: { serviceWorker?: ServiceWorkerContainer };
+  win: Pick<Window, 'addEventListener' | 'location'>;
+  doc: Pick<Document, 'addEventListener' | 'visibilityState'>;
+}
+
+export function registerServiceWorker(env: PwaEnv = { prod: import.meta.env.PROD, nav: navigator, win: window, doc: document }): void {
+  const sw = env.nav.serviceWorker;
+  if (!env.prod || !state.supported || !sw) return;
+  sw.addEventListener('controllerchange', () => { if (applying) env.win.location.reload(); });
+  env.win.addEventListener('load', () => {
+    let pending: Promise<ServiceWorkerRegistration | undefined>;
+    try { pending = Promise.resolve(sw.register('./sw.js')); } catch (e) { set({ error: e instanceof Error ? e.message : String(e) }); return; }
+    pending.then((reg) => {
+      // Some environments (service workers blocked by policy or by a test browser) resolve with nothing: treat that as "not available", not a crash.
+      if (!reg) { set({ supported: false }); return; }
+      const flag = () => { if (reg.waiting && sw.controller) { waiting = reg.waiting; set({ updateReady: true }); } };
       flag();
       reg.addEventListener('updatefound', () => {
         const w = reg.installing;
         w?.addEventListener('statechange', () => { if (w.state === 'installed') flag(); });
       });
-      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') void reg.update().catch(() => undefined); });
-      void navigator.serviceWorker.ready.then(() => set({ offlineReady: true }));
+      env.doc.addEventListener('visibilitychange', () => { if (env.doc.visibilityState === 'visible') void reg.update().catch(() => undefined); });
+      void sw.ready.then(() => set({ offlineReady: true }));
     }, (e: unknown) => set({ error: e instanceof Error ? e.message : String(e) }));
   });
 }
+
+/** Test helper: put the module state back to a given starting point. */
+export function resetPwaStateForTests(supported: boolean): void { state = { supported, offlineReady: false, updateReady: false, error: null }; waiting = null; applying = false; }
+export function getPwaStateForTests(): PwaState { return state; }
