@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Repo } from '../db/repo';
 import type { Exercise, SetRecord, Workout } from '../db/types';
-import { formatSet } from '../lib/training';
+import { hintText, progressionHint } from '../lib/lifting';
+import { formatSet, type SetInput } from '../lib/training';
 import { Badge } from './Badge';
 
 interface Block {
@@ -59,7 +60,7 @@ export function WorkoutEditor({ repo, workoutId, onChanged, onClose }: { repo: R
 
       {blocks.length === 0 && <p className="muted" data-testid="no-exercises">No exercises yet. Add one below (nothing is pre-filled).</p>}
       {blocks.map((b) => (
-        <ExerciseBlock key={b.exercise.id} block={b} workout={workout} onAdd={(input) => run(() => repo.addSet(workout.id, b.exercise.id, input))} onRemove={(id) => run(() => repo.removeSet(id))} />
+        <ExerciseBlock key={b.exercise.id} block={b} workout={workout} onAdd={(input) => run(() => repo.addSet(workout.id, b.exercise.id, input))} onRemove={(id) => run(() => repo.removeSet(id))} onEditSet={(id, input) => run(() => repo.updateSet(id, input))} onEditExercise={(patch) => run(() => repo.updateExercise(b.exercise.id, patch))} />
       ))}
 
       <AddExercise
@@ -81,11 +82,14 @@ export function WorkoutEditor({ repo, workoutId, onChanged, onClose }: { repo: R
   );
 }
 
-function ExerciseBlock({ block, workout, onAdd, onRemove }: {
+function ExerciseBlock({ block, workout, onAdd, onRemove, onEditSet, onEditExercise }: {
   block: Block; workout: Workout;
   onAdd: (i: { load_kg: number | null; reps: number | null; rir: number | null; warmup: boolean; pain_note: string | null }) => Promise<void>;
   onRemove: (id: string) => Promise<void>;
+  onEditSet: (id: string, input: SetInput) => Promise<void>;
+  onEditExercise: (patch: { name?: string; primary_muscles?: string[]; rep_min?: number | null; rep_max?: number | null }) => Promise<void>;
 }) {
+  const [editing, setEditing] = useState<string | null>(null);
   const last = block.sets[block.sets.length - 1];
   const [load, setLoad] = useState(last?.load_kg?.toString() ?? '');
   const [reps, setReps] = useState(last?.reps?.toString() ?? '');
@@ -121,12 +125,21 @@ function ExerciseBlock({ block, workout, onAdd, onRemove }: {
           ? <>{block.prior.workout.date}: {block.prior.sets.map((s) => formatSet(s)).join('; ')}</>
           : <span className="muted">no earlier session with this exact exercise and equipment.</span>}
       </p>
+      <HintLine block={block} />
+      <EditExercise ex={ex} onSave={onEditExercise} />
       {block.sets.length > 0 && (
         <ol className="sets" aria-label={`Sets logged today for ${ex.name}`}>
           {block.sets.map((s) => (
             <li key={s.id}>
-              <span>{formatSet(s)}{s.pain_note && <> <span className="pain">pain: {s.pain_note}</span></>}</span>
-              <button aria-label={`Remove set ${s.ordinal}`} onClick={() => void onRemove(s.id)}>Remove</button>
+              {editing === s.id
+                ? <SetEditForm set={s} onSave={async (input) => { await onEditSet(s.id, input); setEditing(null); }} onCancel={() => setEditing(null)} />
+                : <>
+                    <span>{formatSet(s)}{s.pain_note && <> <span className="pain">pain: {s.pain_note}</span></>}</span>
+                    <span className="row gap">
+                      <button aria-label={`Edit set ${s.ordinal}`} onClick={() => setEditing(s.id)}>Edit</button>
+                      <button aria-label={`Remove set ${s.ordinal}`} onClick={() => void onRemove(s.id)}>Remove</button>
+                    </span>
+                  </>}
             </li>
           ))}
         </ol>
@@ -172,6 +185,78 @@ function AddExercise({ existing, onPick, onCreate }: {
         <label className="field">Equipment (a different machine is a different exercise)<input value={equip} maxLength={120} onChange={(e) => setEquip(e.target.value)} /></label>
         <label className="field">Primary muscles (comma separated)<input value={muscles} onChange={(e) => setMuscles(e.target.value)} /></label>
         <button type="submit">Create and add</button>
+      </form>
+    </details>
+  );
+}
+
+function HintLine({ block }: { block: Block }) {
+  const h = progressionHint(block.exercise.rep_max ?? null, block.prior?.sets ?? []);
+  if (!h) {
+    return block.exercise.rep_max ? null : <p className="muted flush" data-testid="no-hint">No progression hint: enter a rep range for this exercise (Edit exercise) to get one.</p>;
+  }
+  return <p className="hint" data-testid="hint">Progression idea <Badge kind="proposed" /> {hintText(h)}</p>;
+}
+
+function numOrNull(v: string): number | null | 'bad' {
+  if (v.trim() === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 'bad';
+}
+
+export function SetEditForm({ set, onSave, onCancel }: { set: SetRecord; onSave: (i: SetInput) => Promise<void>; onCancel: () => void }) {
+  const [load, setLoad] = useState(set.load_kg?.toString() ?? '');
+  const [reps, setReps] = useState(set.reps?.toString() ?? '');
+  const [rir, setRir] = useState(set.rir?.toString() ?? '');
+  const [warm, setWarm] = useState(set.warmup);
+  const [pain, setPain] = useState(set.pain_note ?? '');
+  const [err, setErr] = useState<string | null>(null);
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    const l = numOrNull(load), r = numOrNull(reps), ri = numOrNull(rir);
+    if (l === 'bad' || r === 'bad' || ri === 'bad') return setErr('Enter numbers only.');
+    try { await onSave({ load_kg: l, reps: r, rir: ri, warmup: warm, pain_note: pain.trim() === '' ? null : pain }); } catch (x) { setErr(x instanceof Error ? x.message : String(x)); }
+  }
+  return (
+    <form className="edit-set" onSubmit={(e) => void save(e)} aria-label={`Edit set ${set.ordinal}`}>
+      <div className="grid3">
+        <label className="field">Load (kg)<input inputMode="decimal" value={load} onChange={(e) => setLoad(e.target.value)} /></label>
+        <label className="field">Reps<input inputMode="numeric" value={reps} onChange={(e) => setReps(e.target.value)} /></label>
+        <label className="field">RIR<input inputMode="decimal" value={rir} onChange={(e) => setRir(e.target.value)} /></label>
+      </div>
+      <label className="check"><input type="checkbox" checked={warm} onChange={(e) => setWarm(e.target.checked)} /> Warm-up set</label>
+      <label className="field">Pain note<input value={pain} maxLength={500} onChange={(e) => setPain(e.target.value)} /></label>
+      {err && <p role="alert" className="error">{err}</p>}
+      <div className="row gap wrap"><button type="submit" className="primary">Save set</button><button type="button" onClick={onCancel}>Cancel</button></div>
+    </form>
+  );
+}
+
+export function EditExercise({ ex, onSave }: { ex: Exercise; onSave: (p: { name?: string; primary_muscles?: string[]; rep_min?: number | null; rep_max?: number | null }) => Promise<void> }) {
+  const [name, setName] = useState(ex.name);
+  const [muscles, setMuscles] = useState(ex.primary_muscles.join(', '));
+  const [mn, setMn] = useState(ex.rep_min?.toString() ?? '');
+  const [mx, setMx] = useState(ex.rep_max?.toString() ?? '');
+  const [err, setErr] = useState<string | null>(null);
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    const a = numOrNull(mn), b = numOrNull(mx);
+    if (a === 'bad' || b === 'bad') return setErr('Rep range must be numbers.');
+    setErr(null);
+    try { await onSave({ name, primary_muscles: muscles.split(','), rep_min: a, rep_max: b }); } catch (x) { setErr(x instanceof Error ? x.message : String(x)); }
+  }
+  return (
+    <details className="add-ex">
+      <summary>Edit exercise</summary>
+      <form onSubmit={(e) => void save(e)} aria-label={`Edit exercise ${ex.name}`}>
+        <label className="field">Name (history is kept; equipment cannot be changed)<input value={name} maxLength={120} onChange={(e) => setName(e.target.value)} required /></label>
+        <label className="field">Primary muscles (comma separated)<input value={muscles} onChange={(e) => setMuscles(e.target.value)} /></label>
+        <div className="grid3">
+          <label className="field">Rep range min<input inputMode="numeric" value={mn} onChange={(e) => setMn(e.target.value)} /></label>
+          <label className="field">Rep range max<input inputMode="numeric" value={mx} onChange={(e) => setMx(e.target.value)} /></label>
+        </div>
+        {err && <p role="alert" className="error">{err}</p>}
+        <button type="submit">Save exercise</button>
       </form>
     </details>
   );

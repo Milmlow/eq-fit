@@ -1,4 +1,4 @@
-# Recomp (personal)
+# EQ Fit (personal)
 
 ## Run it on Windows
 
@@ -13,14 +13,16 @@
 
 ## About
 
-Local-first, browser-only personal training app (Stage 2 of 5). Data lives in this browser's IndexedDB. No backend,
-no remote, no analytics, no network calls. Personal project (not EQ, not SKS).
+EQ Fit: local-first, browser-only personal training app (Stage 3 of 5). Data lives in this browser's IndexedDB
+(database name is still "recomp" internally so existing data is kept). No backend, no remote, no analytics, no network calls.
+Personal project (not EQ, not SKS).
 
-What works now: CSV import with preview, duplicate protection and reversible type mapping (Stage 1); Today screen
-(planned vs completed, quick set log, "last time" for each exercise); flexible Week (move, add, remove sessions,
-history baseline as context, optional 3-day fallback); structured exercises and sets (load, reps, optional RIR,
-warm-up flag, pain note); linking an imported watch activity to a workout without double counting; running
-comparison by period (4 weeks, 4 weeks combined, last complete month, custom range; treadmill toggle).
+What works now: CSV import with preview, duplicate protection and reversible type mapping; Today screen; flexible Week;
+structured exercises and sets (edit or remove a set, rename an exercise, optional rep range); watch-activity link
+without double counting; running comparison by period; Lifting tab with weekly working sets per muscle (working sets
+only, primary muscles as you typed them, Mon-Sun weeks, "unassigned" for blank), per-exercise history with estimated
+1RM (Epley and Brzycki shown, source set, 1 rep = actual, over 10 reps = low confidence), and progression ideas
+(double progression, labelled "proposed", only when you entered a rep range, never when the last session has a pain note).
 
 ## Commands
 
@@ -34,7 +36,8 @@ comparison by period (4 weeks, 4 weeks combined, last complete month, custom ran
 
 Golden tests compare the app against figures produced by independent Python scripts (never by app code):
 `python3 -I tests/oracle/oracle.py data-local/Activities.csv` -> `tests/fixtures/oracle.json`, and
-`python3 -I tests/oracle/oracle_running.py data-local/Activities.csv 2026-11-02` -> `tests/fixtures/oracle-running.json`.
+`python3 -I tests/oracle/oracle_running.py data-local/Activities.csv 2026-11-02` -> `tests/fixtures/oracle-running.json`, and
+`python3 -I tests/oracle/oracle_lifting.py` (synthetic data only) -> `tests/fixtures/synthetic-lifting.json` + `oracle-lifting.json`.
 Running pace = distance-weighted mean of the exported m:ss pace (seconds per km), over runs with both a pace and a
 distance above zero; km = sum of distance. Outdoor = "Running"; treadmill = "Treadmill Running" (after mapping).
 
@@ -49,9 +52,10 @@ computed (this app), proposed (a suggestion). Unknown values show as "-" or "unk
 
 ## NOT built
 
-Food, meals and check-ins (weight, waist), trends and charts, weekly review and suggestions, JSON backup/restore
-(there is NO backup yet: clearing browser data deletes everything), CSV export, PWA/offline install, sync of any kind,
-UI for changing activity-type mappings (repository supports it, tested), editing or deleting a logged set (only add
-and remove), exercise rename/edit, planned exercise targets (sets/reps), Pool Swim and cycling distance/pace
-interpretation, a committed Playwright suite (browser checks were ad-hoc scripts), Safari/Firefox/real-phone testing.
-Next: Stage 3 is food and check-ins.
+Food, meals and check-ins (weight, waist), trends and charts, weekly review, JSON backup/restore (there is NO backup yet:
+clearing browser data deletes everything), CSV export, PWA/offline install, hosting, sync of any kind, UI for changing
+activity-type mappings (repository supports it, tested), editing equipment of an exercise (by design: a different machine
+is a different exercise), planned set/rep targets per workout, per-muscle weekly targets (only a reference note),
+fractional or secondary-muscle set counting, a muscle taxonomy, max-testing prompts, a committed Playwright suite
+(browser checks were ad-hoc scripts), Safari/Firefox/real-phone testing.
+Next: Stage 4 is backup, install and hosting.

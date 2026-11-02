@@ -1,0 +1,181 @@
+{
+ "note": "SYNTHETIC data. No real personal data.",
+ "exercises": {
+  "bench": {
+   "name": "Bench Press",
+   "equipment": "Barbell",
+   "primary_muscles": [
+    "Chest",
+    " triceps "
+   ],
+   "rep_range": [
+    5,
+    8
+   ]
+  },
+  "incline": {
+   "name": "Incline Press",
+   "equipment": "Dumbbell",
+   "primary_muscles": [
+    "chest"
+   ],
+   "rep_range": [
+    8,
+    12
+   ]
+  },
+  "carry": {
+   "name": "Farmer Carry",
+   "equipment": "Handles",
+   "primary_muscles": [],
+   "rep_range": null
+  },
+  "cpA": {
+   "name": "Chest Press",
+   "equipment": "Machine A",
+   "primary_muscles": [
+    "CHEST"
+   ],
+   "rep_range": [
+    8,
+    10
+   ]
+  },
+  "cpB": {
+   "name": "Chest Press",
+   "equipment": "Machine B",
+   "primary_muscles": [
+    "Chest"
+   ],
+   "rep_range": null
+  }
+ },
+ "sets": [
+  {
+   "date": "2026-10-25",
+   "exercise": "bench",
+   "load_kg": 40,
+   "reps": 10,
+   "rir": null,
+   "warmup": true,
+   "pain_note": null
+  },
+  {
+   "date": "2026-10-25",
+   "exercise": "bench",
+   "load_kg": 80,
+   "reps": 8,
+   "rir": 2,
+   "warmup": false,
+   "pain_note": null
+  },
+  {
+   "date": "2026-10-25",
+   "exercise": "bench",
+   "load_kg": 80,
+   "reps": 6,
+   "rir": 2,
+   "warmup": false,
+   "pain_note": null
+  },
+  {
+   "date": "2026-10-25",
+   "exercise": "incline",
+   "load_kg": 30,
+   "reps": 12,
+   "rir": null,
+   "warmup": false,
+   "pain_note": null
+  },
+  {
+   "date": "2026-10-25",
+   "exercise": "incline",
+   "load_kg": 30,
+   "reps": 10,
+   "rir": null,
+   "warmup": false,
+   "pain_note": null
+  },
+  {
+   "date": "2026-10-25",
+   "exercise": "cpA",
+   "load_kg": 50,
+   "reps": 10,
+   "rir": null,
+   "warmup": false,
+   "pain_note": null
+  },
+  {
+   "date": "2026-10-26",
+   "exercise": "bench",
+   "load_kg": 50,
+   "reps": 5,
+   "rir": null,
+   "warmup": true,
+   "pain_note": null
+  },
+  {
+   "date": "2026-10-26",
+   "exercise": "bench",
+   "load_kg": 82.5,
+   "reps": 5,
+   "rir": 1,
+   "warmup": false,
+   "pain_note": null
+  },
+  {
+   "date": "2026-10-26",
+   "exercise": "bench",
+   "load_kg": 82.5,
+   "reps": null,
+   "rir": null,
+   "warmup": false,
+   "pain_note": null
+  },
+  {
+   "date": "2026-10-26",
+   "exercise": "bench",
+   "load_kg": 100,
+   "reps": 1,
+   "rir": 0,
+   "warmup": false,
+   "pain_note": null
+  },
+  {
+   "date": "2026-10-26",
+   "exercise": "carry",
+   "load_kg": 40,
+   "reps": 1,
+   "rir": null,
+   "warmup": false,
+   "pain_note": null
+  },
+  {
+   "date": "2026-10-26",
+   "exercise": "cpB",
+   "load_kg": 70,
+   "reps": 8,
+   "rir": null,
+   "warmup": false,
+   "pain_note": null
+  },
+  {
+   "date": "2026-10-26",
+   "exercise": "cpA",
+   "load_kg": 55,
+   "reps": 9,
+   "rir": 3,
+   "warmup": false,
+   "pain_note": "left shoulder pinch"
+  },
+  {
+   "date": "2026-10-26",
+   "exercise": "incline",
+   "load_kg": 32,
+   "reps": 8,
+   "rir": null,
+   "warmup": false,
+   "pain_note": null
+  }
+ ]
+}

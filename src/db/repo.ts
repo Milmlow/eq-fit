@@ -1,6 +1,7 @@
 import { newId } from '../lib/hash';
 import { isGroup, resolveGroup, type Group } from '../lib/mapping';
 import { recordMigrations, type RecompDB } from './db';
+import { validateRepRange } from '../lib/lifting';
 import { exerciseKey, validateName, validateSet, workoutOrderKey, type SetInput } from '../lib/training';
 import type { Activity, Exercise, ImportBatch, MigrationRecord, SetRecord, Workout, WorkoutKind } from './types';
 
@@ -243,5 +244,75 @@ export class Repo {
     const linked = await this.linkedActivityIds();
     const acts = (await this.activitiesBetween(date, date)).filter((a) => a.group !== 'other' && !linked.has(a.id));
     return { workouts: done.length, unlinkedActivities: acts.length, total: done.length + acts.length };
+  }
+
+  // ---- Stage 3: edit exercise / set, history -------------------------------------------------
+
+  /**
+   * Edit an exercise. The id never changes, so history is kept. Equipment is NOT editable
+   * (a different machine is a different exercise). Rename that collides with another exercise
+   * of the same equipment is refused.
+   */
+  async updateExercise(id: string, patch: { name?: string; primary_muscles?: string[]; rep_min?: number | null; rep_max?: number | null }): Promise<Exercise> {
+    const cur = await this.db.exercises.get(id);
+    if (!cur) throw new Error('exercise not found');
+    const next: Exercise = { ...cur };
+    if (patch.name !== undefined) {
+      const errs = validateName('exercise name', patch.name);
+      if (errs.length) throw new Error(errs.join('; '));
+      next.name = patch.name.trim();
+      next.exercise_key = exerciseKey(next.name, cur.equipment);
+      const clash = await this.db.exercises.where('exercise_key').equals(next.exercise_key).first();
+      if (clash && clash.id !== id) throw new Error('another exercise already has that name with the same equipment');
+    }
+    if (patch.primary_muscles !== undefined) next.primary_muscles = patch.primary_muscles.map((m) => m.trim()).filter(Boolean).slice(0, 10);
+    if (patch.rep_min !== undefined || patch.rep_max !== undefined) {
+      const mn = patch.rep_min === undefined ? cur.rep_min ?? null : patch.rep_min;
+      const mx = patch.rep_max === undefined ? cur.rep_max ?? null : patch.rep_max;
+      const errs = validateRepRange(mn, mx);
+      if (errs.length) throw new Error(errs.join('; '));
+      next.rep_min = mn; next.rep_max = mx;
+    }
+    await this.db.exercises.put(next);
+    return next;
+  }
+
+  async getExercise(id: string): Promise<Exercise | undefined> {
+    return this.db.exercises.get(id);
+  }
+
+  /** Edit load, reps, RIR, warm-up flag, pain note of a logged set. Workout/exercise/ordinal are fixed. */
+  async updateSet(id: string, input: SetInput): Promise<SetRecord> {
+    const errs = validateSet(input);
+    if (errs.length) throw new Error(errs.join('; '));
+    const cur = await this.db.sets.get(id);
+    if (!cur) throw new Error('set not found');
+    const next: SetRecord = {
+      ...cur, load_kg: input.load_kg, reps: input.reps, rir: input.rir, warmup: input.warmup,
+      pain_note: input.pain_note && input.pain_note.trim() !== '' ? input.pain_note.trim() : null,
+    };
+    await this.db.sets.put(next);
+    return next;
+  }
+
+  /** Every logged set joined with its workout date and exercise, for weekly counts. */
+  async allSetsWithContext(): Promise<{ set: SetRecord; workout: Workout; exercise: Exercise }[]> {
+    const [sets, ws, exs] = await Promise.all([this.db.sets.toArray(), this.db.workouts.toArray(), this.db.exercises.toArray()]);
+    const wm = new Map(ws.map((w) => [w.id, w])), em = new Map(exs.map((e) => [e.id, e]));
+    const out: { set: SetRecord; workout: Workout; exercise: Exercise }[] = [];
+    for (const set of sets) {
+      const workout = wm.get(set.workout_id), exercise = em.get(set.exercise_id);
+      if (workout && exercise) out.push({ set, workout, exercise });
+    }
+    return out;
+  }
+
+  /** Sessions for one exercise, oldest first: workout + that exercise's sets in ordinal order. */
+  async exerciseHistory(exerciseId: string): Promise<{ workout: Workout; sets: SetRecord[] }[]> {
+    const sets = await this.db.sets.where('exercise_id').equals(exerciseId).toArray();
+    const ids = [...new Set(sets.map((s) => s.workout_id))];
+    const ws = (await this.db.workouts.bulkGet(ids)).filter((w): w is Workout => !!w);
+    ws.sort((a, b) => (workoutOrderKey(a) < workoutOrderKey(b) ? -1 : 1));
+    return ws.map((workout) => ({ workout, sets: sets.filter((s) => s.workout_id === workout.id).sort((a, b) => a.ordinal - b.ordinal) }));
   }
 }

@@ -25,6 +25,8 @@ export class RecompDB extends Dexie {
       workouts: 'id, date, status, &linked_activity_id',
       sets: 'id, workout_id, exercise_id',
     });
+    // Schema v3 (Stage 3): optional non-indexed fields (exercise rep range). No index change, data untouched.
+    this.version(3).stores({});
   }
 }
 
@@ -37,6 +39,7 @@ export interface Migration {
 export const MIGRATIONS: Migration[] = [
   { version: 1, name: 'initial schema: batches, activities, type_mappings' },
   { version: 2, name: 'stage 2: exercises, workouts, sets (additive)' },
+  { version: 3, name: 'stage 3: optional exercise rep range (no index change)' },
 ];
 
 export async function recordMigrations(db: RecompDB): Promise<void> {

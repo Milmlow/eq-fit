@@ -1,0 +1,195 @@
+{
+ "weekly_sets": {
+  "2026-10-19": {
+   "chest": 5,
+   "triceps": 2
+  },
+  "2026-10-26": {
+   "chest": 6,
+   "triceps": 3,
+   "unassigned": 1
+  }
+ },
+ "session_e1rm": {
+  "2026-10-25|bench": {
+   "epley": 101.3,
+   "brzycki": 99.3,
+   "actual": false,
+   "low_confidence": false,
+   "load": 80,
+   "reps": 8
+  },
+  "2026-10-25|cpA": {
+   "epley": 66.7,
+   "brzycki": 66.7,
+   "actual": false,
+   "low_confidence": false,
+   "load": 50,
+   "reps": 10
+  },
+  "2026-10-25|incline": {
+   "epley": 42.0,
+   "brzycki": 43.2,
+   "actual": false,
+   "low_confidence": true,
+   "load": 30,
+   "reps": 12
+  },
+  "2026-10-26|bench": {
+   "epley": 100.0,
+   "brzycki": 100.0,
+   "actual": true,
+   "low_confidence": false,
+   "load": 100,
+   "reps": 1
+  },
+  "2026-10-26|carry": {
+   "epley": 40.0,
+   "brzycki": 40.0,
+   "actual": true,
+   "low_confidence": false,
+   "load": 40,
+   "reps": 1
+  },
+  "2026-10-26|cpA": {
+   "epley": 71.5,
+   "brzycki": 70.7,
+   "actual": false,
+   "low_confidence": false,
+   "load": 55,
+   "reps": 9
+  },
+  "2026-10-26|cpB": {
+   "epley": 88.7,
+   "brzycki": 86.9,
+   "actual": false,
+   "low_confidence": false,
+   "load": 70,
+   "reps": 8
+  },
+  "2026-10-26|incline": {
+   "epley": 40.5,
+   "brzycki": 39.7,
+   "actual": false,
+   "low_confidence": false,
+   "load": 32,
+   "reps": 8
+  }
+ },
+ "hints": {
+  "bench@2026-10-25": "stay",
+  "bench@2026-10-26": "stay",
+  "incline@2026-10-25": "stay",
+  "incline@2026-10-26": "stay",
+  "cpA@2026-10-25": "increase",
+  "cpA@2026-10-26": "review_pain_note",
+  "cpB@2026-10-26": null,
+  "carry@2026-10-26": null
+ },
+ "hint_cases": [
+  {
+   "range": [
+    8,
+    10
+   ],
+   "sets": [
+    [
+     10,
+     2
+    ],
+    [
+     10,
+     3
+    ],
+    [
+     11,
+     null
+    ]
+   ],
+   "pain": false,
+   "expected": "increase"
+  },
+  {
+   "range": [
+    8,
+    10
+   ],
+   "sets": [
+    [
+     10,
+     0
+    ],
+    [
+     10,
+     2
+    ]
+   ],
+   "pain": false,
+   "expected": "stay"
+  },
+  {
+   "range": [
+    8,
+    10
+   ],
+   "sets": [
+    [
+     10,
+     4
+    ],
+    [
+     10,
+     2
+    ]
+   ],
+   "pain": false,
+   "expected": "stay"
+  },
+  {
+   "range": [
+    8,
+    10
+   ],
+   "sets": [
+    [
+     10,
+     2
+    ],
+    [
+     9,
+     2
+    ]
+   ],
+   "pain": false,
+   "expected": "stay"
+  },
+  {
+   "range": [
+    8,
+    10
+   ],
+   "sets": [
+    [
+     10,
+     2
+    ]
+   ],
+   "pain": true,
+   "expected": "review_pain_note"
+  },
+  {
+   "range": [
+    8,
+    10
+   ],
+   "sets": [
+    [
+     null,
+     2
+    ]
+   ],
+   "pain": false,
+   "expected": "stay"
+  }
+ ]
+}

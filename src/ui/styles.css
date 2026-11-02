@@ -50,3 +50,10 @@ nav { flex-wrap: wrap; }
 @media (max-width: 480px) { .grid3 { gap: 6px; } nav button { flex: 1 1 30%; padding: 8px 6px; } }
 .sets li { flex-wrap: wrap; } .sets li > span { min-width: 0; overflow-wrap: anywhere; flex: 1 1 140px; }
 @media (max-width: 480px) { .scroll table th, .scroll table td { padding: 6px 3px; font-size: .85rem; } }
+/* Stage 3 */
+.hint { background: var(--bg); border-left: 3px dashed var(--acc); padding: 6px 10px; border-radius: 6px; }
+.session { border-top: 1px solid var(--line); padding: 8px 0; } h5 { font-size: 1rem; }
+.edit-set { width: 100%; }
+.sets li:has(.edit-set) { display: block; }
+.sets li button { white-space: nowrap; flex: none; }
+.sets li > .row { flex: none; }

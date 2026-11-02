@@ -56,6 +56,9 @@ export interface Exercise extends Base {
   name: string;
   equipment: string; // '' when not stated. Different equipment = different exercise (never equivalent).
   primary_muscles: string[];
+  /** Optional user-entered rep range for double progression. Absent/null = no progression hint. */
+  rep_min?: number | null;
+  rep_max?: number | null;
   exercise_key: string; // lower(name) + '|' + lower(equipment): uniqueness and comparability key
   created_at: string;
 }
