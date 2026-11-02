@@ -5,7 +5,7 @@ import { canShareFile, dated, saveTextFile, shareTextFile } from '../lib/downloa
 import { backupStatus, describeAge, describePersistence, type PersistState } from '../lib/storage';
 
 const LABELS: Record<keyof BackupCounts, string> = {
-  batches: 'import batches', activities: 'activities', type_mappings: 'type mappings', exercises: 'exercises', workouts: 'workouts', sets: 'sets',
+  batches: 'import batches', activities: 'activities', type_mappings: 'type mappings', exercises: 'exercises', workouts: 'workouts', sets: 'sets', goals: 'goal revisions', checkins: 'check-ins',
 };
 const JSON_MIME = 'application/json';
 const CSV_MIME = 'text/csv;charset=utf-8';
@@ -46,12 +46,12 @@ export function BackupSection({ repo, today, lastBackup, onBackedUp, onRestored,
     } finally { setBusy(false); }
   }
 
-  async function exportCsv(which: 'sets' | 'running') {
+  async function exportCsv(which: 'sets' | 'running' | 'checkins' | 'goals') {
     setBusy(true); setMsg(null);
     try {
       const now = new Date();
-      const text = which === 'sets' ? await repo.exportSetsCsv() : await repo.exportRunningCsv(today);
-      const name = dated(which === 'sets' ? 'eq-fit-workouts' : 'eq-fit-running', 'csv', now);
+      const text = which === 'sets' ? await repo.exportSetsCsv() : which === 'running' ? await repo.exportRunningCsv(today) : which === 'checkins' ? await repo.exportCheckinsCsv() : await repo.exportGoalsCsv();
+      const name = dated({ sets: 'eq-fit-workouts', running: 'eq-fit-running', checkins: 'eq-fit-checkins', goals: 'eq-fit-goals' }[which], 'csv', now);
       saveTextFile(name, text, CSV_MIME);
       setMsg({ kind: 'ok', text: `CSV created: ${name}. Text that starts with = + - @ is saved with a leading apostrophe so spreadsheets do not run it as a formula.` });
     } catch (e) {
@@ -92,7 +92,7 @@ export function BackupSection({ repo, today, lastBackup, onBackedUp, onRestored,
   return (
     <section className="card backup" aria-labelledby="backup-h">
       <h3 id="backup-h">Backup and restore</h3>
-      <p className="privacy" data-testid="privacy-warning"><strong>Keep the backup file private.</strong> It holds your full activity and training history. Do not share it, email it, or put it anywhere public.</p>
+      <p className="privacy" data-testid="privacy-warning"><strong>Keep the backup file private.</strong> It holds your full activity, training history and body measurements. Do not share it, email it, or put it anywhere public.</p>
       <p data-testid="last-backup">
         {status.days === null
           ? <>Last backup: <strong>never</strong>.</>
@@ -153,6 +153,8 @@ export function BackupSection({ repo, today, lastBackup, onBackedUp, onRestored,
       <div className="row gap wrap actions">
         <button type="button" disabled={busy} onClick={() => void exportCsv('sets')}>Workouts and sets (CSV)</button>
         <button type="button" disabled={busy} onClick={() => void exportCsv('running')}>Running periods (CSV)</button>
+        <button type="button" disabled={busy} onClick={() => void exportCsv('checkins')}>Check-ins (CSV)</button>
+        <button type="button" disabled={busy} onClick={() => void exportCsv('goals')}>Goals (CSV)</button>
       </div>
 
       <h4>Storage</h4>

@@ -4,6 +4,7 @@ import type { Activity, Workout } from '../db/types';
 import { addDays, mondayOf } from '../lib/summary';
 import { baselinePerWeek, fallbackDates, WEEKDAYS, weekDates } from '../lib/week';
 import { Badge } from './Badge';
+import { Goals } from './Goals';
 
 type Act = Activity & { group: string };
 
@@ -51,6 +52,7 @@ export function Week({ repo, today, version, onChanged }: { repo: Repo; today: s
           : <>No imported history in the previous 4 weeks, so there is no baseline.</>}
       </p>
       <p>This week: {plannedCount} planned, {doneCount} done <Badge kind="reported" /></p>
+      <Goals repo={repo} today={today} weekOf={anchor} version={version} onChanged={onChanged} manage heading="Goals" />
       {error && <p role="alert" className="error">{error}</p>}
 
       <ul className="days">

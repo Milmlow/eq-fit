@@ -1,0 +1,47 @@
+/* Stage 5: achieved PR, goals, bests, check-in. Colours come only from the theme tokens in themes.css. */
+
+/* Achieved PR (solid, so it cannot be mistaken for the outline "possible" stamp) */
+.pr-done { margin: 12px 0 0; padding: 10px 14px; background: var(--accent); color: var(--on-accent); border: 3px solid var(--fg); border-radius: var(--radius); }
+.pr-done-head { margin: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-weight: 800; font-size: 1.1rem; }
+.pr-done-stamp { font-style: italic; font-weight: 900; font-stretch: 80%; text-transform: uppercase; font-size: 1.6rem; line-height: 1; border: 3px solid var(--on-accent); border-radius: 50%; padding: 4px 12px; transform: rotate(-4deg); }
+.pr-done ul { margin: 6px 0 0; padding-left: 20px; }
+.pr-done li { margin: 2px 0; overflow-wrap: anywhere; }
+.pr-chip { display: inline-block; background: var(--accent); color: var(--on-accent); font-weight: 800; font-size: .85rem; padding: 2px 10px; border-radius: 999px; text-transform: uppercase; font-style: italic; }
+.pr-banner { background: var(--accent); color: var(--on-accent); font-weight: 700; padding: 8px 12px; border-radius: 8px; margin: 8px 0; }
+
+/* Goals */
+.goal { border-top: 1px solid var(--line); padding: 10px 0; }
+.goal:first-of-type { border-top: 0; }
+.goal-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: baseline; }
+.goal-name { font-weight: 700; overflow-wrap: anywhere; min-width: 0; }
+.bar { height: 16px; border: 2px solid var(--line); border-radius: 999px; background: var(--paper); overflow: hidden; margin: 6px 0 4px; }
+.bar > span { display: block; height: 100%; background: var(--acc); }
+.bar.met > span { background: var(--fg); }
+.goal-text { margin: 0; color: var(--fg); }
+.goal-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.goal-actions button, .tmpl button { min-height: 44px; min-width: 44px; }
+.tmpl { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+
+/* Bests */
+.bests-table td, .bests-table th { vertical-align: top; }
+
+/* Check-in */
+.mean-line { margin: 4px 0; }
+.mean-line b { font-size: 1.15rem; }
+.chart { width: 100%; height: auto; max-height: 220px; display: block; }
+.chart text { fill: var(--muted); font: 11px var(--font); }
+.chart .axis { stroke: var(--line); stroke-width: 1; }
+.chart .win { fill: none; stroke: var(--line); stroke-width: 1; stroke-dasharray: 3 3; }
+.chart circle { fill: var(--focus); stroke: var(--fg); stroke-width: 1; }
+.checkin-list { list-style: none; padding: 0; margin: 8px 0 0; }
+.checkin-list li { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.checkin-list li > span { min-width: 0; overflow-wrap: anywhere; flex: 1 1 200px; }
+.checkin-list button { min-height: 44px; min-width: 44px; }
+.field input[type="date"] { min-height: 48px; }
+
+.bests-list { list-style: none; padding: 0; margin: 8px 0; }
+.bests-list li { border-top: 1px solid var(--line); padding: 8px 0; display: grid; gap: 2px; }
+.bests-list li:first-child { border-top: 0; }
+.bl { font-weight: 700; }
+.bv { font-size: 1.6rem; font-weight: 900; font-style: italic; font-variant-numeric: tabular-nums; }
+.bm { color: var(--muted); overflow-wrap: anywhere; }

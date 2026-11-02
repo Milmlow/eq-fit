@@ -1,6 +1,6 @@
 // CSV export (workouts/sets and running periods). Text cells are guarded against spreadsheet formula injection:
 // a text cell that starts with = + - @ tab or CR gets a leading apostrophe. Numbers are written as numbers (they cannot be formulas).
-import type { Exercise, SetRecord, Workout } from '../db/types';
+import type { Checkin, Exercise, GoalRevision, SetRecord, Workout } from '../db/types';
 import { lastCompleteMonth, recentCompleteWeeks, summariseRuns, type RunInput } from './running';
 import { workoutOrderKey } from './training';
 
@@ -56,4 +56,17 @@ export function runningCsv(rows: RunInput[], today: string): string {
     for (const p of periods) out.push([p.label, p.start, p.end, tread, p.runs, p.runsWithPace, p.km, p.paceSecPerKm]);
   }
   return toCsv(RUNNING_HEADER, out);
+}
+
+export const CHECKINS_HEADER = ['date', 'weight_kg', 'waist_cm', 'note'];
+/** One row per date, oldest first. An unmeasured value stays blank (never 0). */
+export function checkinsCsv(checkins: Checkin[]): string {
+  return toCsv(CHECKINS_HEADER, [...checkins].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0)).map((c) => [c.date, c.weight_kg, c.waist_cm, c.note]));
+}
+
+export const GOALS_HEADER = ['goal_id', 'effective_from', 'name', 'type', 'target', 'muscle', 'include_treadmill', 'archived'];
+/** Every revision of every goal (history included), oldest first. */
+export function goalsCsv(goals: GoalRevision[]): string {
+  return toCsv(GOALS_HEADER, [...goals].sort((a, b) => (a.effective_from !== b.effective_from ? (a.effective_from < b.effective_from ? -1 : 1) : a.created_at < b.created_at ? -1 : 1))
+    .map((g) => [g.goal_id, g.effective_from, g.name, g.kind, g.target, g.muscle, g.include_treadmill, g.archived]));
 }

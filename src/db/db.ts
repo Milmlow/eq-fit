@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { Activity, Exercise, ImportBatch, MigrationRecord, SetRecord, TypeMapping, Workout } from './types';
+import type { Activity, Checkin, Exercise, GoalRevision, ImportBatch, MigrationRecord, SetRecord, TypeMapping, Workout } from './types';
 
 export class RecompDB extends Dexie {
   migrations!: Table<MigrationRecord, number>;
@@ -9,6 +9,8 @@ export class RecompDB extends Dexie {
   exercises!: Table<Exercise, string>;
   workouts!: Table<Workout, string>;
   sets!: Table<SetRecord, string>;
+  goals!: Table<GoalRevision, string>;
+  checkins!: Table<Checkin, string>;
 
   constructor(name = 'recomp') {
     super(name);
@@ -27,6 +29,11 @@ export class RecompDB extends Dexie {
     });
     // Schema v3 (Stage 3): optional non-indexed fields (exercise rep range). No index change, data untouched.
     this.version(3).stores({});
+    // Schema v4 (Stage 5): additive only. New tables goals (revisions) and checkins (one per date). Existing tables and data are untouched.
+    this.version(4).stores({
+      goals: 'id, goal_id, effective_from',
+      checkins: 'id, &date',
+    });
   }
 }
 
@@ -40,6 +47,7 @@ export const MIGRATIONS: Migration[] = [
   { version: 1, name: 'initial schema: batches, activities, type_mappings' },
   { version: 2, name: 'stage 2: exercises, workouts, sets (additive)' },
   { version: 3, name: 'stage 3: optional exercise rep range (no index change)' },
+  { version: 4, name: 'stage 5: goals (revisions with effective_from) and checkins (additive)' },
 ];
 
 export async function recordMigrations(db: RecompDB): Promise<void> {

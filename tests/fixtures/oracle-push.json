@@ -1,0 +1,881 @@
+{
+ "pr": {
+  "input": [
+   {
+    "id": "s16",
+    "workout_id": "wC1",
+    "exercise_id": "exC",
+    "ordinal": 1,
+    "load_kg": 100,
+    "reps": 5,
+    "warmup": false,
+    "date": "2026-10-14",
+    "workout_created_at": "2026-10-14T07:00:00.000Z"
+   },
+   {
+    "id": "s15",
+    "workout_id": "wA3",
+    "exercise_id": "exB",
+    "ordinal": 1,
+    "load_kg": 35,
+    "reps": 10,
+    "warmup": false,
+    "date": "2026-10-19",
+    "workout_created_at": "2026-10-19T07:00:00.000Z"
+   },
+   {
+    "id": "s14",
+    "workout_id": "wA2",
+    "exercise_id": "exB",
+    "ordinal": 1,
+    "load_kg": 30,
+    "reps": 10,
+    "warmup": false,
+    "date": "2026-10-12",
+    "workout_created_at": "2026-10-12T07:00:00.000Z"
+   },
+   {
+    "id": "s13",
+    "workout_id": "wA5",
+    "exercise_id": "exA",
+    "ordinal": 2,
+    "load_kg": 82.5,
+    "reps": 1,
+    "warmup": false,
+    "date": "2026-10-26",
+    "workout_created_at": "2026-10-26T17:00:00.000Z"
+   },
+   {
+    "id": "s12",
+    "workout_id": "wA5",
+    "exercise_id": "exA",
+    "ordinal": 1,
+    "load_kg": 80,
+    "reps": 1,
+    "warmup": false,
+    "date": "2026-10-26",
+    "workout_created_at": "2026-10-26T17:00:00.000Z"
+   },
+   {
+    "id": "s11",
+    "workout_id": "wA4",
+    "exercise_id": "exA",
+    "ordinal": 1,
+    "load_kg": 80,
+    "reps": 1,
+    "warmup": false,
+    "date": "2026-10-26",
+    "workout_created_at": "2026-10-26T08:00:00.000Z"
+   },
+   {
+    "id": "s10",
+    "workout_id": "wA3",
+    "exercise_id": "exA",
+    "ordinal": 5,
+    "load_kg": 10,
+    "reps": 40,
+    "warmup": false,
+    "date": "2026-10-19",
+    "workout_created_at": "2026-10-19T07:00:00.000Z"
+   },
+   {
+    "id": "s9",
+    "workout_id": "wA3",
+    "exercise_id": "exA",
+    "ordinal": 4,
+    "load_kg": 200,
+    "reps": 1,
+    "warmup": true,
+    "date": "2026-10-19",
+    "workout_created_at": "2026-10-19T07:00:00.000Z"
+   },
+   {
+    "id": "s8",
+    "workout_id": "wA3",
+    "exercise_id": "exA",
+    "ordinal": 3,
+    "load_kg": null,
+    "reps": 10,
+    "warmup": false,
+    "date": "2026-10-19",
+    "workout_created_at": "2026-10-19T07:00:00.000Z"
+   },
+   {
+    "id": "s7",
+    "workout_id": "wA3",
+    "exercise_id": "exA",
+    "ordinal": 2,
+    "load_kg": 60,
+    "reps": null,
+    "warmup": false,
+    "date": "2026-10-19",
+    "workout_created_at": "2026-10-19T07:00:00.000Z"
+   },
+   {
+    "id": "s6",
+    "workout_id": "wA3",
+    "exercise_id": "exA",
+    "ordinal": 1,
+    "load_kg": 65,
+    "reps": 5,
+    "warmup": false,
+    "date": "2026-10-19",
+    "workout_created_at": "2026-10-19T07:00:00.000Z"
+   },
+   {
+    "id": "s5",
+    "workout_id": "wA2",
+    "exercise_id": "exA",
+    "ordinal": 3,
+    "load_kg": 62.5,
+    "reps": 8,
+    "warmup": false,
+    "date": "2026-10-12",
+    "workout_created_at": "2026-10-12T07:00:00.000Z"
+   },
+   {
+    "id": "s4",
+    "workout_id": "wA2",
+    "exercise_id": "exA",
+    "ordinal": 2,
+    "load_kg": 62.5,
+    "reps": 8,
+    "warmup": false,
+    "date": "2026-10-12",
+    "workout_created_at": "2026-10-12T07:00:00.000Z"
+   },
+   {
+    "id": "s3",
+    "workout_id": "wA2",
+    "exercise_id": "exA",
+    "ordinal": 1,
+    "load_kg": 60,
+    "reps": 8,
+    "warmup": false,
+    "date": "2026-10-12",
+    "workout_created_at": "2026-10-12T07:00:00.000Z"
+   },
+   {
+    "id": "s2",
+    "workout_id": "wA1",
+    "exercise_id": "exA",
+    "ordinal": 2,
+    "load_kg": 100,
+    "reps": 10,
+    "warmup": true,
+    "date": "2026-10-05",
+    "workout_created_at": "2026-10-05T07:00:00.000Z"
+   },
+   {
+    "id": "s1",
+    "workout_id": "wA1",
+    "exercise_id": "exA",
+    "ordinal": 1,
+    "load_kg": 60,
+    "reps": 8,
+    "warmup": false,
+    "date": "2026-10-05",
+    "workout_created_at": "2026-10-05T07:00:00.000Z"
+   }
+  ],
+  "expected_set_ids": [
+   "s11",
+   "s13",
+   "s15",
+   "s4"
+  ],
+  "expected": [
+   {
+    "setId": "s11",
+    "e1rm": 80.0,
+    "previousBest": 79.2
+   },
+   {
+    "setId": "s13",
+    "e1rm": 82.5,
+    "previousBest": 80.0
+   },
+   {
+    "setId": "s15",
+    "e1rm": 46.7,
+    "previousBest": 40.0
+   },
+   {
+    "setId": "s4",
+    "e1rm": 79.2,
+    "previousBest": 76.0
+   }
+  ]
+ },
+ "goals": {
+  "revisions": [
+   {
+    "id": "g1a",
+    "goal_id": "g1a",
+    "kind": "lifts_per_week",
+    "name": "Lift 3x",
+    "target": 3,
+    "muscle": null,
+    "include_treadmill": false,
+    "effective_from": "2026-10-14",
+    "archived": false,
+    "created_at": "2026-10-14T01:00:00.000Z"
+   },
+   {
+    "id": "g2a",
+    "goal_id": "g2a",
+    "kind": "runs_per_week",
+    "name": "Run twice",
+    "target": 2,
+    "muscle": null,
+    "include_treadmill": false,
+    "effective_from": "2026-10-12",
+    "archived": false,
+    "created_at": "2026-10-14T02:00:00.000Z"
+   },
+   {
+    "id": "g3a",
+    "goal_id": "g3a",
+    "kind": "km_per_week",
+    "name": "<b>20 km</b>",
+    "target": 20,
+    "muscle": null,
+    "include_treadmill": true,
+    "effective_from": "2026-10-19",
+    "archived": false,
+    "created_at": "2026-10-19T01:00:00.000Z"
+   },
+   {
+    "id": "g4a",
+    "goal_id": "g4a",
+    "kind": "sets_per_muscle_per_week",
+    "name": "Chest sets",
+    "target": 10,
+    "muscle": "chest",
+    "include_treadmill": false,
+    "effective_from": "2026-10-19",
+    "archived": false,
+    "created_at": "2026-10-19T02:00:00.000Z"
+   },
+   {
+    "id": "g1b",
+    "goal_id": "g1a",
+    "kind": "lifts_per_week",
+    "name": "Lift 4x",
+    "target": 4,
+    "muscle": null,
+    "include_treadmill": false,
+    "effective_from": "2026-10-26",
+    "archived": false,
+    "created_at": "2026-10-28T01:00:00.000Z"
+   },
+   {
+    "id": "g2b",
+    "goal_id": "g2a",
+    "kind": "runs_per_week",
+    "name": "Run twice",
+    "target": 2,
+    "muscle": null,
+    "include_treadmill": false,
+    "effective_from": "2026-11-02",
+    "archived": true,
+    "created_at": "2026-11-02T01:00:00.000Z"
+   }
+  ],
+  "facts": {
+   "activities": [
+    {
+     "id": "a1",
+     "date": "2026-10-18",
+     "group": "weights",
+     "distance_km": null
+    },
+    {
+     "id": "a2",
+     "date": "2026-10-19",
+     "group": "weights",
+     "distance_km": null
+    },
+    {
+     "id": "a3",
+     "date": "2026-10-25",
+     "group": "weights",
+     "distance_km": null
+    },
+    {
+     "id": "a4",
+     "date": "2026-10-26",
+     "group": "weights",
+     "distance_km": null
+    },
+    {
+     "id": "a5",
+     "date": "2026-10-25",
+     "group": "outdoor_run",
+     "distance_km": 5.0
+    },
+    {
+     "id": "a6",
+     "date": "2026-10-26",
+     "group": "outdoor_run",
+     "distance_km": 8.25
+    },
+    {
+     "id": "a7",
+     "date": "2026-10-26",
+     "group": "treadmill_run",
+     "distance_km": 3.1
+    },
+    {
+     "id": "a8",
+     "date": "2026-11-01",
+     "group": "outdoor_run",
+     "distance_km": null
+    },
+    {
+     "id": "a9",
+     "date": "2026-11-02",
+     "group": "outdoor_run",
+     "distance_km": 10.0
+    },
+    {
+     "id": "a10",
+     "date": "2026-10-27",
+     "group": "other",
+     "distance_km": 2.0
+    }
+   ],
+   "workouts": [
+    {
+     "id": "w1",
+     "date": "2026-10-25",
+     "kind": "weights",
+     "status": "done",
+     "linked_activity_id": "a3"
+    },
+    {
+     "id": "w2",
+     "date": "2026-10-25",
+     "kind": "weights",
+     "status": "done",
+     "linked_activity_id": null
+    },
+    {
+     "id": "w3",
+     "date": "2026-10-26",
+     "kind": "weights",
+     "status": "done",
+     "linked_activity_id": null
+    },
+    {
+     "id": "w4",
+     "date": "2026-10-27",
+     "kind": "weights",
+     "status": "planned",
+     "linked_activity_id": null
+    },
+    {
+     "id": "w5",
+     "date": "2026-10-28",
+     "kind": "run",
+     "status": "done",
+     "linked_activity_id": null
+    },
+    {
+     "id": "w6",
+     "date": "2026-10-18",
+     "kind": "weights",
+     "status": "done",
+     "linked_activity_id": null
+    }
+   ],
+   "sets": [
+    {
+     "date": "2026-10-25",
+     "warmup": false,
+     "muscles": [
+      "chest"
+     ]
+    },
+    {
+     "date": "2026-10-25",
+     "warmup": false,
+     "muscles": [
+      "chest"
+     ]
+    },
+    {
+     "date": "2026-10-25",
+     "warmup": false,
+     "muscles": [
+      "chest"
+     ]
+    },
+    {
+     "date": "2026-10-25",
+     "warmup": true,
+     "muscles": [
+      "chest"
+     ]
+    },
+    {
+     "date": "2026-10-25",
+     "warmup": false,
+     "muscles": [
+      "Chest ",
+      "Triceps"
+     ]
+    },
+    {
+     "date": "2026-10-25",
+     "warmup": false,
+     "muscles": [
+      "back"
+     ]
+    },
+    {
+     "date": "2026-10-26",
+     "warmup": false,
+     "muscles": [
+      "chest"
+     ]
+    },
+    {
+     "date": "2026-10-26",
+     "warmup": false,
+     "muscles": [
+      "chest"
+     ]
+    },
+    {
+     "date": "2026-10-26",
+     "warmup": false,
+     "muscles": [
+      "back"
+     ]
+    },
+    {
+     "date": "2026-10-26",
+     "warmup": false,
+     "muscles": [
+      "back"
+     ]
+    }
+   ]
+  },
+  "weeks": [
+   "2026-10-12",
+   "2026-10-19",
+   "2026-10-26",
+   "2026-11-02"
+  ],
+  "expected_full": {
+   "2026-10-12": [
+    {
+     "rev_id": "g1a",
+     "value": 2,
+     "target": 3,
+     "met": false,
+     "partial": false
+    },
+    {
+     "rev_id": "g2a",
+     "value": 0,
+     "target": 2,
+     "met": false,
+     "partial": false
+    }
+   ],
+   "2026-10-19": [
+    {
+     "rev_id": "g1a",
+     "value": 3,
+     "target": 3,
+     "met": true,
+     "partial": false
+    },
+    {
+     "rev_id": "g2a",
+     "value": 1,
+     "target": 2,
+     "met": false,
+     "partial": false
+    },
+    {
+     "rev_id": "g3a",
+     "value": 5.0,
+     "target": 20,
+     "met": false,
+     "partial": false
+    },
+    {
+     "rev_id": "g4a",
+     "value": 4,
+     "target": 10,
+     "met": false,
+     "partial": false
+    }
+   ],
+   "2026-10-26": [
+    {
+     "rev_id": "g1b",
+     "value": 2,
+     "target": 4,
+     "met": false,
+     "partial": false
+    },
+    {
+     "rev_id": "g2a",
+     "value": 3,
+     "target": 2,
+     "met": true,
+     "partial": false
+    },
+    {
+     "rev_id": "g3a",
+     "value": 11.35,
+     "target": 20,
+     "met": false,
+     "partial": false
+    },
+    {
+     "rev_id": "g4a",
+     "value": 2,
+     "target": 10,
+     "met": false,
+     "partial": false
+    }
+   ],
+   "2026-11-02": [
+    {
+     "rev_id": "g1b",
+     "value": 0,
+     "target": 4,
+     "met": false,
+     "partial": false
+    },
+    {
+     "rev_id": "g3a",
+     "value": 10.0,
+     "target": 20,
+     "met": false,
+     "partial": false
+    },
+    {
+     "rev_id": "g4a",
+     "value": 0,
+     "target": 10,
+     "met": false,
+     "partial": false
+    }
+   ]
+  },
+  "expected_lagging": {
+   "2026-10-12": [
+    {
+     "rev_id": "g1a",
+     "value": 2,
+     "target": 3,
+     "met": false,
+     "partial": false
+    },
+    {
+     "rev_id": "g2a",
+     "value": 0,
+     "target": 2,
+     "met": false,
+     "partial": false
+    }
+   ],
+   "2026-10-19": [
+    {
+     "rev_id": "g1a",
+     "value": 3,
+     "target": 3,
+     "met": true,
+     "partial": false
+    },
+    {
+     "rev_id": "g2a",
+     "value": 1,
+     "target": 2,
+     "met": false,
+     "partial": false
+    },
+    {
+     "rev_id": "g3a",
+     "value": 5.0,
+     "target": 20,
+     "met": false,
+     "partial": false
+    },
+    {
+     "rev_id": "g4a",
+     "value": 4,
+     "target": 10,
+     "met": false,
+     "partial": false
+    }
+   ],
+   "2026-10-26": [
+    {
+     "rev_id": "g1b",
+     "value": 2,
+     "target": 4,
+     "met": false,
+     "partial": true
+    },
+    {
+     "rev_id": "g2a",
+     "value": 3,
+     "target": 2,
+     "met": true,
+     "partial": true
+    },
+    {
+     "rev_id": "g3a",
+     "value": 11.35,
+     "target": 20,
+     "met": false,
+     "partial": true
+    },
+    {
+     "rev_id": "g4a",
+     "value": 2,
+     "target": 10,
+     "met": false,
+     "partial": false
+    }
+   ],
+   "2026-11-02": [
+    {
+     "rev_id": "g1b",
+     "value": 0,
+     "target": 4,
+     "met": false,
+     "partial": true
+    },
+    {
+     "rev_id": "g3a",
+     "value": 10.0,
+     "target": 20,
+     "met": false,
+     "partial": true
+    },
+    {
+     "rev_id": "g4a",
+     "value": 0,
+     "target": 10,
+     "met": false,
+     "partial": false
+    }
+   ]
+  },
+  "latest_full": "2026-11-02",
+  "latest_lagging": "2026-10-20"
+ },
+ "bests": {
+  "runs": [
+   {
+    "date": "2026-10-05",
+    "group": "outdoor_run",
+    "distance_km": 5.0,
+    "avg_pace_sec_per_km": 300
+   },
+   {
+    "date": "2026-10-07",
+    "group": "outdoor_run",
+    "distance_km": 10.0,
+    "avg_pace_sec_per_km": 310
+   },
+   {
+    "date": "2026-10-09",
+    "group": "outdoor_run",
+    "distance_km": 4.9,
+    "avg_pace_sec_per_km": 280
+   },
+   {
+    "date": "2026-10-13",
+    "group": "outdoor_run",
+    "distance_km": 12.0,
+    "avg_pace_sec_per_km": null
+   },
+   {
+    "date": "2026-10-14",
+    "group": "outdoor_run",
+    "distance_km": 21.1,
+    "avg_pace_sec_per_km": 345
+   },
+   {
+    "date": "2026-10-16",
+    "group": "treadmill_run",
+    "distance_km": 10.5,
+    "avg_pace_sec_per_km": 270
+   },
+   {
+    "date": "2026-10-20",
+    "group": "outdoor_run",
+    "distance_km": null,
+    "avg_pace_sec_per_km": 250
+   },
+   {
+    "date": "2026-10-21",
+    "group": "outdoor_run",
+    "distance_km": 5.2,
+    "avg_pace_sec_per_km": 290
+   },
+   {
+    "date": "2026-10-23",
+    "group": "outdoor_run",
+    "distance_km": 5.0,
+    "avg_pace_sec_per_km": 290
+   }
+  ],
+  "expected": {
+   "fastest5k": {
+    "value": 290,
+    "date": "2026-10-21",
+    "n": 5
+   },
+   "fastest10k": {
+    "value": 310,
+    "date": "2026-10-07",
+    "n": 2
+   },
+   "longest": {
+    "value": 21.1,
+    "date": "2026-10-14",
+    "n": 6
+   },
+   "bestWeek": {
+    "value": 21.1,
+    "date": "2026-10-12",
+    "n": 3,
+    "runsInWeek": 1
+   }
+  },
+  "expected_empty": {
+   "fastest5k": {
+    "value": null,
+    "date": null,
+    "n": 0
+   },
+   "fastest10k": {
+    "value": null,
+    "date": null,
+    "n": 0
+   },
+   "longest": {
+    "value": null,
+    "date": null,
+    "n": 0
+   },
+   "bestWeek": {
+    "value": null,
+    "date": null,
+    "n": 0
+   }
+  }
+ },
+ "checkins": {
+  "entries": [
+   {
+    "date": "2026-10-25",
+    "weight_kg": 83.0,
+    "waist_cm": null
+   },
+   {
+    "date": "2026-10-26",
+    "weight_kg": 82.4,
+    "waist_cm": 90.0
+   },
+   {
+    "date": "2026-10-27",
+    "weight_kg": 82.0,
+    "waist_cm": null
+   },
+   {
+    "date": "2026-10-29",
+    "weight_kg": 81.6,
+    "waist_cm": 89.5
+   },
+   {
+    "date": "2026-10-31",
+    "weight_kg": 81.9,
+    "waist_cm": null
+   },
+   {
+    "date": "2026-11-02",
+    "weight_kg": 81.5,
+    "waist_cm": 89.0
+   },
+   {
+    "date": "2026-11-04",
+    "weight_kg": 70.0,
+    "waist_cm": 70.0
+   }
+  ],
+  "cases": [
+   {
+    "selected": "2026-11-01",
+    "weight": {
+     "mean": 81.98,
+     "n": 4,
+     "start": "2026-10-26",
+     "end": "2026-11-01"
+    },
+    "waist": {
+     "mean": 89.75,
+     "n": 2,
+     "start": "2026-10-26",
+     "end": "2026-11-01"
+    }
+   },
+   {
+    "selected": "2026-11-02",
+    "weight": {
+     "mean": 81.75,
+     "n": 4,
+     "start": "2026-10-27",
+     "end": "2026-11-02"
+    },
+    "waist": {
+     "mean": 89.25,
+     "n": 2,
+     "start": "2026-10-27",
+     "end": "2026-11-02"
+    }
+   },
+   {
+    "selected": "2026-10-20",
+    "weight": {
+     "mean": null,
+     "n": 0,
+     "start": "2026-10-14",
+     "end": "2026-10-20"
+    },
+    "waist": {
+     "mean": null,
+     "n": 0,
+     "start": "2026-10-14",
+     "end": "2026-10-20"
+    }
+   },
+   {
+    "selected": "2026-10-31",
+    "weight": {
+     "mean": 82.18,
+     "n": 5,
+     "start": "2026-10-25",
+     "end": "2026-10-31"
+    },
+    "waist": {
+     "mean": 89.75,
+     "n": 2,
+     "start": "2026-10-25",
+     "end": "2026-10-31"
+    }
+   }
+  ]
+ }
+}

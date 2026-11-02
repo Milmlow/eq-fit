@@ -6,6 +6,7 @@ import { loadHero, type HeroData } from '../lib/hero';
 import { startToday } from '../lib/start';
 import type { ThemeName } from '../lib/theme';
 import { Badge } from './Badge';
+import { CheckIn } from './CheckIn';
 import { TodayHero } from './TodayHero';
 import { WorkoutEditor } from './WorkoutEditor';
 
@@ -81,6 +82,7 @@ export function Today({ repo, today, version, onChanged, theme }: { repo: Repo; 
     <div className="today-wrap">
       {hero && <TodayHero data={hero} theme={theme} onStart={() => void start()} starting={starting} demo={false} />}
       {!hero && <p>Loading...</p>}
+      <CheckIn repo={repo} today={today} version={version} onChanged={onChanged} compact />
       {error && <p role="alert" className="error">{error}</p>}
       <section aria-labelledby="today-h" className="today-log">
         <h2 id="today-h">Today <span className="muted">{today}</span></h2>

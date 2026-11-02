@@ -15,6 +15,10 @@ const V3 = fx('synthetic-backup-v3.json') as BackupDoc;
 const V2 = fx('synthetic-backup-v2.json') as BackupDoc;
 const V1 = fx('synthetic-backup-v1.json') as BackupDoc;
 const ORACLE = fx('oracle-backup-expected.json');
+/** The six tables that exist in v1-v3 backups. */
+const OLD6 = TABLE_NAMES.slice(0, 6);
+const NO_PUSH = { goals: 0, checkins: 0 };
+const V4 = fx('synthetic-backup-v4.json') as BackupDoc;
 const clone = <T,>(x: T): T => JSON.parse(JSON.stringify(x));
 
 async function seed(repo: Repo, tables: Partial<BackupTables> = V3.tables): Promise<void> {
@@ -25,6 +29,8 @@ async function seed(repo: Repo, tables: Partial<BackupTables> = V3.tables): Prom
   await db.exercises.bulkAdd(tables.exercises ?? []);
   await db.workouts.bulkAdd(tables.workouts ?? []);
   await db.sets.bulkAdd(tables.sets ?? []);
+  await db.goals.bulkAdd(tables.goals ?? []);
+  await db.checkins.bulkAdd(tables.checkins ?? []);
 }
 const snapshot = async (repo: Repo) => JSON.parse(JSON.stringify((await repo.exportBackup(new Date(0))).tables)) as BackupTables;
 
@@ -50,8 +56,10 @@ describe('oracle: the app export equals the independently built fixture', () => 
     expect(viaText.schemaVersion).toBe(BACKUP_SCHEMA_VERSION);
     expect(viaText.exportedAt).toBe('2026-11-02T04:00:00.000Z');
     expect(typeof viaText.appVersion).toBe('string');
-    expect(viaText.counts).toEqual(ORACLE.counts_v3);
-    for (const t of TABLE_NAMES) expect(viaText.tables[t], t).toEqual(V3.tables[t]);
+    expect(viaText.counts).toEqual({ ...ORACLE.counts_v3, ...NO_PUSH });
+    for (const t of OLD6) expect(viaText.tables[t], t).toEqual(V3.tables[t]);
+    expect(viaText.tables.goals).toEqual([]);
+    expect(viaText.tables.checkins).toEqual([]);
   });
 
   it('export, wipe, restore gives deep-equal data in every table', async () => {
@@ -60,12 +68,12 @@ describe('oracle: the app export equals the independently built fixture', () => 
     const before = await snapshot(repo);
     const text = serializeBackup(await repo.exportBackup());
     for (const t of TABLE_NAMES) await repo.db[t].clear();
-    expect(await repo.tableCounts()).toEqual({ batches: 0, activities: 0, type_mappings: 0, exercises: 0, workouts: 0, sets: 0 });
+    expect(await repo.tableCounts()).toEqual({ batches: 0, activities: 0, type_mappings: 0, exercises: 0, workouts: 0, sets: 0, ...NO_PUSH });
     const r = await tryRestore(repo, text);
     expect(r.ok).toBe(true);
     const after = await snapshot(repo);
     for (const t of TABLE_NAMES) expect(after[t], t).toEqual(before[t]);
-    expect(await repo.tableCounts()).toEqual(ORACLE.counts_v3);
+    expect(await repo.tableCounts()).toEqual({ ...ORACLE.counts_v3, ...NO_PUSH });
   });
 
   it('restore replaces existing data (it does not merge)', async () => {
@@ -95,9 +103,10 @@ describe('older schema versions migrate on restore', () => {
     const repo = await freshRepo();
     const r = await tryRestore(repo, JSON.stringify(V2));
     expect(r.ok && r.sourceVersion).toBe(2);
-    expect(r.ok && r.backup.schemaVersion).toBe(3);
+    expect(r.ok && r.backup.schemaVersion).toBe(4);
     const back = await snapshot(repo);
-    for (const t of TABLE_NAMES) expect(back[t], t).toEqual(V2.tables[t]);
+    for (const t of OLD6) expect(back[t], t).toEqual(V2.tables[t]);
+    expect([back.goals, back.checkins]).toEqual([[], []]);
     expect(back.exercises.every((e) => !('rep_min' in e))).toBe(true); // unknown stays unknown, not defaulted
     // and the restored database is a normal current-schema database: editing a rep range works
     const ex = back.exercises[0];
@@ -111,7 +120,7 @@ describe('older schema versions migrate on restore', () => {
     const r = await tryRestore(repo, JSON.stringify(V1));
     expect(r.ok && r.sourceVersion).toBe(1);
     const c = await repo.tableCounts();
-    expect(c).toEqual({ ...ORACLE.counts_v1, exercises: 0, workouts: 0, sets: 0 });
+    expect(c).toEqual({ ...ORACLE.counts_v1, exercises: 0, workouts: 0, sets: 0, ...NO_PUSH });
     const back = await snapshot(repo);
     for (const t of ['batches', 'activities', 'type_mappings'] as const) expect(back[t], t).toEqual(V1.tables[t]);
   });
@@ -120,7 +129,7 @@ describe('older schema versions migrate on restore', () => {
     const repo = await freshRepo();
     const r = await tryRestore(repo, JSON.stringify(V3));
     expect(r.ok && r.sourceVersion).toBe(3);
-    expect(await repo.tableCounts()).toEqual(ORACLE.counts_v3);
+    expect(await repo.tableCounts()).toEqual({ ...ORACLE.counts_v3, ...NO_PUSH });
   });
 });
 
@@ -135,7 +144,7 @@ describe('bad backups are rejected and existing data is unchanged', () => {
     ['array at top level', '[]', /not an EQ Fit backup/],
     ['null', 'null', /not an EQ Fit backup/],
     ['wrong format marker', mut((d) => { (d as unknown as Record<string, unknown>).format = 'something-else'; }), /wrong format/],
-    ['newer schema version', mut((d) => { d.schemaVersion = 4; }), /version 4/],
+    ['newer schema version', mut((d) => { d.schemaVersion = 5; }), /version 5/],
     ['schema version 0', mut((d) => { d.schemaVersion = 0; }), /schema version/],
     ['schema version as text', mut((d) => { (d as unknown as Record<string, unknown>).schemaVersion = '3'; }), /schema version/],
     ['missing schema version', mut((d) => { delete (d as unknown as Record<string, unknown>).schemaVersion; }), /schema version/],
@@ -197,11 +206,11 @@ describe('restore is one atomic transaction', () => {
     const repo = await freshRepo();
     await seed(repo);
     const before = await snapshot(repo);
-    // Bypass validation on purpose: a duplicate set id fails on the LAST table written, after five tables were already replaced.
-    const broken = clone(V3);
+    // Bypass validation on purpose: a duplicate check-in date fails on the LAST table written, after seven tables were already replaced.
+    const broken = clone(V4);
     broken.tables.batches = [];
     broken.tables.activities = [];
-    broken.tables.sets = [broken.tables.sets[0], broken.tables.sets[0]];
+    broken.tables.checkins = [broken.tables.checkins[0], broken.tables.checkins[0]];
     await expect(restoreBackup(repo.db, broken)).rejects.toBeTruthy();
     expect(await snapshot(repo)).toEqual(before);
   });
@@ -210,7 +219,7 @@ describe('restore is one atomic transaction', () => {
     const repo = await freshRepo();
     await seed(repo);
     const before = await snapshot(repo);
-    const broken = clone(V3);
+    const broken = clone(V4);
     broken.tables.activities[1].dedupe_key = broken.tables.activities[0].dedupe_key;
     await expect(restoreBackup(repo.db, broken)).rejects.toBeTruthy();
     expect(await snapshot(repo)).toEqual(before);
@@ -219,7 +228,7 @@ describe('restore is one atomic transaction', () => {
   it('restore leaves the migration ledger and a usable database', async () => {
     const repo = await freshRepo();
     await tryRestore(repo, JSON.stringify(V3));
-    expect((await repo.listMigrations()).map((m) => m.version)).toEqual([1, 2, 3]);
+    expect((await repo.listMigrations()).map((m) => m.version)).toEqual([1, 2, 3, 4]);
     const w = await repo.createWorkout({ date: '2026-11-02', name: 'After restore', kind: 'weights' });
     expect(await repo.getWorkout(w.id)).toBeTruthy();
   });
@@ -258,7 +267,7 @@ describe('lossless export', () => {
     const back = (await repo.db.activities.get(t.activities[0].id))!;
     expect(Object.is(back.parsed['Min Elevation'], 0)).toBe(true);
     expect(back.raw_fields['Min Elevation']).toBe("'-0");
-    expect(normalizeNegativeZero(await snapshot(repo))).toEqual(normalizeNegativeZero(t));
+    expect(normalizeNegativeZero(await snapshot(repo))).toEqual(normalizeNegativeZero({ ...t, goals: [], checkins: [] }));
     // any OTHER lossy value still refuses
     const doc = await repo.exportBackup();
     doc.tables.activities[0] = { ...doc.tables.activities[0], calories: Number.NaN };

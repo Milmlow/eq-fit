@@ -18,4 +18,5 @@ export const DEMO_HERO: HeroData = {
   },
   lastWeek: { start: '2026-10-26', end: '2026-11-01', lifts: 5, runs: 3, km: 26.49 },
   paceSec: 349,
+  achieved: [],
 };

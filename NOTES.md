@@ -48,3 +48,16 @@
 - Out-of-scope ideas (not built): a scheduled reminder via notifications, export a backup straight to a cloud folder, encrypt backups with a passphrase, an in-app install button, a diff view before restore, remembering the last restore time, a compact CSV of activities.
 - `npm audit` dev-dependency advisories are unchanged from Stage 3.
 - Windows: after pulling this branch run `npm install` (no new dependencies were added, but `package.json` is now version 0.4.0). `npm run build` writes `dist/sw.js`.
+
+## Stage 5 notes (stage-5-push)
+- PR is computed on read, not stored: simplest, always consistent with the sets. Cost: every Today/session load reads all sets (fine at this size).
+- First-ever set of an exercise is a baseline, not a PR (otherwise every new exercise would fire "New PR" on its first set). Equal e1RM is not a PR. Order is by workout date, then workout creation time, then set number.
+- A planned (not yet done) workout still counts: a PR appears while you are still in the session.
+- Goals are stored as revisions; a revision applies from the Monday-Sunday week containing its effective_from. A goal's type cannot be changed (create a new one).
+- "Lifts" counts watch weights-group activities plus done manual weights workouts with no linked activity. A manual workout that is NOT linked to its watch activity counts twice (same caveat as "Completed today"); link them to avoid it. Seen in the real-data check: week of 2026-10-26 shows 6 lifts (5 imported + 1 manual session).
+- When the newest imported activity is before a goal week, run/lift/km goals say "watch import does not reach this week: logged workouts only" instead of showing a plain 0.
+- Running bests: a pace best is the single fastest qualifying run, not a distance-weighted average of several runs (the brief's "distance-weighted average pace" collapses to the run's own pace for one run). Outdoor only; treadmill bests were not asked for.
+- Check-in: one entry per date (saving a date again replaces it). Chart dots use the --focus token because --acc on --card is 2.9:1 in Dark (found by the contrast test). Met goals fill with --fg, not vermilion, so nothing reads as red/alarm.
+- Found while testing: blocking service workers in the test browser makes `src/pwa.ts` throw "Cannot read properties of undefined (reading 'waiting')" on load. Only seen with service workers blocked (test setup); not changed here.
+- Out-of-scope ideas (not built): PR history per exercise, rep-PRs, goal history chart, treadmill bests, a "this week so far" nudge on Today.
+- Windows: no new dependencies in Stage 5, so no new `npm install` is needed; `package.json` is now version 0.5.0.

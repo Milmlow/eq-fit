@@ -2,13 +2,16 @@
 // Restore validates the WHOLE document before anything is touched, then replaces all tables in ONE IndexedDB transaction.
 // The theme preference (localStorage) and demo mode are NOT part of a backup. The migration ledger is not user data.
 import { isGroup } from './mapping';
+import { isGoalKind, validateGoal } from './goals';
+import { validateCheckin } from './checkins';
+import { normaliseMuscles } from './lifting';
 import { exerciseKey, MAX_TEXT, validateSet } from './training';
 import type { RecompDB } from '../db/db';
-import type { Activity, Exercise, ImportBatch, SetRecord, TypeMapping, Workout } from '../db/types';
+import type { Activity, Checkin, Exercise, GoalRevision, ImportBatch, SetRecord, TypeMapping, Workout } from '../db/types';
 
 export const BACKUP_FORMAT = 'eq-fit-backup';
 /** Current IndexedDB schema version (see src/db/db.ts). Backups carry it so older files can be migrated. */
-export const BACKUP_SCHEMA_VERSION = 3;
+export const BACKUP_SCHEMA_VERSION = 4;
 /** Larger files are refused before parsing. A full real history is roughly 10 to 15 MB. */
 export const MAX_BACKUP_BYTES = 64 * 1024 * 1024;
 const MAX_STRING = 100_000;
@@ -17,7 +20,7 @@ const MAX_ERRORS = 25;
 declare const __APP_VERSION__: string;
 export const APP_VERSION: string = typeof __APP_VERSION__ === 'undefined' ? 'dev' : __APP_VERSION__;
 
-export const TABLE_NAMES = ['batches', 'activities', 'type_mappings', 'exercises', 'workouts', 'sets'] as const;
+export const TABLE_NAMES = ['batches', 'activities', 'type_mappings', 'exercises', 'workouts', 'sets', 'goals', 'checkins'] as const;
 export type TableName = (typeof TABLE_NAMES)[number];
 export type BackupCounts = Record<TableName, number>;
 
@@ -28,6 +31,8 @@ export interface BackupTables {
   exercises: Exercise[];
   workouts: Workout[];
   sets: SetRecord[];
+  goals: GoalRevision[];
+  checkins: Checkin[];
 }
 
 export interface BackupDoc {
@@ -40,10 +45,13 @@ export interface BackupDoc {
 }
 
 /** Tables a backup of each schema version contains. Version 1 predates exercises, workouts and sets. */
+const TABLES_V1: readonly TableName[] = ['batches', 'activities', 'type_mappings'];
+const TABLES_V2: readonly TableName[] = ['batches', 'activities', 'type_mappings', 'exercises', 'workouts', 'sets'];
 const TABLES_BY_VERSION: Record<number, readonly TableName[]> = {
-  1: ['batches', 'activities', 'type_mappings'],
-  2: TABLE_NAMES,
-  3: TABLE_NAMES,
+  1: TABLES_V1,
+  2: TABLES_V2,
+  3: TABLES_V2,
+  4: TABLE_NAMES,
 };
 
 export function backupFileName(now: Date): string {
@@ -52,21 +60,23 @@ export function backupFileName(now: Date): string {
 }
 
 export async function tableCounts(db: RecompDB): Promise<BackupCounts> {
-  const [batches, activities, type_mappings, exercises, workouts, sets] = await Promise.all([
-    db.batches.count(), db.activities.count(), db.type_mappings.count(), db.exercises.count(), db.workouts.count(), db.sets.count(),
+  const [batches, activities, type_mappings, exercises, workouts, sets, goals, checkins] = await Promise.all([
+    db.batches.count(), db.activities.count(), db.type_mappings.count(), db.exercises.count(), db.workouts.count(), db.sets.count(), db.goals.count(), db.checkins.count(),
   ]);
-  return { batches, activities, type_mappings, exercises, workouts, sets };
+  return { batches, activities, type_mappings, exercises, workouts, sets, goals, checkins };
 }
 
 /** Read every user-data table in one read transaction (a consistent snapshot). */
 export async function buildBackup(db: RecompDB, now: Date = new Date()): Promise<BackupDoc> {
-  const tables = await db.transaction('r', [db.batches, db.activities, db.type_mappings, db.exercises, db.workouts, db.sets], async () => ({
+  const tables = await db.transaction('r', [db.batches, db.activities, db.type_mappings, db.exercises, db.workouts, db.sets, db.goals, db.checkins], async () => ({
     batches: await db.batches.toArray(),
     activities: await db.activities.toArray(),
     type_mappings: await db.type_mappings.toArray(),
     exercises: await db.exercises.toArray(),
     workouts: await db.workouts.toArray(),
     sets: await db.sets.toArray(),
+    goals: await db.goals.toArray(),
+    checkins: await db.checkins.toArray(),
   }));
   const counts = Object.fromEntries(TABLE_NAMES.map((t) => [t, tables[t].length])) as BackupCounts;
   return { format: BACKUP_FORMAT, schemaVersion: BACKUP_SCHEMA_VERSION, appVersion: APP_VERSION, exportedAt: now.toISOString(), counts, tables };
@@ -148,6 +158,7 @@ const strRecord: Check = (v) => (isObj(v) && Object.values(v).every((x) => typeo
 const cellRecord: Check = (v) => (isObj(v) && Object.values(v).every(validCell) ? null : 'must be a map of numbers, text, true/false or null');
 const group: Check = (v) => (typeof v === 'string' && isGroup(v) ? null : 'must be a known activity group');
 const groupOrNull: Check = (v) => (v === null ? null : group(v, { rec: {} }));
+const posNum: Check = (v) => (typeof v === 'number' && Number.isFinite(v) && v > 0 && v <= 100000 ? null : 'must be a number above 0');
 const optRep: Check = (v) => (v === null || (typeof v === 'number' && Number.isInteger(v) && v >= 1 && v <= 1000) ? null : 'must be a whole number or null');
 
 const BASE = { id, owner_id: strOrNull(200) };
@@ -173,6 +184,15 @@ const SCHEMAS: Record<TableName, { fields: Record<string, Check>; optional?: str
       ...BASE, workout_id: id, exercise_id: id, ordinal: (v) => (typeof v === 'number' && Number.isInteger(v) && v >= 1 && v <= 100000 ? null : 'must be a whole number 1 or more'),
       load_kg: numOrNull, reps: numOrNull, rir: numOrNull, warmup: bool, pain_note: strOrNull(MAX_TEXT * 8), created_at: iso,
     },
+  },
+  goals: {
+    fields: {
+      ...BASE, goal_id: id, kind: (v) => (typeof v === 'string' && isGoalKind(v) ? null : 'must be a known goal type'), name: str(200), target: posNum,
+      muscle: strOrNull(200), include_treadmill: bool, effective_from: (v) => (validDate(v) ? null : 'must be YYYY-MM-DD'), archived: bool, created_at: iso,
+    },
+  },
+  checkins: {
+    fields: { ...BASE, date: (v) => (validDate(v) ? null : 'must be YYYY-MM-DD'), weight_kg: numOrNull, waist_cm: numOrNull, note: strOrNull(MAX_TEXT * 2), created_at: iso },
   },
 };
 
@@ -203,10 +223,12 @@ function checkRelations(tb: BackupTables, errs: string[]): void {
   };
   const batchIds = ids('batches', tb.batches), actIds = ids('activities', tb.activities), exIds = ids('exercises', tb.exercises);
   const woIds = ids('workouts', tb.workouts); ids('sets', tb.sets); ids('type_mappings', tb.type_mappings);
+  const goalIds = ids('goals', tb.goals); ids('checkins', tb.checkins);
   const uniq = (name: string, vals: string[]) => { const s = new Set<string>(); for (const v of vals) { if (s.has(v)) add(`${name}: duplicate ${v.slice(0, 60)}`); s.add(v); } };
   uniq('activities.dedupe_key', tb.activities.map((a) => a.dedupe_key));
   uniq('type_mappings.original_type', tb.type_mappings.map((m) => m.original_type));
   uniq('exercises.exercise_key', tb.exercises.map((e) => e.exercise_key));
+  uniq('checkins.date', tb.checkins.map((c) => c.date));
   uniq('workouts.linked_activity_id', tb.workouts.filter((w) => w.linked_activity_id !== null).map((w) => w.linked_activity_id as string));
   for (const a of tb.activities) {
     if (!batchIds.has(a.batch_id)) add(`activities: ${a.id.slice(0, 40)} points to a missing batch`);
@@ -222,14 +244,25 @@ function checkRelations(tb: BackupTables, errs: string[]): void {
     if (!exIds.has(s.exercise_id)) add(`sets: ${s.id.slice(0, 40)} uses a missing exercise`);
     for (const m of validateSet({ load_kg: s.load_kg, reps: s.reps, rir: s.rir, warmup: s.warmup, pain_note: s.pain_note })) add(`sets: ${s.id.slice(0, 40)} ${m}`);
   }
+  // Goals: every revision belongs to a goal whose first revision is in the file, and the revision kind never changes within a goal.
+  const root = new Map(tb.goals.filter((g) => g.id === g.goal_id).map((g) => [g.goal_id, g]));
+  for (const g of tb.goals) {
+    const r = root.get(g.goal_id);
+    if (!r || !goalIds.has(g.goal_id)) { add(`goals: ${g.id.slice(0, 40)} belongs to a goal whose first revision is missing`); continue; }
+    if (r.kind !== g.kind) add(`goals: ${g.id.slice(0, 40)} changes the goal type`);
+    if (!g.archived) for (const m of validateGoal({ kind: g.kind, name: g.name, target: g.target, muscle: g.muscle, include_treadmill: g.include_treadmill })) add(`goals: ${g.id.slice(0, 40)} ${m}`);
+    if (g.muscle !== null && normaliseMuscles([g.muscle])[0] !== g.muscle) add(`goals: ${g.id.slice(0, 40)} muscle is not in its stored form`);
+  }
+  for (const c of tb.checkins) for (const m of validateCheckin({ date: c.date, weight_kg: c.weight_kg, waist_cm: c.waist_cm, note: c.note }, '9999-12-31')) add(`checkins: ${c.id.slice(0, 40)} ${m}`);
 }
 
-/** Older documents become the current shape here. v1 -> v2 adds the empty lifting tables; v2 -> v3 adds only optional fields, so nothing changes. */
+/** Older documents become the current shape here. v1 -> v2 adds the empty lifting tables; v2 -> v3 adds only optional fields, so nothing changes; v3 -> v4 adds the empty goals and check-ins tables. */
 function migrate(tables: Partial<BackupTables>, from: number): BackupTables {
   let v = from;
   const t = { ...tables };
   if (v === 1) { t.exercises = []; t.workouts = []; t.sets = []; v = 2; }
   if (v === 2) { v = 3; }
+  if (v === 3) { t.goals = []; t.checkins = []; v = 4; }
   return t as BackupTables;
 }
 
@@ -276,14 +309,16 @@ export function validateBackup(text: string, opts: { maxBytes?: number; sizeByte
  */
 export async function restoreBackup(db: RecompDB, backup: BackupDoc): Promise<BackupCounts> {
   const t = backup.tables;
-  await db.transaction('rw', [db.batches, db.activities, db.type_mappings, db.exercises, db.workouts, db.sets], async () => {
-    await Promise.all([db.batches.clear(), db.activities.clear(), db.type_mappings.clear(), db.exercises.clear(), db.workouts.clear(), db.sets.clear()]);
+  await db.transaction('rw', [db.batches, db.activities, db.type_mappings, db.exercises, db.workouts, db.sets, db.goals, db.checkins], async () => {
+    await Promise.all([db.batches.clear(), db.activities.clear(), db.type_mappings.clear(), db.exercises.clear(), db.workouts.clear(), db.sets.clear(), db.goals.clear(), db.checkins.clear()]);
     await db.batches.bulkAdd(t.batches);
     await db.activities.bulkAdd(t.activities);
     await db.type_mappings.bulkAdd(t.type_mappings);
     await db.exercises.bulkAdd(t.exercises);
     await db.workouts.bulkAdd(t.workouts);
     await db.sets.bulkAdd(t.sets);
+    await db.goals.bulkAdd(t.goals);
+    await db.checkins.bulkAdd(t.checkins);
   });
   return tableCounts(db);
 }

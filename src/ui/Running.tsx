@@ -2,12 +2,17 @@ import { useEffect, useState } from 'react';
 import type { Repo } from '../db/repo';
 import { formatPace, lastCompleteMonth, recentCompleteWeeks, summariseRuns, type RunInput, type RunPeriod } from '../lib/running';
 import { addDays } from '../lib/summary';
+import type { GoalKind } from '../db/types';
 import { Badge } from './Badge';
+import { Bests } from './Bests';
+import { Goals } from './Goals';
 
 interface Custom { id: number; start: string; end: string }
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
 
-export function Running({ repo, today, version }: { repo: Repo; today: string; version: number }) {
+const RUN_KINDS: GoalKind[] = ['runs_per_week', 'km_per_week'];
+
+export function Running({ repo, today, version, onChanged }: { repo: Repo; today: string; version: number; onChanged: () => void }) {
   const [rows, setRows] = useState<RunInput[] | null>(null);
   const [treadmill, setTreadmill] = useState(false);
   const [customs, setCustoms] = useState<Custom[]>([]);
@@ -70,6 +75,9 @@ export function Running({ repo, today, version }: { repo: Repo; today: string; v
         </table>
       </div>
       <p className="muted">Avg pace is distance-weighted (long runs count more), not a mean of paces. Runs with no pace or distance are left out of the pace figure and are never filled in. "-" means no data.</p>
+
+      <Goals repo={repo} today={today} weekOf={today} version={version} onChanged={onChanged} kinds={RUN_KINDS} manage={false} heading="Running goals" />
+      <Bests repo={repo} version={version} />
 
       <h3>Custom period</h3>
       <div className="row gap wrap">

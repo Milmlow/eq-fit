@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Repo } from '../db/repo';
 import type { Exercise, SetRecord, Workout } from '../db/types';
+import type { AchievedPr } from '../lib/pr';
 import { hintText, progressionHint } from '../lib/lifting';
 import { formatSet, type SetInput } from '../lib/training';
 import { Badge } from './Badge';
@@ -11,10 +12,14 @@ interface Block {
   prior: { workout: Workout; sets: SetRecord[] } | null;
 }
 
+/** Achieved PRs in this session, by set id. Computed on read from all logged sets (see src/lib/pr.ts). */
+type PrMap = Map<string, AchievedPr>;
+
 export function WorkoutEditor({ repo, workoutId, onChanged, onClose }: { repo: Repo; workoutId: string; onChanged: () => void; onClose: () => void }) {
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [all, setAll] = useState<Exercise[]>([]);
+  const [prs, setPrs] = useState<PrMap>(new Map());
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -29,6 +34,8 @@ export function WorkoutEditor({ repo, workoutId, onChanged, onClose }: { repo: R
       if (!exercise) continue;
       bs.push({ exercise, sets: sets.filter((s) => s.exercise_id === id), prior: await repo.priorComparable(w, id) });
     }
+    const mine = new Set(sets.map((s) => s.id));
+    setPrs(new Map((await repo.achievedPrs()).filter((p) => mine.has(p.setId)).map((p) => [p.setId, p])));
     setWorkout(w); setBlocks(bs); setAll(exercises);
   }, [repo, workoutId]);
 
@@ -60,7 +67,7 @@ export function WorkoutEditor({ repo, workoutId, onChanged, onClose }: { repo: R
 
       {blocks.length === 0 && <p className="muted" data-testid="no-exercises">No exercises yet. Add one below (nothing is pre-filled).</p>}
       {blocks.map((b) => (
-        <ExerciseBlock key={b.exercise.id} block={b} workout={workout} onAdd={(input) => run(() => repo.addSet(workout.id, b.exercise.id, input))} onRemove={(id) => run(() => repo.removeSet(id))} onEditSet={(id, input) => run(() => repo.updateSet(id, input))} onEditExercise={(patch) => run(() => repo.updateExercise(b.exercise.id, patch))} />
+        <ExerciseBlock key={b.exercise.id} block={b} prs={prs} workout={workout} onAdd={(input) => run(() => repo.addSet(workout.id, b.exercise.id, input))} onRemove={(id) => run(() => repo.removeSet(id))} onEditSet={(id, input) => run(() => repo.updateSet(id, input))} onEditExercise={(patch) => run(() => repo.updateExercise(b.exercise.id, patch))} />
       ))}
 
       <AddExercise
@@ -82,8 +89,8 @@ export function WorkoutEditor({ repo, workoutId, onChanged, onClose }: { repo: R
   );
 }
 
-function ExerciseBlock({ block, workout, onAdd, onRemove, onEditSet, onEditExercise }: {
-  block: Block; workout: Workout;
+function ExerciseBlock({ block, prs, workout, onAdd, onRemove, onEditSet, onEditExercise }: {
+  block: Block; prs: PrMap; workout: Workout;
   onAdd: (i: { load_kg: number | null; reps: number | null; rir: number | null; warmup: boolean; pain_note: string | null }) => Promise<void>;
   onRemove: (id: string) => Promise<void>;
   onEditSet: (id: string, input: SetInput) => Promise<void>;
@@ -127,6 +134,7 @@ function ExerciseBlock({ block, workout, onAdd, onRemove, onEditSet, onEditExerc
       </p>
       <HintLine block={block} />
       <EditExercise ex={ex} onSave={onEditExercise} />
+      <PrBanner block={block} prs={prs} />
       {block.sets.length > 0 && (
         <ol className="sets" aria-label={`Sets logged today for ${ex.name}`}>
           {block.sets.map((s) => (
@@ -134,7 +142,7 @@ function ExerciseBlock({ block, workout, onAdd, onRemove, onEditSet, onEditExerc
               {editing === s.id
                 ? <SetEditForm set={s} onSave={async (input) => { await onEditSet(s.id, input); setEditing(null); }} onCancel={() => setEditing(null)} />
                 : <>
-                    <span>{formatSet(s)}{s.pain_note && <> <span className="pain">pain: {s.pain_note}</span></>}</span>
+                    <span>{formatSet(s)}{prs.has(s.id) && <> <span className="pr-chip" data-testid="set-pr">New PR</span></>}{s.pain_note && <> <span className="pain">pain: {s.pain_note}</span></>}</span>
                     <span className="row gap">
                       <button aria-label={`Edit set ${s.ordinal}`} onClick={() => setEditing(s.id)}>Edit</button>
                       <button aria-label={`Remove set ${s.ordinal}`} onClick={() => void onRemove(s.id)}>Remove</button>
@@ -156,6 +164,17 @@ function ExerciseBlock({ block, workout, onAdd, onRemove, onEditSet, onEditExerc
         <button type="submit" className="primary" data-workout={workout.id}>Add set</button>
       </form>
     </div>
+  );
+}
+
+function PrBanner({ block, prs }: { block: Block; prs: PrMap }) {
+  const mine = block.sets.map((s) => prs.get(s.id)).filter((p): p is AchievedPr => !!p);
+  if (mine.length === 0) return null;
+  const top = mine.reduce((a, b) => (b.e1rm > a.e1rm ? b : a));
+  return (
+    <p className="pr-banner" role="status" data-testid="pr-banner">
+      New PR achieved: {top.load_kg} kg × {top.reps}, estimated 1RM {top.e1rm} kg (best before: {top.previousBest} kg).
+    </p>
   );
 }
 

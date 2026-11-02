@@ -3,10 +3,14 @@ import { isGroup, resolveGroup, type Group } from '../lib/mapping';
 import { recordMigrations, type RecompDB } from './db';
 import { validateRepRange } from '../lib/lifting';
 import { buildBackup, restoreBackup, tableCounts, type BackupCounts, type BackupDoc } from '../lib/backup';
-import { runningCsv, setsCsv } from '../lib/csvExport';
-import { addDays } from '../lib/summary';
+import { checkinsCsv, goalsCsv, runningCsv, setsCsv } from '../lib/csvExport';
+import { addDays, mondayOf } from '../lib/summary';
+import { findAchievedPrs, type AchievedPr } from '../lib/pr';
+import { validateGoal, type GoalInput, type WeekFacts } from '../lib/goals';
+import { runningBests, type RunningBests } from '../lib/bests';
+import { validateCheckin } from '../lib/checkins';
 import { exerciseKey, validateName, validateSet, workoutOrderKey, type SetInput } from '../lib/training';
-import type { Activity, Exercise, ImportBatch, MigrationRecord, SetRecord, Workout, WorkoutKind } from './types';
+import type { Activity, Checkin, Exercise, GoalRevision, ImportBatch, MigrationRecord, SetRecord, Workout, WorkoutKind } from './types';
 
 let lastMs = 0;
 /** Strictly increasing ISO timestamps within a session, so creation order is never a tie. */
@@ -346,7 +350,7 @@ export class Repo {
 
   async hasUserData(): Promise<boolean> {
     const c = await tableCounts(this.db);
-    return c.activities + c.workouts + c.sets + c.exercises > 0;
+    return c.activities + c.workouts + c.sets + c.exercises + c.goals + c.checkins > 0;
   }
 
   async exportSetsCsv(): Promise<string> {
@@ -354,8 +358,120 @@ export class Repo {
     return setsCsv(w, e, s);
   }
 
+  async exportCheckinsCsv(): Promise<string> {
+    return checkinsCsv(await this.db.checkins.toArray());
+  }
+
+  async exportGoalsCsv(): Promise<string> {
+    return goalsCsv(await this.db.goals.toArray());
+  }
+
   async exportRunningCsv(today: string): Promise<string> {
     const all = await this.activitiesBetween(addDays(today, -800), today);
     return runningCsv(all.map((a) => ({ date: a.date, group: a.group, distance_km: a.distance_km, avg_pace_sec_per_km: a.avg_pace_sec_per_km })), today);
+  }
+
+  // ---- Stage 5: achieved PRs (computed on read), goals, running bests, check-ins ---------------------------------
+
+  /** Every achieved PR across all logged sets. Computed on read from the sets themselves; nothing is stored. */
+  async achievedPrs(): Promise<AchievedPr[]> {
+    const all = await this.allSetsWithContext();
+    return findAchievedPrs(all.map(({ set, workout }) => ({
+      id: set.id, workout_id: set.workout_id, exercise_id: set.exercise_id, ordinal: set.ordinal, load_kg: set.load_kg, reps: set.reps,
+      warmup: set.warmup, date: workout.date, workout_created_at: workout.created_at,
+    })));
+  }
+
+  listGoalRevisions(): Promise<GoalRevision[]> {
+    return this.db.goals.toArray();
+  }
+
+  /** A new goal applies from the week containing `today`. Nothing is ever created by default. */
+  async createGoal(input: GoalInput, today: string): Promise<GoalRevision> {
+    const errs = validateGoal(input);
+    if (errs.length) throw new Error(errs.join('; '));
+    const id = newId();
+    const rev: GoalRevision = {
+      id, owner_id: null, goal_id: id, kind: input.kind, name: input.name.trim(), target: input.target,
+      muscle: input.kind === 'sets_per_muscle_per_week' ? (input.muscle ?? '').trim().toLowerCase().split(/\s+/).join(' ') : null,
+      include_treadmill: input.include_treadmill, effective_from: mondayOf(today), archived: false, created_at: tickIso(),
+    };
+    await this.db.goals.add(rev);
+    return rev;
+  }
+
+  /** Edit = add a revision. Earlier revisions are untouched, so weeks before `effectiveFrom` keep the target they had. The goal type cannot change. */
+  async reviseGoal(goalId: string, patch: Partial<Pick<GoalInput, 'name' | 'target' | 'muscle' | 'include_treadmill'>>, effectiveFrom: string): Promise<GoalRevision> {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(effectiveFrom)) throw new Error('date must be YYYY-MM-DD');
+    const cur = await this.currentGoalRevision(goalId);
+    if (!cur || cur.archived) throw new Error('goal not found');
+    const next: GoalInput = {
+      kind: cur.kind, name: patch.name ?? cur.name, target: patch.target ?? cur.target,
+      muscle: patch.muscle === undefined ? cur.muscle : patch.muscle, include_treadmill: patch.include_treadmill ?? cur.include_treadmill,
+    };
+    const errs = validateGoal(next);
+    if (errs.length) throw new Error(errs.join('; '));
+    const rev: GoalRevision = {
+      id: newId(), owner_id: null, goal_id: goalId, kind: cur.kind, name: next.name.trim(), target: next.target,
+      muscle: next.kind === 'sets_per_muscle_per_week' ? (next.muscle ?? '').trim().toLowerCase().split(/\s+/).join(' ') : null,
+      include_treadmill: next.include_treadmill, effective_from: effectiveFrom, archived: false, created_at: tickIso(),
+    };
+    await this.db.goals.add(rev);
+    return rev;
+  }
+
+  /** Ends a goal from the week containing `effectiveFrom`. History stays: earlier weeks still show it. */
+  async archiveGoal(goalId: string, effectiveFrom: string): Promise<void> {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(effectiveFrom)) throw new Error('date must be YYYY-MM-DD');
+    const cur = await this.currentGoalRevision(goalId);
+    if (!cur || cur.archived) throw new Error('goal not found');
+    await this.db.goals.add({ ...cur, id: newId(), archived: true, effective_from: effectiveFrom, created_at: tickIso() });
+  }
+
+  private async currentGoalRevision(goalId: string): Promise<GoalRevision | undefined> {
+    const revs = (await this.db.goals.where('goal_id').equals(goalId).toArray())
+      .sort((a, b) => (mondayOf(a.effective_from) !== mondayOf(b.effective_from) ? (mondayOf(a.effective_from) < mondayOf(b.effective_from) ? -1 : 1) : a.created_at < b.created_at ? -1 : 1));
+    return revs[revs.length - 1];
+  }
+
+  /** Everything goalValue() needs for the Monday-Sunday week starting `weekStart`. */
+  async goalWeekFacts(weekStart: string): Promise<WeekFacts> {
+    const end = addDays(weekStart, 6);
+    const [acts, wos, all, latest] = await Promise.all([this.activitiesBetween(weekStart, end), this.workoutsBetween(weekStart, end), this.allSetsWithContext(), this.latestActivityDate()]);
+    return {
+      activities: acts.map((a) => ({ id: a.id, date: a.date, group: a.group, distance_km: a.distance_km })),
+      workouts: wos.map((w) => ({ id: w.id, date: w.date, kind: w.kind, status: w.status, linked_activity_id: w.linked_activity_id })),
+      sets: all.filter((x) => x.workout.date >= weekStart && x.workout.date <= end).map((x) => ({ date: x.workout.date, warmup: x.set.warmup, muscles: x.exercise.primary_muscles })),
+      latestActivityDate: latest,
+    };
+  }
+
+  /** Bests over all imported history (outdoor runs only). */
+  async runningBests(): Promise<RunningBests> {
+    const all = await this.activitiesBetween('0000-01-01', '9999-12-31');
+    return runningBests(all.map((a) => ({ date: a.date, group: a.group, distance_km: a.distance_km, avg_pace_sec_per_km: a.avg_pace_sec_per_km })));
+  }
+
+  // ---- check-ins: one per date; saving again for a date replaces that date's entry -------------------------------
+
+  async saveCheckin(input: { date: string; weight_kg: number | null; waist_cm: number | null; note: string | null }, today: string): Promise<Checkin> {
+    const note = input.note !== null && input.note.trim() !== '' ? input.note.trim() : null;
+    const clean = { ...input, note };
+    const errs = validateCheckin(clean, today);
+    if (errs.length) throw new Error(errs.join('; '));
+    return this.db.transaction('rw', this.db.checkins, async () => {
+      const cur = await this.db.checkins.where('date').equals(clean.date).first();
+      const rec: Checkin = { id: cur?.id ?? newId(), owner_id: null, ...clean, created_at: cur?.created_at ?? tickIso() };
+      await this.db.checkins.put(rec);
+      return rec;
+    });
+  }
+
+  listCheckins(): Promise<Checkin[]> {
+    return this.db.checkins.orderBy('date').toArray();
+  }
+
+  async removeCheckin(date: string): Promise<void> {
+    await this.db.checkins.where('date').equals(date).delete();
   }
 }

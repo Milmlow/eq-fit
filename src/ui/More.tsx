@@ -4,12 +4,13 @@ import { THEME_PREFS, type ThemePref } from '../lib/theme';
 import { ImportScreen } from './ImportScreen';
 import { RecentView } from './RecentView';
 import { BackupSection } from './BackupSection';
+import { CheckIn } from './CheckIn';
 import { BackupBanner } from './Banners';
 import { usePwa } from '../pwa';
 import { APP_VERSION } from '../lib/backup';
 import type { PersistState } from '../lib/storage';
 
-type Sub = 'menu' | 'import' | 'recent';
+type Sub = 'menu' | 'import' | 'recent' | 'checkin';
 
 export function More({ repo, version, onChanged, pref, onPref, persisted, demo, onDemo, today, lastBackup, onBackedUp, persist, onAskPersist }: {
   repo: Repo | null; version: number; onChanged: () => void; pref: ThemePref; onPref: (p: ThemePref) => void; persisted: boolean; demo: boolean; onDemo: (d: boolean) => void;
@@ -19,10 +20,11 @@ export function More({ repo, version, onChanged, pref, onPref, persisted, demo, 
   const pwa = usePwa();
   if (sub !== 'menu') {
     return (
-      <section aria-label={sub === 'import' ? 'Import' : 'Recent'}>
+      <section aria-label={sub === 'import' ? 'Import' : sub === 'recent' ? 'Recent' : 'Check-in'}>
         <button type="button" onClick={() => setSub('menu')}>Back to More</button>
         {repo && sub === 'import' && <ImportScreen repo={repo} onCommitted={onChanged} />}
         {repo && sub === 'recent' && <RecentView repo={repo} version={version} />}
+        {repo && sub === 'checkin' && <CheckIn repo={repo} today={today} version={version} onChanged={onChanged} compact={false} />}
         {!repo && <p>Opening local database...</p>}
       </section>
     );
@@ -48,6 +50,7 @@ export function More({ repo, version, onChanged, pref, onPref, persisted, demo, 
       <ul className="items more-list">
         <li><span>Import activities (CSV)</span><button type="button" onClick={() => setSub('import')}>Import</button></li>
         <li><span>Recent (28 days)</span><button type="button" onClick={() => setSub('recent')}>Recent</button></li>
+        <li><span>Check-in (weight and waist)</span><button type="button" onClick={() => setSub('checkin')}>Check-in</button></li>
       </ul>
 
       {repo && <BackupSection repo={repo} today={today} lastBackup={lastBackup} onBackedUp={onBackedUp} onRestored={onChanged} persist={persist} onAskPersist={onAskPersist} />}

@@ -39,7 +39,8 @@ function Explainer({ id }: { id: string }) {
         <li>Last time: your best working set from the most recent earlier session of this exercise (highest Epley estimated 1RM; a tie goes to more reps). Warm-ups are left out.</li>
         <li>Today's target: the same load, one more rep. If you set a rep range and one more rep would pass its top, a 2.5 kg load increase is shown instead, when your progression hint allows it.</li>
         <li>Alternative: {fmtKg(ALT_INCREMENT_KG)} kg heavier, with the fewest reps that still match last time's estimated 1RM.</li>
-        <li>New PR: shown only if the target's estimated 1RM would beat the best you have ever recorded for this exercise. It is a possibility, not a record you have set.</li>
+        <li>New PR stamp (outline): shown only if the target's estimated 1RM would beat the best you have ever recorded for this exercise. It is a possibility, not a record you have set.</li>
+        <li>New PR achieved (solid block): a working set you logged today whose estimated 1RM beat every earlier working set of that exact exercise and equipment. Warm-ups and sets with a missing load or reps never count.</li>
         <li>If your last session has a pain note, only Last time is shown.</li>
       </ul>
     </div>
@@ -92,6 +93,18 @@ export function TodayHero({ data, theme, onStart, starting, demo }: HeroProps) {
         <span className="start-in"><span>{starting ? 'Starting' : 'Start'}</span><IconArrow /></span>
       </button>
       {demo && <p className="demo-note safe" role="status">Demo values, nothing is saved. No session was started.</p>}
+      {data.achieved.length > 0 && (
+        <div className="pr-done" role="status" data-testid="hero-pr-achieved">
+          <p className="pr-done-head"><span className="pr-done-stamp">New PR</span> <span>Achieved today</span></p>
+          <ul>
+            {data.achieved.map((a) => (
+              <li key={`${a.exerciseName}|${a.equipment}`}>
+                <strong>{a.exerciseName}</strong>{a.equipment && <> ({a.equipment})</>}: {fmtKg(a.load_kg)} kg × {a.reps}. Estimated 1RM {a.e1rm} kg, up from {a.previousBest} kg.
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="beat">
         <div className="beat-head safe">

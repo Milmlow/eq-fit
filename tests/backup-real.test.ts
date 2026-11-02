@@ -20,6 +20,9 @@ describe.skipIf(!have)('backup round trip on the real import (2698 activities)',
     const acts = await repo.activitiesBetween('2026-11-01', '2026-11-01');
     if (acts.length) await repo.linkActivity(w.id, acts[0].id);
     await repo.setTypeMapping('Cardio', 'weights');
+    const g = await repo.createGoal({ kind: 'km_per_week', name: 'Weekly km', target: 25, muscle: null, include_treadmill: false }, '2026-11-02');
+    await repo.reviseGoal(g.id, { target: 30 }, '2026-11-09');
+    await repo.saveCheckin({ date: '2026-11-02', weight_kg: 81.5, waist_cm: 89, note: 'real-data check' }, '2026-11-02');
 
     // zero-sign-insensitive compare: the stored -0 (from "'-0" cells) is expected to come back as 0; everything else must be identical
     const before = normalizeNegativeZero(JSON.parse(JSON.stringify((await repo.exportBackup(new Date(0))).tables)));

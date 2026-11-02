@@ -38,6 +38,8 @@ const PAIRS: [string, string, number, string][] = [
   ['accent', 'bg', 3, 'Start panel edge against page'], ['accent', 'paper', 3, 'vermilion underline/panel against text panel'],
   ['blue', 'bg', 3, 'Last time panel edge against page'], ['acc', 'bg', 3, 'primary button edge against page'],
   ['tab-active', 'tab-bg', 3, 'active tab marker bar'],
+  ['acc', 'paper', 3, 'Stage 5 progress bar fill on its track'],
+  ['fg', 'accent', 3, 'Stage 5 achieved-PR block border against its fill'], ['line', 'paper', 3, 'Stage 5 progress bar outline'],
 ];
 
 const T = tokens();

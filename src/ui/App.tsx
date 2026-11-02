@@ -52,7 +52,7 @@ export function App() {
         {tab === 'today' && !demo && repo && <Today repo={repo} today={today} version={version} onChanged={bump} theme={theme} />}
         {repo && tab === 'week' && <Week repo={repo} today={today} version={version} onChanged={bump} />}
         {repo && tab === 'lift' && <Lifting repo={repo} version={version} onChanged={bump} />}
-        {repo && tab === 'run' && <Running repo={repo} today={today} version={version} />}
+        {repo && tab === 'run' && <Running repo={repo} today={today} version={version} onChanged={bump} />}
         {tab === 'more' && (
           <More repo={repo} version={version} onChanged={bump} pref={pref} onPref={setPref} persisted={persisted} demo={demo} onDemo={setDemo}
             today={today} lastBackup={lastBackup} onBackedUp={onBackedUp} persist={persist} onAskPersist={() => void requestPersistence().then(setPersist)} />
