@@ -1,0 +1,19 @@
+{
+ "counts_v1": {
+  "activities": 12,
+  "batches": 2,
+  "type_mappings": 2
+ },
+ "counts_v3": {
+  "activities": 12,
+  "batches": 2,
+  "exercises": 4,
+  "sets": 9,
+  "type_mappings": 2,
+  "workouts": 4
+ },
+ "note": "SYNTHETIC. Built by tests/oracle/oracle_backup.py, not by app code.",
+ "running_csv": "﻿period,start,end,treadmill_included,runs,runs_with_pace,km,pace_sec_per_km\r\nWeek 1 of 4,2026-10-05,2026-10-11,false,2,2,15,300\r\nWeek 2 of 4,2026-10-12,2026-10-18,false,1,1,15,360\r\nWeek 3 of 4,2026-10-19,2026-10-25,false,1,0,4,\r\nWeek 4 of 4,2026-10-26,2026-11-01,false,1,1,8,350\r\n4 weeks combined,2026-10-05,2026-11-01,false,5,4,42,334.21\r\nMonth 2026-10,2026-10-01,2026-10-31,false,5,4,42,334.21\r\nWeek 1 of 4,2026-10-05,2026-10-11,true,3,3,20,307.5\r\nWeek 2 of 4,2026-10-12,2026-10-18,true,1,1,15,360\r\nWeek 3 of 4,2026-10-19,2026-10-25,true,1,0,4,\r\nWeek 4 of 4,2026-10-26,2026-11-01,true,2,2,14,328.57\r\n4 weeks combined,2026-10-05,2026-11-01,true,7,6,53,329.59\r\nMonth 2026-10,2026-10-01,2026-10-31,true,7,6,53,329.59\r\n",
+ "sets_csv": "﻿workout_date,workout_name,workout_kind,workout_status,workout_notes,exercise,equipment,set_number,load_kg,reps,rir,warmup,pain_note\r\n2026-10-27,Push,weights,done,\"felt good, \"\"heavy\"\"\",Bench Press,Barbell,1,40,10,,true,\r\n2026-10-27,Push,weights,done,\"felt good, \"\"heavy\"\"\",Bench Press,Barbell,2,80,8,2,false,\r\n2026-10-27,Push,weights,done,\"felt good, \"\"heavy\"\"\",Bench Press,Barbell,3,80,7,0.5,false,\"'@left shoulder, \"\"pinch\"\"\"\r\n2026-10-27,Push,weights,done,\"felt good, \"\"heavy\"\"\",Incline Press,Dumbbell,4,24,12,1,false,\r\n2026-10-27,,weights,planned,,,,,,,,,\r\n2026-11-01,'-leg day,weights,done,\"'+extra\nsecond line\",'=SUM(A1)  Squat,,1,100,5,,false,'+sore\tknee\r\n2026-11-01,'-leg day,weights,done,\"'+extra\nsecond line\",'=SUM(A1)  Squat,,2,,8,,false,\r\n2026-11-01,'-leg day,weights,done,\"'+extra\nsecond line\",'=SUM(A1)  Squat,,3,102.5,,,false,\r\n2026-11-01,'-leg day,weights,done,\"'+extra\nsecond line\",Farmer Carry,Handles,4,32,20,3.5,false,\"line1\nline2\"\r\n2026-11-01,'-leg day,weights,done,\"'+extra\nsecond line\",Farmer Carry,Handles,5,0,0,,false,\r\n2026-11-02,Easy run,run,planned,,,,,,,,,\r\n",
+ "today": "2026-11-02"
+}

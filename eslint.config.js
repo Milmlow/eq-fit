@@ -7,6 +7,7 @@ export default tseslint.config(
   { ignores: ['dist', 'node_modules', 'data-local', 'screenshots'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
+  { files: ['scripts/sw-template.js'], languageOptions: { globals: { ...globals.serviceworker } } },
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: { globals: { ...globals.browser, ...globals.node } },

@@ -1,0 +1,43 @@
+# Prepared, NOT enabled. Nothing runs until this file is pushed to the default branch AND Pages is switched on
+# (repo Settings > Pages > Source: "GitHub Actions"). Royce does both. See README "Hosting".
+name: Deploy EQ Fit to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test            # real-data tests skip themselves: data-local/ is never in the repo
+      - run: npm run build       # base is './', so the app works from /<repo-name>/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

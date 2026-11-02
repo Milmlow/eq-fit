@@ -1,0 +1,18 @@
+/* Stage 4: Backup section, banners. Uses only the existing theme tokens (themes.css), so all three themes work. */
+.banner { margin: 14px 0; padding: 12px 14px; background: var(--paper); color: var(--fg); border: 2px solid var(--warn); border-radius: var(--radius); display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.banner p { margin: 0; flex: 1 1 220px; }
+.storage-warning { margin: 14px 0; padding: 12px 14px; background: var(--paper); border: 3px solid var(--err); border-radius: var(--radius); }
+.backup h4 { margin: 1.5rem 0 .3rem; font-size: 1.02rem; }
+.backup .privacy { margin: 0 0 10px; padding: 8px 0 8px 10px; border-left: 5px solid var(--accent); background: var(--paper); }
+.backup .actions button { flex: 1 1 200px; }
+.backup .problem { margin-top: 12px; padding: 10px 12px; border: 2px solid var(--err); border-radius: var(--radius); background: var(--paper); }
+.backup .problem p { margin: 0 0 6px; }
+.backup .problem ul { margin: 0; padding-left: 20px; overflow-wrap: anywhere; }
+.confirm { margin-top: 14px; padding: 12px 14px; border: 3px solid var(--err); border-radius: var(--radius); background: var(--paper); color: var(--fg); }
+.confirm h4 { margin-top: 0; }
+.confirm h4:focus { outline: 3px solid var(--focus); outline-offset: 3px; }
+.confirm .warnline { margin: 8px 0; }
+.confirm table { margin: 4px 0; }
+.confirm th[scope="row"] { font-weight: 500; }
+button.danger { font-weight: 600; }
+.backup .muted { margin: 0 0 8px; }

@@ -2,6 +2,9 @@ import { newId } from '../lib/hash';
 import { isGroup, resolveGroup, type Group } from '../lib/mapping';
 import { recordMigrations, type RecompDB } from './db';
 import { validateRepRange } from '../lib/lifting';
+import { buildBackup, restoreBackup, tableCounts, type BackupCounts, type BackupDoc } from '../lib/backup';
+import { runningCsv, setsCsv } from '../lib/csvExport';
+import { addDays } from '../lib/summary';
 import { exerciseKey, validateName, validateSet, workoutOrderKey, type SetInput } from '../lib/training';
 import type { Activity, Exercise, ImportBatch, MigrationRecord, SetRecord, Workout, WorkoutKind } from './types';
 
@@ -324,5 +327,35 @@ export class Repo {
     const ws = (await this.db.workouts.bulkGet(ids)).filter((w): w is Workout => !!w);
     ws.sort((a, b) => (workoutOrderKey(a) < workoutOrderKey(b) ? -1 : 1));
     return ws.map((workout) => ({ workout, sets: sets.filter((s) => s.workout_id === workout.id).sort((a, b) => a.ordinal - b.ordinal) }));
+  }
+
+  // ---- Stage 4: backup, restore, CSV export ---------------------------------------------------------
+
+  exportBackup(now: Date = new Date()): Promise<BackupDoc> {
+    return buildBackup(this.db, now);
+  }
+
+  /** Replace everything with a backup that already passed validateBackup(). One transaction; failure leaves existing data untouched. */
+  restoreBackup(backup: BackupDoc): Promise<BackupCounts> {
+    return restoreBackup(this.db, backup);
+  }
+
+  tableCounts(): Promise<BackupCounts> {
+    return tableCounts(this.db);
+  }
+
+  async hasUserData(): Promise<boolean> {
+    const c = await tableCounts(this.db);
+    return c.activities + c.workouts + c.sets + c.exercises > 0;
+  }
+
+  async exportSetsCsv(): Promise<string> {
+    const [w, e, s] = await Promise.all([this.db.workouts.toArray(), this.db.exercises.toArray(), this.db.sets.toArray()]);
+    return setsCsv(w, e, s);
+  }
+
+  async exportRunningCsv(today: string): Promise<string> {
+    const all = await this.activitiesBetween(addDays(today, -800), today);
+    return runningCsv(all.map((a) => ({ date: a.date, group: a.group, distance_km: a.distance_km, avg_pace_sec_per_km: a.avg_pace_sec_per_km })), today);
   }
 }

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<style>text{font-family:'Archivo Variable', 'Archivo', Impact, 'Arial Black', sans-serif;font-style:italic;font-weight:900;font-stretch:75%;fill:#ffffff;text-anchor:middle}</style>
+<rect width="512" height="512" fill="#2f50f0"/>
+<g transform="translate(256 256) scale(1.0) translate(-256 -256)">
+<rect x="-600" y="318" width="1712" height="116" fill="#d63a08"/>
+<text x="256" y="300" font-size="270" letter-spacing="-8">EQ</text>
+<text x="256" y="408" font-size="98" letter-spacing="14">FIT</text>
+</g>
+</svg>

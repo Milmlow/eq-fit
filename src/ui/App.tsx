@@ -10,6 +10,10 @@ import { DemoToday, Today } from './Today';
 import { useTheme } from './useTheme';
 import { Week } from './Week';
 import { localToday } from '../lib/today';
+import { loadLastBackup, requestPersistence, saveLastBackup, watchStorageErrors, type PersistState } from '../lib/storage';
+import { BackupBanner, StorageWarning, UpdateBanner } from './Banners';
+
+const ls = () => { try { return window.localStorage; } catch { return null; } };
 
 export function App() {
   const [repo, setRepo] = useState<Repo | null>(null);
@@ -18,12 +22,16 @@ export function App() {
   const [version, setVersion] = useState(0);
   const [demo, setDemo] = useState(() => demoFromSearch(window.location.search));
   const { pref, theme, setPref, persisted } = useTheme();
+  const [lastBackup, setLastBackup] = useState<string | null>(() => loadLastBackup(ls()));
+  const [persist, setPersist] = useState<PersistState | null>(null);
   const today = localToday();
   const bump = () => setVersion((v) => v + 1);
 
   useEffect(() => {
-    Repo.open(new RecompDB()).then(setRepo, (e: unknown) => setError(e instanceof Error ? e.message : String(e)));
+    Repo.open(new RecompDB()).then((r) => setRepo(watchStorageErrors(r)), (e: unknown) => setError(e instanceof Error ? e.message : String(e)));
+    void requestPersistence().then(setPersist);
   }, []);
+  const onBackedUp = (iso: string) => { saveLastBackup(ls(), iso); setLastBackup(iso); };
 
   return (
     <div className="app">
@@ -31,6 +39,9 @@ export function App() {
         <header className="app-head"><p className="wordmark sm" aria-hidden="true">EQ FIT</p></header>
       )}
       <main id="main">
+        <UpdateBanner />
+        <StorageWarning />
+        {repo && !demo && tab === 'today' && <BackupBanner repo={repo} version={version} lastBackup={lastBackup} onGo={() => setTab('more')} />}
         {error && (
           <p role="alert" className="error">
             Storage unavailable: {error}. Nothing can be saved in this browser session.
@@ -42,7 +53,10 @@ export function App() {
         {repo && tab === 'week' && <Week repo={repo} today={today} version={version} onChanged={bump} />}
         {repo && tab === 'lift' && <Lifting repo={repo} version={version} onChanged={bump} />}
         {repo && tab === 'run' && <Running repo={repo} today={today} version={version} />}
-        {tab === 'more' && <More repo={repo} version={version} onChanged={bump} pref={pref} onPref={setPref} persisted={persisted} demo={demo} onDemo={setDemo} />}
+        {tab === 'more' && (
+          <More repo={repo} version={version} onChanged={bump} pref={pref} onPref={setPref} persisted={persisted} demo={demo} onDemo={setDemo}
+            today={today} lastBackup={lastBackup} onBackedUp={onBackedUp} persist={persist} onAskPersist={() => void requestPersistence().then(setPersist)} />
+        )}
       </main>
       <TabBar tab={tab} onTab={setTab} />
     </div>
