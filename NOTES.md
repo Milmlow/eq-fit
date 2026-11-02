@@ -25,3 +25,14 @@
 - Per-session e1RM source set = highest Epley among eligible working sets; a 1-rep set is the actual lift.
 - Progression increment (2.5 kg) is wording only, not computed.
 - Hint uses the last session containing the exercise; a pain note on ANY set (warm-up included) of that session blocks it.
+
+## Themed Today screen notes (stage-3-theme)
+- The designer's reference images show "TM" next to the wordmark, a fake status bar and a clock. None of those are built (hard stop); the wordmark is plain text.
+- References put Alternative at 82.5 x 6; the app computes 82.5 x 7 for 80 x 8 (Epley e1RM 101.33 vs 101.75). 82.5 x 6 is demo only.
+- Last-week "lifts" = imported weights-group entries (Cardio and Strength Training per the existing mapping) in the last complete Mon-Sun week; "-" if the import does not reach that week. A partially imported week would show partial numbers.
+- Start opens the first PLANNED weights workout today, else creates the same blank planned weights session as "Add weights session". It does not reopen a done session.
+- Rep-range rule: if last reps + 1 would pass your rep_max and the existing hint says "increase", the target is last load + 2.5 kg at your rep_min (assumption: the brief did not say which reps); if the hint says stay, only Last time and the existing hint text show.
+- Hero shows the first planned exercise with a usable prior session; an earlier planned exercise with no history is skipped.
+- Out of scope ideas: PR alert after logging a set, per-exercise load increments, Week/Lift/Run redesign, a JSON backup of the theme preference (it is deliberately not part of backups).
+- `npm audit` reports moderate dev-dependency advisories in vitest/vite tooling (pre-existing; fix is a breaking major bump). Not touched.
+- Windows: `npm install` adds `@fontsource-variable/archivo`; after pulling this branch run `npm install` again.

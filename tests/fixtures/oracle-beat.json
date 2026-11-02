@@ -1,0 +1,718 @@
+[
+ {
+  "id": "basic_pr",
+  "desc": "Last 80x8 (warm-up ignored); target 80x9 beats best ever; alt 82.5x7",
+  "last_sets": [
+   {
+    "load_kg": 40,
+    "reps": 10,
+    "rir": null,
+    "warmup": true,
+    "pain_note": null
+   },
+   {
+    "load_kg": 80,
+    "reps": 8,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   },
+   {
+    "load_kg": 80,
+    "reps": 7,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "all_sets": [
+   {
+    "load_kg": 40,
+    "reps": 10,
+    "rir": null,
+    "warmup": true,
+    "pain_note": null
+   },
+   {
+    "load_kg": 80,
+    "reps": 8,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   },
+   {
+    "load_kg": 80,
+    "reps": 7,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   },
+   {
+    "load_kg": 75,
+    "reps": 8,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "rep_min": null,
+  "rep_max": null,
+  "expected": {
+   "kind": "target",
+   "last": {
+    "load_kg": 80,
+    "reps": 8
+   },
+   "target": {
+    "load_kg": 80,
+    "reps": 9,
+    "progressed": false
+   },
+   "pr": true,
+   "alternative": {
+    "load_kg": 82.5,
+    "reps": 7
+   }
+  }
+ },
+ {
+  "id": "pr_false",
+  "desc": "Earlier 90x8 (E=114) is above target E=104, so no PR cue",
+  "last_sets": [
+   {
+    "load_kg": 80,
+    "reps": 8,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "all_sets": [
+   {
+    "load_kg": 90,
+    "reps": 8,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   },
+   {
+    "load_kg": 80,
+    "reps": 8,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "rep_min": null,
+  "rep_max": null,
+  "expected": {
+   "kind": "target",
+   "last": {
+    "load_kg": 80,
+    "reps": 8
+   },
+   "target": {
+    "load_kg": 80,
+    "reps": 9,
+    "progressed": false
+   },
+   "pr": false,
+   "alternative": {
+    "load_kg": 82.5,
+    "reps": 7
+   }
+  }
+ },
+ {
+  "id": "pr_equal_not_strict",
+  "desc": "Target E equals best ever exactly (80x9=104 vs 104): not strictly greater, no cue",
+  "last_sets": [
+   {
+    "load_kg": 80,
+    "reps": 8,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "all_sets": [
+   {
+    "load_kg": 80,
+    "reps": 8,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   },
+   {
+    "load_kg": 104,
+    "reps": 1,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "rep_min": null,
+  "rep_max": null,
+  "expected": {
+   "kind": "target",
+   "last": {
+    "load_kg": 80,
+    "reps": 8
+   },
+   "target": {
+    "load_kg": 80,
+    "reps": 9,
+    "progressed": false
+   },
+   "pr": false,
+   "alternative": {
+    "load_kg": 82.5,
+    "reps": 7
+   }
+  }
+ },
+ {
+  "id": "tie_more_reps",
+  "desc": "E tie 78 vs 78: 60x9 wins on reps even when listed second; target 60x10",
+  "last_sets": [
+   {
+    "load_kg": 65,
+    "reps": 6,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   },
+   {
+    "load_kg": 60,
+    "reps": 9,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "all_sets": [
+   {
+    "load_kg": 65,
+    "reps": 6,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   },
+   {
+    "load_kg": 60,
+    "reps": 9,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "rep_min": null,
+  "rep_max": null,
+  "expected": {
+   "kind": "target",
+   "last": {
+    "load_kg": 60,
+    "reps": 9
+   },
+   "target": {
+    "load_kg": 60,
+    "reps": 10,
+    "progressed": false
+   },
+   "pr": true,
+   "alternative": {
+    "load_kg": 62.5,
+    "reps": 8
+   }
+  }
+ },
+ {
+  "id": "pain_note",
+  "desc": "Pain note on a working set: Last time only",
+  "last_sets": [
+   {
+    "load_kg": 80,
+    "reps": 8,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   },
+   {
+    "load_kg": 80,
+    "reps": 7,
+    "rir": null,
+    "warmup": false,
+    "pain_note": "left shoulder pinch"
+   }
+  ],
+  "all_sets": [
+   {
+    "load_kg": 80,
+    "reps": 8,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   },
+   {
+    "load_kg": 80,
+    "reps": 7,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "rep_min": null,
+  "rep_max": null,
+  "expected": {
+   "kind": "pain",
+   "last": {
+    "load_kg": 80,
+    "reps": 8
+   }
+  }
+ },
+ {
+  "id": "pain_on_warmup",
+  "desc": "Pain note on a warm-up also blocks (same as existing hint rule)",
+  "last_sets": [
+   {
+    "load_kg": 40,
+    "reps": 10,
+    "rir": null,
+    "warmup": true,
+    "pain_note": "tweak"
+   },
+   {
+    "load_kg": 80,
+    "reps": 8,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "all_sets": [
+   {
+    "load_kg": 80,
+    "reps": 8,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "rep_min": null,
+  "rep_max": null,
+  "expected": {
+   "kind": "pain",
+   "last": {
+    "load_kg": 80,
+    "reps": 8
+   }
+  }
+ },
+ {
+  "id": "no_history",
+  "desc": "No prior session",
+  "last_sets": null,
+  "all_sets": [],
+  "rep_min": null,
+  "rep_max": null,
+  "expected": {
+   "kind": "none"
+  }
+ },
+ {
+  "id": "only_warmups",
+  "desc": "Prior session has only warm-ups: nothing comparable",
+  "last_sets": [
+   {
+    "load_kg": 40,
+    "reps": 10,
+    "rir": null,
+    "warmup": true,
+    "pain_note": null
+   }
+  ],
+  "all_sets": [
+   {
+    "load_kg": 40,
+    "reps": 10,
+    "rir": null,
+    "warmup": true,
+    "pain_note": null
+   }
+  ],
+  "rep_min": null,
+  "rep_max": null,
+  "expected": {
+   "kind": "none"
+  }
+ },
+ {
+  "id": "range_cap_increase",
+  "desc": "Range 6-8, last 80x8 RIR 2 on all sets -> hint increase: 82.5 x 6 (rep_min), no alternative",
+  "last_sets": [
+   {
+    "load_kg": 80,
+    "reps": 8,
+    "rir": 2,
+    "warmup": false,
+    "pain_note": null
+   },
+   {
+    "load_kg": 80,
+    "reps": 8,
+    "rir": 2,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "all_sets": [
+   {
+    "load_kg": 80,
+    "reps": 8,
+    "rir": 2,
+    "warmup": false,
+    "pain_note": null
+   },
+   {
+    "load_kg": 80,
+    "reps": 8,
+    "rir": 2,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "rep_min": 6,
+  "rep_max": 8,
+  "expected": {
+   "kind": "target",
+   "last": {
+    "load_kg": 80,
+    "reps": 8
+   },
+   "target": {
+    "load_kg": 82.5,
+    "reps": 6,
+    "progressed": true
+   },
+   "pr": false,
+   "alternative": null
+  }
+ },
+ {
+  "id": "range_cap_hold",
+  "desc": "Range 6-8, last 80x8 but one set RIR 0 -> stay: Last time only",
+  "last_sets": [
+   {
+    "load_kg": 80,
+    "reps": 8,
+    "rir": 2,
+    "warmup": false,
+    "pain_note": null
+   },
+   {
+    "load_kg": 80,
+    "reps": 8,
+    "rir": 0,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "all_sets": [
+   {
+    "load_kg": 80,
+    "reps": 8,
+    "rir": 2,
+    "warmup": false,
+    "pain_note": null
+   },
+   {
+    "load_kg": 80,
+    "reps": 8,
+    "rir": 0,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "rep_min": 6,
+  "rep_max": 8,
+  "expected": {
+   "kind": "hold",
+   "last": {
+    "load_kg": 80,
+    "reps": 8
+   }
+  }
+ },
+ {
+  "id": "range_no_cap",
+  "desc": "Range 6-12, last 80x8 -> plain +1 rep",
+  "last_sets": [
+   {
+    "load_kg": 80,
+    "reps": 8,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "all_sets": [
+   {
+    "load_kg": 80,
+    "reps": 8,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "rep_min": 6,
+  "rep_max": 12,
+  "expected": {
+   "kind": "target",
+   "last": {
+    "load_kg": 80,
+    "reps": 8
+   },
+   "target": {
+    "load_kg": 80,
+    "reps": 9,
+    "progressed": false
+   },
+   "pr": true,
+   "alternative": {
+    "load_kg": 82.5,
+    "reps": 7
+   }
+  }
+ },
+ {
+  "id": "range_cap_increase_pr",
+  "desc": "Range 6-8, last 100x8 -> 102.5x6: E=123 vs best ever 126.67 -> no PR",
+  "last_sets": [
+   {
+    "load_kg": 100,
+    "reps": 8,
+    "rir": 2,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "all_sets": [
+   {
+    "load_kg": 100,
+    "reps": 8,
+    "rir": 2,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "rep_min": 6,
+  "rep_max": 8,
+  "expected": {
+   "kind": "target",
+   "last": {
+    "load_kg": 100,
+    "reps": 8
+   },
+   "target": {
+    "load_kg": 102.5,
+    "reps": 6,
+    "progressed": true
+   },
+   "pr": false,
+   "alternative": null
+  }
+ },
+ {
+  "id": "warmup_not_best_ever",
+  "desc": "A huge warm-up in history must not count as best ever: 70x10 -> 70x11 is a PR",
+  "last_sets": [
+   {
+    "load_kg": 100,
+    "reps": 12,
+    "rir": null,
+    "warmup": true,
+    "pain_note": null
+   },
+   {
+    "load_kg": 70,
+    "reps": 10,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "all_sets": [
+   {
+    "load_kg": 100,
+    "reps": 12,
+    "rir": null,
+    "warmup": true,
+    "pain_note": null
+   },
+   {
+    "load_kg": 70,
+    "reps": 10,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "rep_min": null,
+  "rep_max": null,
+  "expected": {
+   "kind": "target",
+   "last": {
+    "load_kg": 70,
+    "reps": 10
+   },
+   "target": {
+    "load_kg": 70,
+    "reps": 11,
+    "progressed": false
+   },
+   "pr": true,
+   "alternative": {
+    "load_kg": 72.5,
+    "reps": 9
+   }
+  }
+ },
+ {
+  "id": "alt_equality",
+  "desc": "Alternative exact-equality boundary: 60x20 (E=100) -> 62.5x18 (E=100)",
+  "last_sets": [
+   {
+    "load_kg": 60,
+    "reps": 20,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "all_sets": [
+   {
+    "load_kg": 60,
+    "reps": 20,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "rep_min": null,
+  "rep_max": null,
+  "expected": {
+   "kind": "target",
+   "last": {
+    "load_kg": 60,
+    "reps": 20
+   },
+   "target": {
+    "load_kg": 60,
+    "reps": 21,
+    "progressed": false
+   },
+   "pr": true,
+   "alternative": {
+    "load_kg": 62.5,
+    "reps": 18
+   }
+  }
+ },
+ {
+  "id": "one_rep",
+  "desc": "Single 100x1 (E=100): target 100x2; alt 102.5x1",
+  "last_sets": [
+   {
+    "load_kg": 100,
+    "reps": 1,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "all_sets": [
+   {
+    "load_kg": 100,
+    "reps": 1,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "rep_min": null,
+  "rep_max": null,
+  "expected": {
+   "kind": "target",
+   "last": {
+    "load_kg": 100,
+    "reps": 1
+   },
+   "target": {
+    "load_kg": 100,
+    "reps": 2,
+    "progressed": false
+   },
+   "pr": true,
+   "alternative": {
+    "load_kg": 102.5,
+    "reps": 1
+   }
+  }
+ },
+ {
+  "id": "missing_reps_skipped",
+  "desc": "A set with missing reps is not eligible; best is 70x5",
+  "last_sets": [
+   {
+    "load_kg": 90,
+    "reps": null,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   },
+   {
+    "load_kg": 70,
+    "reps": 5,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "all_sets": [
+   {
+    "load_kg": 90,
+    "reps": null,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   },
+   {
+    "load_kg": 70,
+    "reps": 5,
+    "rir": null,
+    "warmup": false,
+    "pain_note": null
+   }
+  ],
+  "rep_min": null,
+  "rep_max": null,
+  "expected": {
+   "kind": "target",
+   "last": {
+    "load_kg": 70,
+    "reps": 5
+   },
+   "target": {
+    "load_kg": 70,
+    "reps": 6,
+    "progressed": false
+   },
+   "pr": true,
+   "alternative": {
+    "load_kg": 72.5,
+    "reps": 4
+   }
+  }
+ }
+]

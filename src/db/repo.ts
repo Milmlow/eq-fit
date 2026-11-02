@@ -142,6 +142,16 @@ export class Repo {
     return wo;
   }
 
+  /**
+   * The Start button's logic: today's first PLANNED weights workout if there is one, otherwise create the same
+   * session Today's "Add weights session" creates (date, blank name, kind weights, status planned).
+   */
+  async openOrCreateWeightsWorkout(date: string): Promise<{ workout: Workout; created: boolean }> {
+    const existing = (await this.workoutsBetween(date, date)).find((w) => w.kind === 'weights' && w.status === 'planned');
+    if (existing) return { workout: existing, created: false };
+    return { workout: await this.createWorkout({ date, name: '', kind: 'weights' }), created: true };
+  }
+
   async updateWorkout(id: string, patch: Partial<Pick<Workout, 'date' | 'name' | 'kind' | 'status' | 'notes' | 'planned_exercise_ids'>>): Promise<void> {
     if (patch.date !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(patch.date)) throw new Error('date must be YYYY-MM-DD');
     if (patch.notes !== undefined && patch.notes.length > 2000) throw new Error('notes too long');

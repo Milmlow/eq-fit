@@ -1,0 +1,89 @@
+/*
+  Design tokens, one block per theme, switched by data-theme on <html> (see src/lib/theme.ts).
+  Every colour token is a plain #rrggbb so tests/contrast.test.ts can read this file directly and check WCAG AA.
+  Non-colour tokens (fonts, radii) are shared at the bottom. Dark is the default until Royce picks.
+*/
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0a0e1a;          /* page */
+  --paper: #0a0e1a;       /* solid fill behind text blocks (matters in Crazy) */
+  --fg: #f6efe0;          /* main text */
+  --muted: #9aa3c7;       /* secondary text */
+  --card: #141a2e;        /* panels */
+  --line: #2f5bff;        /* dividers and borders */
+  --acc: #2f50f0;         /* ordinary primary buttons */
+  --on-acc: #ffffff;
+  --accent: #d63a08;      /* vermilion: Start and Today's target */
+  --on-accent: #ffffff;
+  --blue: #2f50f0;        /* Last time panel */
+  --on-blue: #ffffff;
+  --pr-ink: #ff8a5c;      /* New PR stamp */
+  --tab-bg: #14249e;
+  --tab-ink: #ffffff;
+  --tab-active: #ff8a5c;
+  --tab-focus: #ffffff;
+  --focus: #8fa6ff;
+  --err: #ff8a80;
+  --warn: #ffd27a;
+  --disabled-bg: #2a303b;
+  --disabled-fg: #c4ccd8;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #fbf4e6;
+  --paper: #fbf4e6;
+  --fg: #0b1b7a;
+  --muted: #4a5590;
+  --card: #f2e8d2;
+  --line: #0b1b7a;
+  --acc: #1f3fd6;
+  --on-acc: #ffffff;
+  --accent: #d63a08;
+  --on-accent: #ffffff;
+  --blue: #0b1b7a;
+  --on-blue: #ffffff;
+  --pr-ink: #c93305;
+  --tab-bg: #0b1b7a;
+  --tab-ink: #ffffff;
+  --tab-active: #ff8a5c;
+  --tab-focus: #ffffff;
+  --focus: #1f3fd6;
+  --err: #b3261e;
+  --warn: #8a5300;
+  --disabled-bg: #e3d9c3;
+  --disabled-fg: #4a5590;
+}
+
+[data-theme="crazy"] {
+  color-scheme: light;
+  --bg: #f1e2c0;          /* printed paper */
+  --paper: #fff8e6;       /* every text block sits on this solid fill */
+  --fg: #0b1b7a;
+  --muted: #3f4a85;
+  --card: #fff8e6;
+  --line: #0b1b7a;
+  --acc: #1f3fd6;
+  --on-acc: #ffffff;
+  --accent: #d63a08;
+  --on-accent: #ffffff;
+  --blue: #0b1b7a;
+  --on-blue: #ffffff;
+  --pr-ink: #b83000;
+  --tab-bg: #0b1b7a;
+  --tab-ink: #ffffff;
+  --tab-active: #ff8a5c;
+  --tab-focus: #ffffff;
+  --focus: #1f3fd6;
+  --err: #b3261e;
+  --warn: #8a5300;
+  --disabled-bg: #e3d9c3;
+  --disabled-fg: #3f4a85;
+}
+
+:root {
+  --font: 'Archivo Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --tabbar-h: 68px;
+  --radius: 10px;
+}

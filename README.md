@@ -13,7 +13,7 @@
 
 ## About
 
-EQ Fit: local-first, browser-only personal training app (Stage 3 of 5). Data lives in this browser's IndexedDB
+EQ Fit: local-first, browser-only personal training app (Stage 3 of 5, plus the themed Today screen on branch stage-3-theme). Data lives in this browser's IndexedDB
 (database name is still "recomp" internally so existing data is kept). No backend, no remote, no analytics, no network calls.
 Personal project (not EQ, not SKS).
 
@@ -23,6 +23,22 @@ without double counting; running comparison by period; Lifting tab with weekly w
 only, primary muscles as you typed them, Mon-Sun weeks, "unassigned" for blank), per-exercise history with estimated
 1RM (Epley and Brzycki shown, source set, 1 rep = actual, over 10 reps = low confidence), and progression ideas
 (double progression, labelled "proposed", only when you entered a rep range, never when the last session has a pain note).
+
+## Themes, Today screen and tabs (branch stage-3-theme)
+
+- Bottom tabs: Today, Week, Lift (lifting progress), Run (running by period), More (theme selector, Import, Recent, demo mode, a disabled Backup placeholder).
+- Today hero: date, session title, Start, "Beat last time" (Last time, Today's target, Alternative, a possible-PR cue), last-week totals and the 4-week running average.
+  The "?" button explains the rule. Rules live in `src/lib/beatLastTime.ts` (pure; checked against `tests/oracle/oracle_beat.py`).
+  Last time = best working set of the most recent earlier session (highest Epley e1RM, tie -> more reps). Target = same load, +1 rep
+  (or +2.5 kg at the bottom of your rep range when your rep range is topped out and the progression hint says increase).
+  Alternative = +2.5 kg (`ALT_INCREMENT_KG`) with the fewest reps that match last time's e1RM. "New PR" only means the target would beat your best recorded e1RM.
+  A pain note in the last session shows Last time only; no history shows one neutral line.
+- Themes: System / Light / Dark / Crazy. Dark until you choose. Stored in `localStorage` key `eqfit.theme` (not part of workout data).
+  Tokens (all colours) are in `src/ui/themes.css`, one block per `data-theme`; layout/typography in `src/ui/today.css`; Crazy art in `src/ui/CrazyArt.tsx`.
+  `tests/contrast.test.ts` reads `themes.css` and checks WCAG AA for every text and UI pair in every theme.
+- Fonts: Archivo (SIL OFL) self-hosted from the npm package `@fontsource-variable/archivo`, Latin subset (`src/ui/fonts.css`). No CDN.
+- Demo mode: More > Demo mode, or open the app with `?demo=1`. Shows the designer's reference values (Mon 2 Nov, Bench Press 80 x 8 -> 80 x 9, alt 82.5 x 6, 5 lifts, 3 runs, 26.49 km, 5:49). Reads and writes nothing.
+- `?today=YYYY-MM-DD` still overrides today's date (checks only).
 
 ## Commands
 
@@ -37,7 +53,8 @@ only, primary muscles as you typed them, Mon-Sun weeks, "unassigned" for blank),
 Golden tests compare the app against figures produced by independent Python scripts (never by app code):
 `python3 -I tests/oracle/oracle.py data-local/Activities.csv` -> `tests/fixtures/oracle.json`, and
 `python3 -I tests/oracle/oracle_running.py data-local/Activities.csv 2026-11-02` -> `tests/fixtures/oracle-running.json`, and
-`python3 -I tests/oracle/oracle_lifting.py` (synthetic data only) -> `tests/fixtures/synthetic-lifting.json` + `oracle-lifting.json`.
+`python3 -I tests/oracle/oracle_lifting.py` (synthetic data only) -> `tests/fixtures/synthetic-lifting.json` + `oracle-lifting.json`, and
+`python3 -I tests/oracle/oracle_beat.py` (synthetic, exact fractions) -> `tests/fixtures/oracle-beat.json`.
 Running pace = distance-weighted mean of the exported m:ss pace (seconds per km), over runs with both a pace and a
 distance above zero; km = sum of distance. Outdoor = "Running"; treadmill = "Treadmill Running" (after mapping).
 
@@ -52,7 +69,8 @@ computed (this app), proposed (a suggestion). Unknown values show as "-" or "unk
 
 ## NOT built
 
-Food, meals and check-ins (weight, waist), trends and charts, weekly review, JSON backup/restore (there is NO backup yet:
+Backup and restore (the More tab only has a disabled placeholder), install/offline (service worker, manifest, icons), hosting, a full redesign of Week, Lift, Run, Import and Recent (they only take the theme colours), a PR alert when a set is logged, per-exercise increments, themes for print, Safari/Firefox/real-phone testing of the new screens, an automated browser test suite (the browser checks were ad-hoc Playwright scripts).
+Also not built from earlier stages: Food, meals and check-ins (weight, waist), trends and charts, weekly review, JSON backup/restore (there is NO backup yet:
 clearing browser data deletes everything), CSV export, PWA/offline install, hosting, sync of any kind, UI for changing
 activity-type mappings (repository supports it, tested), editing equipment of an exercise (by design: a different machine
 is a different exercise), planned set/rep targets per workout, per-muscle weekly targets (only a reference note),
