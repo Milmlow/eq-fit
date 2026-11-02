@@ -53,16 +53,15 @@ export function Running({ repo, today, version }: { repo: Repo; today: string; v
           <caption>{treadmill ? 'Outdoor and treadmill runs' : 'Outdoor runs only'}</caption>
           <thead>
             <tr>
-              <th scope="col">Period</th><th scope="col">Dates</th><th scope="col">Runs (n)</th><th scope="col">With pace</th><th scope="col">Total km</th><th scope="col">Avg pace</th>
+              <th scope="col">Period</th><th scope="col">Dates (MM-DD)</th><th scope="col">Runs (with pace)</th><th scope="col">km</th><th scope="col">Pace</th>
             </tr>
           </thead>
           <tbody>
             {periods.map((p, i) => (
               <tr key={i} data-testid={`run-row-${i}`}>
                 <th scope="row">{p.label}</th>
-                <td className="nowrap">{p.start} to {p.end}</td>
-                <td className="num">{p.runs}</td>
-                <td className="num">{p.runsWithPace}</td>
+                <td className="nowrap" title={`${p.start} to ${p.end}`}>{p.start.slice(5)} to {p.end.slice(5)}</td>
+                <td className="num nowrap">{p.runs} ({p.runsWithPace})</td>
                 <td className="num">{p.km === null ? '-' : p.km.toFixed(2)}</td>
                 <td className="num nowrap">{formatPace(p.paceSecPerKm)}</td>
               </tr>

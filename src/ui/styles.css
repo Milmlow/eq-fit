@@ -48,3 +48,5 @@ summary { min-height: 48px; display:flex; align-items:center; cursor:pointer; fo
 details.add-ex { margin: 12px 0; }
 nav { flex-wrap: wrap; }
 @media (max-width: 480px) { .grid3 { gap: 6px; } nav button { flex: 1 1 30%; padding: 8px 6px; } }
+.sets li { flex-wrap: wrap; } .sets li > span { min-width: 0; overflow-wrap: anywhere; flex: 1 1 140px; }
+@media (max-width: 480px) { .scroll table th, .scroll table td { padding: 6px 3px; font-size: .85rem; } }
