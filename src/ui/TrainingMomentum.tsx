@@ -33,7 +33,7 @@ export function TrainingMomentum({ repo, today, version, onOpen }: { repo: Repo;
       const { workout } = await repo.openOrCreateWeightsWorkout(today);
       await repo.updateWorkout(workout.id, { planned_exercise_ids: [...new Set([ex.id, ...workout.planned_exercise_ids])] });
       setPick(null); onOpen(workout.id);
-    } catch { setError('Could not open this session. Please try again.'); }
+    } catch (e) { setError(`Could not open this session: ${e instanceof Error ? e.message : 'please try again'}`); }
     finally { setBusy(false); }
   }
   const days = data ? trainingDays(data.acts, data.workouts, today) : [];

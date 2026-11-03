@@ -172,3 +172,32 @@ label.inline select { min-width: 0; max-width: 100%; }
 .trial-entry form button { width:100%; min-height:52px; }
 .trial-ribbon { max-width:880px; margin:12px auto; padding:12px; font-size:13px; border:1px solid var(--line); border-radius:12px; }
 .trial-ribbon button { margin-left:8px; font-size:12px; }
+
+/* Weights workflow */
+.repeat-session { display:flex; gap:18px; align-items:flex-start; }
+.repeat-session > svg { flex-shrink:0; margin-top:8px; color:var(--acc); }
+.repeat-session > div { flex:1; min-width:0; }
+.repeat-session h2 { margin:4px 0 16px; font-size:24px; }
+.session-notes { margin:18px 0; }
+.prior-details { font-size:13px; margin-bottom:16px; }
+.set-compare { display:flex; flex-wrap:wrap; gap:8px 20px; justify-content:space-between; padding:14px 0; font-size:13px; }
+.set-compare > span:first-child { font-weight:800; }
+.set-inputs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.set-inputs input { font-size:28px; font-weight:800; padding:14px; min-width:0; font-variant-numeric:tabular-nums; }
+.log-set { width:100%; min-height:52px; margin-top:14px; }
+.exercise-cards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:24px 0; }
+.exercise-progress-card { display:flex; gap:14px; text-align:left; align-items:center; min-height:140px; padding:16px; background:var(--card); }
+.exercise-progress-card.selected { outline:3px solid var(--fg); outline-offset:2px; }
+.exercise-progress-card > svg { width:72px; flex-shrink:0; color:var(--acc); }
+.exercise-progress-card > span { display:flex; flex-direction:column; gap:8px; min-width:0; }
+.exercise-progress-card strong { font-size:18px; }
+.exercise-progress-card small { font-size:12px; color:var(--muted); }
+.exercise-progress-card b { font-size:16px; }
+.exercise-progress-card > span:last-child { margin-left:auto; }
+.strength-chart svg { width:100%; max-height:260px; color:var(--fg); overflow:visible; }
+.strength-chart svg text { font-family:var(--font); font-size:10px; fill:var(--fg); stroke:none; }
+.range-switch { display:flex; gap:6px; margin-left:auto; }
+.range-switch button { font-size:13px; }
+.range-switch button[aria-pressed=true] { background:var(--acc); color:var(--on-acc); }
+@media(max-width:600px) { .exercise-cards { grid-template-columns:1fr; } .exercise-progress-card { min-height:116px; } }
+@media(max-width:300px) { .set-inputs { grid-template-columns:1fr; } .exercise-progress-card > svg { width:42px; } .repeat-session > svg { display:none; } }

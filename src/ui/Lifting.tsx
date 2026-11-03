@@ -3,6 +3,11 @@ import type { Repo } from '../db/repo';
 import type { Exercise, SetRecord, Workout } from '../db/types';
 import { bestE1rm, hintText, progressionHint, weeklyWorkingSets, type WeekSets } from '../lib/lifting';
 import { formatSet } from '../lib/training';
+import { StrengthChart } from './StrengthChart';
+import { IconLift } from './Icons';
+import { MovementArt } from './MovementArt';
+import { loadMode } from '../lib/strengthProgress';
+import { localToday } from '../lib/today';
 import { Badge } from './Badge';
 import { EditExercise, SetEditForm } from './WorkoutEditor';
 
@@ -11,22 +16,38 @@ interface Session { workout: Workout; sets: SetRecord[] }
 export function Lifting({ repo, version, onChanged }: { repo: Repo; version: number; onChanged: () => void }) {
   const [weeks, setWeeks] = useState<WeekSets[] | null>(null);
   const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [history, setHistory] = useState<Record<string, Session[]>>({});
+  const [error, setError] = useState('');
   const [sel, setSel] = useState<string>('');
 
   const load = useCallback(async () => {
     const all = await repo.allSetsWithContext();
     setWeeks(weeklyWorkingSets(all.map((a) => ({ ...a.set, date: a.workout.date, muscles: a.exercise.primary_muscles }))));
-    setExercises(await repo.listExercises());
+    const exercises = await repo.listExercises();
+    setExercises(exercises);
+    const entries = await Promise.all(exercises.map(async ex => [ex.id, await repo.exerciseHistory(ex.id)] as const));
+    setHistory(Object.fromEntries(entries));
   }, [repo]);
-  useEffect(() => { void load(); }, [load, version]);
+  useEffect(() => { void load().catch(()=>setError('Could not load strength history. Please retry.')); }, [load, version]);
 
   if (!weeks) return <p>Loading...</p>;
   return (
     <section aria-labelledby="lift-h">
-      <h2 id="lift-h">Lifting progress</h2>
+      <p className="eyebrow">YOUR STRENGTH</p><h2 id="lift-h">Small steps. Real progress.</h2>
+      <p className="muted small">Saved on this device · back up from More.</p>
+      {error && <p role="alert">{error}</p>}
+      <div className="exercise-cards">{exercises.map(ex=>{
+        const sessions=history[ex.id]??[];
+        const last=sessions.at(-1),working=last?.sets.filter(s=>!s.warmup)??[];
+        const best=working.at(-1);
+        const art=/bench/i.test(ex.name)?'Bench press':/squat/i.test(ex.name)?'Squat':/chin|pull.?up/i.test(ex.name)?'Chin-ups':/deadlift/i.test(ex.name)?'Deadlift':null;
+        return <button key={ex.id} className={`exercise-progress-card ${sel===ex.id?'selected':''}`} aria-pressed={sel===ex.id} onClick={()=>setSel(ex.id)}>{art?<MovementArt name={art}/>:<IconLift/>}<span><strong>{ex.name}</strong><small>{ex.equipment||'Equipment unspecified'}</small><b>{best?formatSet(best):'Log your first set'}</b><small>{last?`${last.workout.date} · ${sessions.length} sessions`:'No history yet'}</small></span><span aria-hidden="true">↗</span></button>;
+      })}</div>
+      {sel && exercises.find(ex=>ex.id===sel) && <section className="card"><h3>{exercises.find(ex=>ex.id===sel)!.name}</h3><StrengthChart key={sel} exercise={exercises.find(ex=>ex.id===sel)!} sessions={history[sel]??[]} today={localToday()}/></section>}
 
-      <div className="card">
-        <h3>Weekly working sets per muscle</h3>
+
+      <details className="card">
+        <summary>Weekly working sets per muscle</summary>
         <p className="muted" data-testid="convention">
           Counting rule: working sets only (warm-ups are excluded). Each set counts toward the primary muscle(s) you entered for its exercise,
           once per muscle; assisting muscles are not added. Weeks run Monday to Sunday. About 10 working sets per muscle per week is a common
@@ -46,7 +67,7 @@ export function Lifting({ repo, version, onChanged }: { repo: Repo; version: num
             </table>
           </div>
         ))}
-      </div>
+      </details>
 
       <div className="card">
         <h3>Exercise history</h3>
@@ -78,7 +99,8 @@ function History({ repo, exerciseId, onChanged }: { repo: Repo; exerciseId: stri
 
   if (!ex) return null;
   const last = sessions[sessions.length - 1];
-  const hint = progressionHint(ex.rep_max ?? null, last?.sets ?? []);
+  const mode = loadMode(ex);
+  const hint = mode === 'external' ? progressionHint(ex.rep_max ?? null, last?.sets ?? []) : null;
   const newestFirst = [...sessions].reverse();
 
   async function guard(fn: () => Promise<unknown>) {
@@ -93,10 +115,11 @@ function History({ repo, exerciseId, onChanged }: { repo: Repo; exerciseId: stri
         Muscles: {ex.primary_muscles.length ? ex.primary_muscles.join(', ') : 'unassigned'}
         {ex.rep_min != null && ex.rep_max != null ? ` | rep range ${ex.rep_min}-${ex.rep_max}` : ' | no rep range'}
       </p>
-      <p className="muted">
+      <details><summary>How estimates work</summary><p className="muted">
         Estimated 1RM uses working sets of this exact exercise and equipment only. Epley = load x (1 + reps / 30). Brzycki = load x 36 / (37 - reps).
         A single rep is shown as the actual lift, not an estimate. Estimates above about 10 reps are low confidence. A missing load or reps gives no estimate.
       </p>
+      </details>
       <EditExercise ex={ex} onSave={(p) => guard(() => repo.updateExercise(ex.id, p))} />
       {error && <p role="alert" className="error">{error}</p>}
       {hint
@@ -104,7 +127,7 @@ function History({ repo, exerciseId, onChanged }: { repo: Repo; exerciseId: stri
         : <p className="muted" data-testid="no-hint">{ex.rep_max ? 'No progression hint (no sets logged).' : 'No progression hint: enter a rep range first.'}</p>}
       {sessions.length === 0 && <p className="empty">No sets logged for this exercise.</p>}
       {newestFirst.map((s) => {
-        const best = bestE1rm(s.sets);
+        const best = mode === 'external' ? bestE1rm(s.sets) : null;
         return (
           <div key={s.workout.id} className="session" data-testid={`sess-${s.workout.date}`}>
             <h5 className="flush">{s.workout.date}{s.workout.name && ` ${s.workout.name}`} <Badge kind="reported" /></h5>
@@ -122,7 +145,7 @@ function History({ repo, exerciseId, onChanged }: { repo: Repo; exerciseId: stri
             </ol>
             <p className="e1rm" data-testid={`e1rm-${s.workout.date}`}>
               Estimated 1RM <Badge kind="computed" />{' '}
-              {best === null ? <span className="muted">not available (needs a working set with load and reps)</span>
+              {best === null ? <span className="muted">{mode === 'external' ? 'not available (needs a working set with load and reps)' : 'not applied to this equipment'}</span>
                 : best.actual ? <>actual lift {best.load} kg x 1 (not an estimate)</>
                 : <>Epley {best.epley} kg | Brzycki {best.brzycki} kg, from {best.load} kg x {best.reps}{best.lowConfidence && <strong> (low confidence: over 10 reps)</strong>}</>}
             </p>
