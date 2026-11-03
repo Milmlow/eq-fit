@@ -5,6 +5,7 @@ import { AddExercise } from './WorkoutEditor';
 import './workouts.css';
 import { nextWorkoutName } from '../lib/exerciseCatalog';
 import { MovementArt } from './MovementArt';
+import { workoutChoices } from '../lib/workoutFlow';
 
 export function Routines({ repo, today, version, onOpen, onChanged }: {
   repo: Repo; today: string; version: number; onOpen: (id: string) => void; onChanged: () => void;
@@ -12,41 +13,71 @@ export function Routines({ repo, today, version, onOpen, onChanged }: {
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [pending, setPending] = useState<Workout[]>([]);
+  const [recent, setRecent] = useState<Workout[]>([]);
+  const [counts, setCounts] = useState<Map<string, number>>(new Map());
+  const [loaded, setLoaded] = useState(false);
   const [editing, setEditing] = useState<Routine | 'new' | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
   useEffect(() => {
     let live = true;
-    Promise.all([repo.listRoutines(), repo.listExercises(), repo.workoutsBetween(today, today)])
-      .then(([r, e, w]) => { if (live) { setRoutines(r); setExercises(e); setPending(w.filter(x => x.kind === 'weights' && x.status === 'planned')); } })
+    Promise.all([repo.listRoutines(), repo.listExercises(), repo.workoutsBetween('0000-01-01', today), repo.db.sets.toArray()])
+      .then(([r, e, w, sets]) => { if (live) { const choices = workoutChoices(w, sets, today); setRoutines(r); setExercises(e); setPending(choices.pending); setRecent(choices.recent); setCounts(choices.counts); setLoaded(true); } })
       .catch(() => { if (live) setError('Could not load saved workouts. Please reopen this screen.'); });
     return () => { live = false; };
   }, [repo, today, version]);
-  async function start(routine?: Routine) {
+  async function start(routine?: Routine, source?: Workout) {
     if (lock.current) return;
     lock.current = true; setBusy(true); setError('');
     try {
-      const w = routine ? await repo.startRoutine(routine.id, today) : await repo.createWorkout({ date: today, name: '', kind: 'weights' });
+      const w = source ? await repo.repeatWorkout(source.id, today) : routine ? await repo.startRoutine(routine.id, today) : await repo.createWorkout({ date: today, name: '', kind: 'weights' });
       onChanged(); onOpen(w.id);
     } catch (e) { setError(e instanceof Error ? e.message : 'Could not start workout.'); }
     finally { lock.current = false; setBusy(false); }
   }
+  function pictures(ids: string[]) {
+    return <div className="workout-pictures" aria-hidden="true">{ids.slice(0, 4).map(id => <MovementArt key={id} name={exercises.find(e => e.id === id)?.name ?? ''} />)}{ids.length > 4 && <span>+{ids.length - 4}</span>}</div>;
+  }
+  function repeatCard(w: Workout, primary = false) {
+    return <article key={w.id} className="routine-card">
+      {pictures(w.planned_exercise_ids)}<h3>{w.name || 'Weights session'}</h3>
+      <p className="muted small">{w.date} · {counts.get(w.id)} {counts.get(w.id) === 1 ? 'set' : 'sets'} recorded</p>
+      <button className={primary ? 'primary' : ''} disabled={busy} onClick={() => void start(undefined, w)}>{primary ? 'Repeat last workout →' : 'Repeat workout'}</button>
+    </article>;
+  }
   return <section className="card routines" aria-labelledby="routines-title">
     <p className="eyebrow">PICK · LOG · LAUGH</p>
-    <h2 id="routines-title">Your workouts</h2>
+    <h2 id="routines-title">Ready to lift?</h2>
     {error && <p role="alert" className="error">{error}</p>}
+    {!loaded && !error && <p className="muted">Loading your workouts…</p>}
     {editing ? <RoutineForm defaultName={nextWorkoutName(routines.map(r => r.name))} key={typeof editing === 'string' ? editing : editing.id} repo={repo} routine={editing === 'new' ? undefined : editing}
-      onCancel={() => setEditing(null)} onSaved={() => { setEditing(null); onChanged(); }} /> : <>
-      {pending.map(w => <button key={w.id} className="routine-resume" onClick={() => onOpen(w.id)}>Continue {w.name || 'weights session'} →</button>)}
-      {!routines.length && <p className="muted">Save your exercise list once. Next time, it’s ready.</p>}
-      <div className="routine-list">{routines.map(r => <article key={r.id} className="routine-card">
-        <h3>{r.name}</h3><p className="muted">{r.exercise_ids.map(id => exercises.find(e => e.id === id)?.name ?? 'Missing exercise').join(' · ')}</p>
-        <div className="row gap wrap"><button className="primary" disabled={busy} onClick={() => void start(r)}>Start workout</button>
-        <button disabled={busy} aria-label={`Edit ${r.name}`} onClick={() => setEditing(r)}>Edit</button></div>
-      </article>)}</div>
-      <div className="row gap wrap"><button disabled={busy} onClick={() => setEditing('new')}>+ Create workout</button>
-      <button disabled={busy} onClick={() => void start()}>Start empty workout</button></div>
+      onCancel={() => setEditing(null)} onSaved={() => { setEditing(null); onChanged(); }} /> : loaded && <>
+      {pending.length > 0 ? <div className="resume-workout">
+        <p className="muted small">{pending[0].name || 'Workout in progress'} · {pending[0].date === today ? 'Today' : pending[0].date}</p>
+        <button className="primary start-training" onClick={() => onOpen(pending[0].id)}>Continue workout →</button>
+        <p className="muted small">{counts.get(pending[0].id) ?? 0} sets saved. Pick up where you left off.</p>
+      </div> : recent[0] ? repeatCard(recent[0], true) : <>
+        <p className="muted">Pick an exercise. Log your first set. We’ll remember it for next time.</p>
+        <button className="primary start-training" disabled={busy} onClick={() => void start()}>Start a workout →</button>
+      </>}
+      {(pending.length > 0 || recent.length > 0) && <button className="start-fresh" disabled={busy} onClick={() => void start()}>+ Start something different</button>}
+      {routines.length > 0 && <details className="workout-choices" open={!pending.length && !recent.length}><summary>Saved workouts · {routines.length}</summary>
+        <div className="routine-list">{routines.map(r => <article key={r.id} className="routine-card">
+          {pictures(r.exercise_ids)}<h3>{r.name}</h3>
+          <p className="muted small">{r.exercise_ids.length} exercises</p>
+          <div className="row gap wrap"><button disabled={busy} onClick={() => void start(r)}>Start workout</button>
+          <button disabled={busy} aria-label={`Edit ${r.name}`} onClick={() => setEditing(r)}>Edit</button></div>
+        </article>)}</div>
+      </details>}
+      {(pending.length > 1 || recent.length > (pending.length ? 0 : 1)) && <details className="workout-choices"><summary>Other recent workouts</summary>
+        {pending.slice(1).map(w => <button key={w.id} className="routine-resume" onClick={() => onOpen(w.id)}>Continue {w.name || 'workout'} · {w.date}</button>)}
+        <div className="routine-list">{recent.slice(pending.length ? 0 : 1).map(w => repeatCard(w))}</div>
+      </details>}
+      <details className="workout-choices"><summary>Plan a workout</summary>
+        <p className="muted small">Save an exercise list for later.</p>
+        <button disabled={busy} onClick={() => setEditing('new')}>+ Create workout</button>
+      </details>
     </>}
   </section>;
 }

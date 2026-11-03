@@ -2,15 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Repo } from '../db/repo';
 import type { Activity, Workout, WorkoutKind } from '../db/types';
 import { DEMO_HERO } from '../lib/demo';
-import { loadHero, type HeroData } from '../lib/hero';
-import { startToday } from '../lib/start';
 import type { ThemeName } from '../lib/theme';
 import { Badge } from './Badge';
 import { ActivityPulse } from './ActivityPulse';
 import { TodayHero } from './TodayHero';
 import { WorkoutEditor } from './WorkoutEditor';
 import { Milestones } from './Milestones';
-import { RepeatSession } from './RepeatSession';
 import { Routines } from './Routines';
 import { TrainingMomentum } from './TrainingMomentum';
 
@@ -27,25 +24,22 @@ export function DemoToday({ theme, onDemoOff }: { theme: ThemeName; onDemoOff: (
   );
 }
 
-export function Today({ repo, today, version, onChanged, theme }: { repo: Repo; today: string; version: number; onChanged: () => void; theme: ThemeName }) {
+export function Today({ repo, today, version, onChanged }: { repo: Repo; today: string; version: number; onChanged: () => void; theme: ThemeName }) {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [acts, setActs] = useState<Act[]>([]);
   const [completed, setCompleted] = useState(0);
   const [open, setOpen] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
-  const [hero, setHero] = useState<HeroData | null>(null);
-  const [starting, setStarting] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async () => {
-    const [w, a, c, linked, h] = await Promise.all([
-      repo.workoutsBetween(today, today), repo.activitiesBetween(today, today), repo.completionForDate(today), repo.linkedActivityIds(), loadHero(repo, today),
+    const [w, a, c, linked] = await Promise.all([
+      repo.workoutsBetween(today, today), repo.activitiesBetween(today, today), repo.completionForDate(today), repo.linkedActivityIds(),
     ]);
     setWorkouts(w);
     setActs(a.filter((x) => x.group !== 'other' && !linked.has(x.id)));
     setCompleted(c.total);
-    setHero(h);
     setLoaded(true);
   }, [repo, today]);
 
@@ -66,13 +60,6 @@ export function Today({ repo, today, version, onChanged, theme }: { repo: Repo; 
       await load(); onChanged(); setOpen(w.id);
     } catch (e) { setError(e instanceof Error ? e.message : String(e)); }
   }
-  async function start() {
-    setError(null); setStarting(true);
-    try {
-      const r = await startToday(repo, today, false);
-      if (r.kind === 'opened') { await load(); onChanged(); setOpen(r.id); }
-    } catch (e) { setError(`Could not start: ${e instanceof Error ? e.message : String(e)}`); } finally { setStarting(false); }
-  }
   async function link(workoutId: string, activityId: string) {
     setError(null);
     try { await repo.linkActivity(workoutId, activityId); await load(); onChanged(); } catch (e) { setError(e instanceof Error ? e.message : String(e)); }
@@ -87,11 +74,8 @@ export function Today({ repo, today, version, onChanged, theme }: { repo: Repo; 
   return (
     <div className="today-wrap">
       <ActivityPulse repo={repo} today={today} version={version} onOpen={setOpen} />
-      {hero && <details className="next-session"><summary>Next weights session · Start / continue</summary><TodayHero data={hero} theme={theme} onStart={() => void start()} starting={starting} demo={false} /></details>}
-      {!hero && <p>Loading...</p>}
       {error && <p role="alert" className="error">{error}</p>}
       <Routines repo={repo} today={today} version={version} onChanged={onChanged} onOpen={setOpen} />
-      <RepeatSession repo={repo} today={today} version={version} onOpen={id => { setOpen(id); void load(); onChanged(); }} />
       <TrainingMomentum repo={repo} today={today} version={version} onChanged={onChanged} onOpen={(id) => { setOpen(id); void load(); onChanged(); }} />
       <Milestones repo={repo} today={today} version={version} />
       <section aria-labelledby="today-h" className="today-log">

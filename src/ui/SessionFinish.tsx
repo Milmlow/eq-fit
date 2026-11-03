@@ -28,6 +28,7 @@ export function SessionFinish({ repo, workoutId, onDone, onEdit }: { repo: Repo;
       <details><summary>Your sets</summary>{data.exercises.filter(e => data.session.sets.some(s => s.exercise_id === e.id)).map(e => <div key={e.id}><h3>{e.name}</h3><p>{data.session.sets.filter(s => s.exercise_id === e.id).map(formatSet).join(' · ')}</p></div>)}</details>
       <CoachEQ session={data.session} today={today} scope={repo.db.name} history={data.history} exercises={data.exercises} share />
     </>}
+    <p className="muted small">Ready to repeat from Lift next time. No setup needed.</p>
     <button className="primary finish-done" onClick={onDone}>Done</button>
     <button onClick={onEdit}>View / edit session</button>
   </section>;

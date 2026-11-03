@@ -2,3 +2,38 @@
 .focused-workout .exercise{border-top:0;margin-top:4px;padding:0}.focused-workout .active-exercise-title{font-size:1.8rem;margin:10px 0 12px}.focused-workout .exercise-navigation{margin:12px 0}.focused-workout .prior-details{margin:10px 0}.focused-workout .session-notes{margin-top:14px}.focused-workout .set-table-row{min-height:48px;padding:4px 0}.focused-workout .set-table-row button{border-color:transparent;color:var(--fg)}.focused-workout .set-compare{padding:8px 0}.focused-workout .next-set-form .set-inputs input{font-size:24px;padding:10px}.focused-workout .save-routine{margin:8px 0}
 .exercise-tile-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.exercise-tile{position:relative;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;padding:12px 8px;min-height:130px;min-width:0;text-align:center}.exercise-tile svg{width:78px;height:66px;color:var(--acc)}.exercise-tile strong{font-size:.95rem;overflow-wrap:anywhere}.exercise-tile small{color:var(--muted);font-size:.75rem}.exercise-tile.picked{border:2px solid var(--acc)}.tile-tick{position:absolute;right:8px;top:5px;font-weight:800}.your-tile-grid{margin-bottom:16px}.your-exercises{margin-bottom:10px}.picker-notice{min-height:24px;margin:6px 0;font-size:.85rem}.routine-exercises li>svg{width:40px;height:35px;flex-shrink:0;color:var(--acc)}.routine-exercises li>span{flex:1}.routine-builder .routine-save{position:sticky;bottom:82px;padding:10px 0;background:var(--card);border-top:1px solid var(--line);z-index:2}.routine-save .primary{flex:1;margin-top:0}.routine-name summary{font-weight:500;font-size:.9rem}.equipment-dialog{width:420px;max-width:calc(100vw - 24px);border:1px solid var(--line);border-radius:18px;background:var(--card);color:var(--fg);padding:20px}.equipment-dialog::backdrop{background:rgb(0 0 0 / .6)}.equipment-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.equipment-tiles button{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 8px}.equipment-tiles svg{width:80px;height:68px;color:var(--acc)}.equipment-tiles strong{font-size:.9rem}.visual-set-inputs{display:grid;gap:12px}.visual-set-inputs .picker-control{display:grid;grid-template-columns:56px minmax(0,1fr) 56px}.visual-set-inputs .number-picker input{min-width:0;font-size:26px}.visual-set-inputs button{font-size:26px;min-height:56px}.routine-builder fieldset{min-width:0}.custom-exercise{margin:10px 0}@media(min-width:640px){.exercise-tile-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.your-tile-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.visual-set-inputs{grid-template-columns:1fr 1fr}.visual-set-inputs .picker-control{grid-template-columns:44px minmax(0,1fr) 44px}}
 .weight-shortcuts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.weight-shortcuts button{flex:1;min-width:54px;padding:8px;font-size:.9rem}
+
+/* One entry point, one next action. Existing theme tokens keep all three themes intact. */
+.workout-controls{border:0;padding:0;margin:0;min-width:0}
+.start-training{width:100%;min-height:54px;margin:8px 0}
+.start-fresh{margin:14px 0;min-height:48px;width:100%}
+.workout-choices{padding:14px 0;border-top:1px solid var(--line)}
+.workout-pictures{display:flex;gap:12px;align-items:center;margin-bottom:12px;color:var(--acc)}
+.workout-pictures svg{width:48px;height:44px;flex-shrink:0}
+.routines>.routine-card{margin:12px 0}
+.routines>.routine-card>button{width:100%;min-height:52px}
+.exercise-strip{display:flex;gap:8px;overflow-x:auto;padding:12px 0;scrollbar-width:thin}
+.exercise-strip button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;flex:0 0 100px;min-width:0;padding:10px 5px;font-size:.75rem;line-height:1.2}
+.exercise-strip button[aria-current=step]{border:2px solid var(--acc);background:var(--acc);color:var(--on-acc)}
+.exercise-strip svg{width:36px;height:30px}
+.exercise-strip small{font-size:.7rem}
+.active-movement{display:flex;align-items:center;gap:14px;margin:14px 0}
+.active-movement>svg{width:70px;height:62px;flex-shrink:0;color:var(--acc)}
+.focused-workout .active-exercise-title{font-size:1.5rem;margin:0}
+.focused-workout .next-set-form{margin-top:8px}
+.focused-workout .visual-set-inputs{grid-template-columns:1fr 1fr;gap:10px}
+.focused-workout .visual-set-inputs .picker-control{grid-template-columns:44px minmax(0,1fr) 44px;gap:0}
+.focused-workout .number-picker{margin:8px 0}
+.focused-workout .number-picker input{padding:10px 0;font-size:24px;text-align:center}
+.focused-workout .number-picker button{min-height:48px;padding:0;font-size:24px}
+.set-extras{margin:10px 0;font-size:.85rem}
+.set-feedback{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:48px;font-size:.8rem;color:var(--muted)}
+.set-feedback button{min-height:44px;padding:6px 12px}
+.logged-sets{margin:8px 0 16px}
+.focused-workout .prior-details{font-size:.85rem}
+.focused-workout .session-end{margin-top:18px}
+.session-end>.primary{width:100%;min-height:48px}
+@media(max-width:380px){.focused-workout .visual-set-inputs{gap:6px}.focused-workout .visual-set-inputs .picker-control{grid-template-columns:40px minmax(0,1fr) 40px}.focused-workout .number-picker input{font-size:22px}.focused-workout .number-picker{font-size:.75rem}.active-movement>svg{width:52px}.exercise-strip button{flex-basis:88px}}
+.active-exercise-title:focus{outline:none}
+.focused-workout>.row h3>.muted{display:block;font-size:.75rem;font-weight:400;margin-top:4px}
+.more-movements{margin:10px 0}.more-movements>summary{margin-bottom:10px}

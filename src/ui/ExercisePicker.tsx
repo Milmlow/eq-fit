@@ -32,13 +32,15 @@ export function ExercisePicker({ existing, selected = [], onPick, onCreate, onBu
         <MovementArt name={ex.name} /><strong>{ex.name}</strong><small>{ex.equipment || 'Custom'}</small>
       </button>)}</div>
     </details>}
+    <details className="more-movements" open={!existing.length}><summary>{existing.length ? 'More exercises' : 'Choose an exercise'}</summary>
     <div className="exercise-tile-grid">{EXERCISE_CATALOG.map(m => {
       const added = m.equipment.some(eq => selectedKeys.has(exerciseKey(m.name, eq)));
       const full = m.equipment.every(eq => selectedKeys.has(exerciseKey(m.name, eq)));
-      return <button key={m.name} type="button" disabled={busy || full} className={`exercise-tile ${added ? 'picked' : ''}`} aria-label={`${m.name}${full ? ', added' : ', choose equipment'}`} onClick={() => {
+      return <button key={m.name} type="button" disabled={busy || full} className={`exercise-tile ${added ? 'picked' : ''}`} aria-label={`${m.name}${full ? ', added' : m.equipment.length === 1 ? ', add' : ', choose equipment'}`} onClick={() => {
         setError(''); if (m.equipment.length === 1) void add(m.name, m.equipment[0], m.muscles); else setMovement(m);
       }}><MovementArt name={m.name} /><strong>{m.name}</strong>{added && <span className="tile-tick" aria-hidden="true">✓</span>}</button>;
     })}</div>
+    </details>
     <p className="picker-notice" role="status">{notice}</p>
     {error && !movement && <p role="alert" className="error">{error}</p>}
     <details className="custom-exercise"><summary>+ Add something else</summary>{children}</details>
