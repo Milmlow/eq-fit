@@ -12,6 +12,28 @@ describe('Coach isolated humour policy',()=>{
  it('a historical correction removes an ineligible line',()=>{const state=choose({...freshCoach(),tone:'cheeky'},run,now).state;expect(choose(state,{...run,event:'weights'},now).joke).toBeUndefined();});
  it('Another one exhausts the pool without breaking cooldown',()=>{let state={...freshCoach(),tone:'filthy' as const};const ids=new Set();for(let i=0;i<50;i++){const r=choose(state,run,now,true);if(r.joke){expect(ids.has(r.joke.id)).toBe(false);ids.add(r.joke.id);}state=r.state as typeof state;}expect(ids.size).toBe(JOKES.filter(j=>j.event==='run').length);});
  it('retired jokes never return, even after cooldown',()=>{const state={...freshCoach(),tone:'cheeky' as const,dismissed:JOKES.map(j=>j.id)};expect(choose(state,run,now,true).joke).toBeUndefined();});
+ it('Not funny immediately hides the cached line without automatically replacing it',()=>{
+  const first=choose({...freshCoach(),tone:'cheeky'},run,now);
+  const retired={...first.state,dismissed:[first.joke!.id]};
+  expect(choose(retired,run,now).joke).toBeUndefined();
+  expect(choose(retired,run,now).state.recent).toEqual(first.state.recent);
+  const requested=choose(retired,run,now,true);
+  expect(requested.joke).toBeDefined();
+  expect(requested.joke!.id).not.toBe(first.joke!.id);
+ });
+ it('supports fourteen daily events at every enabled tone without repetition',()=>{
+  for(const tone of ['friendly','cheeky','filthy'] as const) for(const event of ['visit','run','weights'] as const){
+   let state={...freshCoach(),tone} as ReturnType<typeof freshCoach>;
+   const ids=new Set<string>();
+   for(let day=0;day<14;day++){
+    const key=`${event}:${day}`;
+    const result=choose(state,{event,key,aliases:event==='visit'?[]:[key]},now+day*86400000);
+    expect(result.joke,`${tone} ${event} day ${day+1}`).toBeDefined();
+    expect(ids.has(result.joke!.id)).toBe(false);
+    ids.add(result.joke!.id);state=result.state;
+   }
+  }
+ });
  it('old imports and empty history yield only visit context',()=>{expect(contextFor(undefined,'2026-11-03').event).toBe('visit');expect(contextFor({date:'2026-11-02'} as Session,'2026-11-03').event).toBe('visit');});
  it('date and activity title edits do not define event identity',()=>{const a={date:'2026-11-03',id:'a',kind:'run',activity:{id:'a'}} as Session;expect(contextFor(a,a.date).key).toBe(contextFor({...a,title:'new'},a.date).key);});
  it('does not depend on browser storage availability',()=>{expect(readCoach('missing')).toEqual(freshCoach());expect(saveCoach('missing',freshCoach())).toBe(false);});
