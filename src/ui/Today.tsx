@@ -6,6 +6,7 @@ import { loadHero, type HeroData } from '../lib/hero';
 import { startToday } from '../lib/start';
 import type { ThemeName } from '../lib/theme';
 import { Badge } from './Badge';
+import { ActivityPulse } from './ActivityPulse';
 import { TodayHero } from './TodayHero';
 import { WorkoutEditor } from './WorkoutEditor';
 import { Milestones } from './Milestones';
@@ -82,12 +83,13 @@ export function Today({ repo, today, version, onChanged, theme }: { repo: Repo; 
 
   return (
     <div className="today-wrap">
-      {hero && <TodayHero data={hero} theme={theme} onStart={() => void start()} starting={starting} demo={false} />}
+      <ActivityPulse repo={repo} today={today} version={version} onOpen={setOpen} />
+      {hero && <details className="next-session"><summary>Next weights session · Start / continue</summary><TodayHero data={hero} theme={theme} onStart={() => void start()} starting={starting} demo={false} /></details>}
       {!hero && <p>Loading...</p>}
       {error && <p role="alert" className="error">{error}</p>}
-      <Milestones repo={repo} today={today} version={version} />
       <RepeatSession repo={repo} today={today} version={version} onOpen={id => { setOpen(id); void load(); onChanged(); }} />
       <TrainingMomentum repo={repo} today={today} version={version} onChanged={onChanged} onOpen={(id) => { setOpen(id); void load(); onChanged(); }} />
+      <Milestones repo={repo} today={today} version={version} />
       <section aria-labelledby="today-h" className="today-log">
         <h2 id="today-h">Today <span className="muted">{today}</span></h2>
         {loaded && (

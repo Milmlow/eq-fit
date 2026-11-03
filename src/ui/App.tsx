@@ -44,7 +44,7 @@ export function App({ trialRepo }: { trialRepo?: Repo } = {}) {
         <UpdateBanner />
         <StorageWarning />
         {repo && !demo && !trialRepo && <CloudSync repo={repo} onChanged={bump} />}
-        {repo && !demo && tab === 'today' && <BackupBanner repo={repo} version={version} lastBackup={lastBackup} onGo={() => setTab('more')} />}
+
         {error && (
           <p role="alert" className="error">
             Storage unavailable: {error}. Nothing can be saved in this browser session.
@@ -53,6 +53,7 @@ export function App({ trialRepo }: { trialRepo?: Repo } = {}) {
         {!repo && !error && tab !== 'more' && !demo && <p>Opening local database...</p>}
         {tab === 'today' && demo && <DemoToday theme={theme} onDemoOff={() => setDemo(false)} />}
         {tab === 'today' && !demo && repo && <Today repo={repo} today={today} version={version} onChanged={bump} theme={theme} />}
+        {repo && !demo && tab === 'today' && <BackupBanner repo={repo} version={version} lastBackup={lastBackup} onGo={() => setTab('more')} />}
         {repo && tab === 'week' && <Week repo={repo} today={today} version={version} onChanged={bump} />}
         {repo && tab === 'lift' && <Lifting repo={repo} version={version} onChanged={bump} />}
         {repo && tab === 'run' && <Running repo={repo} today={today} version={version} />}

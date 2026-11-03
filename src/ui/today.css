@@ -256,3 +256,27 @@ label.inline select { min-width: 0; max-width: 100%; }
 .picker-control input { background:var(--bg); color:var(--fg); border:1px solid var(--line); border-radius:10px; min-height:56px; }
 .quick-reps-sets .picker-control { grid-template-columns:44px minmax(0,1fr) 44px; }
 @media(max-width:360px) { .quick-reps-sets { grid-template-columns:1fr; } }
+
+/* Session-first Today. The rolling window includes today's newly imported run. */
+.activity-pulse { max-width: 640px; margin: 0 auto 18px; }
+.pulse-brand { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 0 16px; }
+.pulse-brand span { font-weight:700; }
+.pulse-latest { border-top:3px solid var(--line); padding:16px 0; }
+.pulse-latest h2 { font-size:clamp(24px,6vw,34px); margin:4px 0; }
+.pulse-latest .visual-heading svg { width:42px; height:42px; flex-shrink:0; }
+.pulse-numbers { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin:18px 0; }
+.pulse-numbers div { min-width:0; display:flex; flex-direction:column; }
+.pulse-numbers b { font-size:clamp(26px,8vw,46px); font-style:italic; font-weight:900; line-height:1.1; overflow-wrap:anywhere; }
+.pulse-numbers span { font-size:14px; color:var(--muted); }
+.pulse-signal { border-left:4px solid var(--accent); padding-left:12px; margin-bottom:8px; }
+.activity-pulse summary,.next-session>summary { min-height:44px; padding:10px 0; cursor:pointer; }
+.pulse-signal summary { font-weight:800; }
+.pulse-averages { border-top:3px solid var(--line); padding-top:14px; }
+.pulse-averages .eyebrow { margin:0; }
+.pulse-recent>div { border-top:1px solid var(--line); padding:8px 0; }
+.next-session { max-width:640px; margin:0 auto 12px; }
+.next-session .hero-top,.next-session .stats,.next-session .hero>.rule:last-of-type { display:none; }
+.sync-status.card { padding:0 12px; margin-bottom:8px; }
+.sync-status>summary { min-height:44px; padding:10px 0; font-size:14px; }
+@media(max-width:340px){ .pulse-numbers { gap:6px; } .pulse-numbers b { font-size:26px; } .pulse-numbers span { font-size:12px; } }
+@media(max-width:340px){ .pulse-numbers b { font-size:clamp(18px,8vw,26px); white-space:nowrap; } }
