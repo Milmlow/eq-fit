@@ -4,6 +4,7 @@ import type { Exercise, Activity, Workout } from '../db/types';
 import type { Group } from '../lib/mapping';
 import { addDays, mondayOf } from '../lib/summary';
 import { trainingDays } from '../lib/progress';
+import { MovementArt } from './MovementArt';
 import { RunProgress } from './RunProgress';
 
 const MOVEMENTS = [
@@ -39,10 +40,9 @@ export function TrainingMomentum({ repo, today, version, onOpen }: { repo: Repo;
   return <>
     {error && <p className="error" role="alert">{error}</p>}
     <section className="progress-panel" aria-labelledby="momentum-heading">
-      <p className="eyebrow">BUILD THE HABIT</p><h2 id="momentum-heading">Show up. Log it. Build on it.</h2>
-      <p className="muted">{data ? `${days.filter(d => d.recorded).length} training days recorded this week.` : 'Loading your week…'} Rest days belong in the plan.</p>
-      <div className="day-strip">{days.map((d, i) => <div key={d.date} className={d.recorded ? 'recorded' : ''} aria-label={`${d.date}: ${d.future ? 'upcoming' : d.recorded ? 'training recorded' : 'no training recorded'}`}><span>{['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}</span><b>{d.recorded ? '✓' : d.future ? '·' : '—'}</b></div>)}</div>
-      <h3>Quick start</h3><div className="quick-lifts">{MOVEMENTS.map(m => <button key={m.name} disabled={busy || !data} onClick={() => setPick(m)}>{m.name}<span aria-hidden="true"> ↗</span></button>)}</div>
+      <div className="visual-heading"><div><p className="eyebrow">THIS WEEK</p><h2 id="momentum-heading">Your rhythm</h2></div><div className="day-count"><strong>{data ? days.filter(d => d.recorded).length : '—'}</strong><span>training days</span></div></div>
+      <div className="day-strip">{days.map((d, i) => <div key={d.date} className={`${d.recorded ? 'recorded' : ''} ${d.date === today ? 'is-today' : ''}`} aria-label={`${d.date}: ${d.future ? 'upcoming' : d.recorded ? 'training recorded' : 'no training recorded'}`}><span>{['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}</span><b>{d.recorded ? '✓' : d.future ? '·' : '—'}</b></div>)}</div>
+      <h3>Pick your lift</h3><div className="quick-lifts">{MOVEMENTS.map(m => <button key={m.name} disabled={busy || !data} onClick={() => setPick(m)}><MovementArt name={m.name} /><span>{m.name}</span><span className="lift-go" aria-hidden="true">↗</span></button>)}</div>
       {pick && <div className="card"><h3>{pick.name}</h3><p className="muted">Choose an existing exercise to keep its history, or start a new one. Different equipment stays separate.</p><div className="row gap wrap">
         {data?.exercises.map(ex => <button key={ex.id} disabled={busy} onClick={() => void open(ex)}>{ex.name}{ex.equipment ? ` · ${ex.equipment}` : ''}</button>)}
         <button disabled={busy} onClick={() => void open(pick)}>Use {pick.name} · {pick.equipment}</button><button disabled={busy} onClick={() => setPick(null)}>Cancel</button>

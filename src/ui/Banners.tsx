@@ -13,8 +13,8 @@ export function BackupBanner({ repo, version, lastBackup, onGo }: { repo: Repo; 
     <div className="banner" role="status" data-testid="backup-banner">
       <p>
         {s.state === 'never'
-          ? <><strong>No backup yet.</strong> Your data lives only in this browser. Make a backup file so a cleared browser or lost phone cannot erase it.</>
-          : <><strong>Last backup was {describeAge(s.days ?? 0)}.</strong> A fresh backup takes a few seconds.</>}
+          ? <><strong>No backup yet.</strong> Back up local workouts and settings.</>
+          : <><strong>Last backup was {describeAge(s.days ?? 0)}.</strong> Save a fresh copy of local workouts and settings.</>}
       </p>
       {onGo && <button type="button" onClick={onGo}>Go to Backup</button>}
     </div>

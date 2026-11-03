@@ -131,3 +131,35 @@ label.inline select { min-width: 0; max-width: 100%; }
   .blk { padding-right: 10px; }
   .blk-load { font-size: 18px; } .blk-label { font-size: 14px; } .blk-reps { font-size: 56px !important; }
 }
+
+/* Visual training dashboard: actual records, no invented targets. */
+.visual-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.visual-heading h2 { margin-bottom:0; }
+.day-count { display:flex; align-items:center; gap:8px; }
+.day-count strong { font-size:48px; line-height:1; font-variant-numeric:tabular-nums; }
+.day-count span { max-width:60px; font-size:12px; color:var(--muted); }
+.day-strip { margin:24px 0 28px; }
+.day-strip > div { border:0; gap:10px; background:transparent; }
+.day-strip b { display:grid; place-items:center; width:clamp(24px,7vw,48px); aspect-ratio:1; border:2px solid var(--line); border-radius:50%; margin:auto; }
+.day-strip .recorded b { background:var(--acc); color:var(--on-acc); border-color:var(--acc); }
+.day-strip .is-today b { outline:2px solid var(--fg); outline-offset:4px; }
+.quick-lifts button { position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:10px; padding:16px; min-height:150px; background:var(--bg); }
+.quick-lifts button > svg { width:96px; height:80px; color:var(--acc); align-self:center; }
+.quick-lifts button > span { font-weight:700; }
+.quick-lifts button .lift-go { position:absolute; right:12px; bottom:14px; }
+.visual-running .progress-metrics { padding:20px 0; border-bottom:1px solid var(--line); }
+.visual-trend { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:clamp(8px,3vw,24px); margin:24px 0 12px; }
+.visual-trend-col { text-align:center; font-size:12px; min-width:0; }
+.visual-trend-col b { font-size:16px; font-variant-numeric:tabular-nums; }
+.visual-trend-track { height:130px; display:flex; align-items:flex-end; border-bottom:1px solid var(--line); margin:10px 0; }
+.visual-trend-track > div { width:100%; background:var(--line); border-radius:8px 8px 0 0; }
+.visual-trend-col.current .visual-trend-track > div { background:var(--acc); }
+.visual-trend-col.current > span { font-weight:800; }
+.distance-delta { font-size:14px; }
+.distance-delta > span:first-child { font-size:22px; }
+.chart-details { font-size:13px; margin-top:18px; }
+.sync-status { padding:10px 14px; margin-bottom:10px; font-size:13px; }
+.sync-status summary { min-height:24px; cursor:pointer; }
+.banner { font-size:13px; }
+@media(min-width:700px) { .quick-lifts { grid-template-columns:repeat(4,minmax(0,1fr)); } }
+@media(max-width:360px) { .day-count strong { font-size:36px; } .quick-lifts button { padding:12px; } }
