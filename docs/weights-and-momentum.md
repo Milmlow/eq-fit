@@ -23,3 +23,13 @@ Browser QA used synthetic local data: log a 60 kg × 8 set, finish, repeat, veri
 ## Main-lift quick entry
 
 Tapping Bench press, Deadlift, Squat or Chin-ups opens a focused weight/reps/sets dialog. It selects the exact existing exercise/equipment identity when present and uses recent working-set values as editable suggestions. Large decrement/increment controls and numeric entry work together. A single explicit Save action atomically logs 1–20 identical completed sets; failures roll back the whole operation. Exercises remain in today's open weights session until Finish session is pressed. Added bodyweight load may stay unknown; assistance is labelled separately. Warm-up batches remain separate, and exercise/equipment selection is available under Details. Browser QA at 390 px saved and inspected three 62.5 kg × 8 sets.
+
+## Session-first Today (November 2026)
+
+Today now leads with the latest completed run/lift and a rolling 28-day dashboard through today. Outdoor pace remains distance-weighted; outdoor kilometres and completed lifting sessions are divided by four for weekly averages. Missing pace stays unknown. The existing historical calendar-week reports are unchanged.
+
+One factual signal accompanies the latest session: more distance than the mean of at least three previous outdoor runs in 28 days; a strictly improved working set compared with the previous dated session of the same external-load exercise; return after a gap; or recorded training-day consistency. No inferred quality score, pace-based praise, first-session PR, or target treated as achievement. Recomputed from saved history, so corrections remove unsupported signals. Same-day lifting comparisons are deliberately excluded because completion times are not recorded.
+
+Linked watch activities appear once, with their measured run metrics retained. An imported linked activity establishes completion for the recent feed even if its local plan remains unfinished. Unlinked planned lifting sessions never contribute. Small branding and Garmin status, backup reminder below Today, and collapsed next-session comparisons leave more room for training. Account, sync, storage schema and backups unchanged.
+
+Validation: 373 tests passed, 12 private-fixture tests skipped; production build passed. Phone-width preview inspected with synthetic data. Actual device offline/PWA testing not performed in this change.
