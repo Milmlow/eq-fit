@@ -55,6 +55,26 @@ const lines: [Event, Exclude<Tone,'off'>, Expression, string][] = [
  ['visit','friendly','deckchair','Coach tip: a deckchair does not need a personal best.'],
  ['visit','friendly','robe','The dressing gown has pockets for two pens and absolutely no authority.'],
  ['visit','friendly','proud','You can keep the numbers and switch me off. Healthy boundaries, inconvenient for my career.'],
+ ['run','friendly','eyebrow','Run logged. GPS gets satellites. I get a pen on a string.'],
+ ['run','friendly','clipboard','Run saved. My job is to stand here looking like I organised it.'],
+ ['run','friendly','permit','Run logged. The souvenir shop is just me selling the same whistle.'],
+ ['run','friendly','eyebrow','Run saved. Running shoe names sound like classified aircraft now.'],
+ ['run','friendly','clipboard','Run recorded. I have reviewed the numbers and underlined something for authority.'],
+ ['run','friendly','proud','Run logged. Yours to be pleased with. No speech required.'],
+ ['run','friendly','robe','Run saved. My coaching outfit has a belt. Unfortunately, it is a dressing gown.'],
+ ['run','friendly','eyebrow','Run recorded. A finish line made of bunting is still doing more than my whistle.'],
+ ['run','friendly','clipboard','Run saved. The sports desk is a folding table. Budget cuts.'],
+ ['run','friendly','permit','Run logged. Your imaginary appearance fee is one approving nod.'],
+ ['weights','friendly','eyebrow','Weights logged. Gym equipment names sound like jobs on a building site.'],
+ ['weights','friendly','clipboard','Session saved. I supervise gravity. It rarely takes feedback.'],
+ ['weights','friendly','permit','Lifting logged. My imaginary gym has a dress code: no lanyards near the equipment.'],
+ ['weights','friendly','eyebrow','Weights saved. A plate tree is a disappointing thing to give a gardener.'],
+ ['weights','friendly','clipboard','Session recorded. The dumbbells have declined my invitation to a planning meeting.'],
+ ['weights','friendly','proud','Lifting saved. This is your record of the work. Keep it for yourself.'],
+ ['weights','friendly','robe','Weights logged. The dressing gown is for coaching, not spotting. HR was very clear.'],
+ ['weights','friendly','eyebrow','Session saved. Gym mirrors are the only colleagues who attend every meeting.'],
+ ['weights','friendly','clipboard','Lifting recorded. My clipboard weighs almost nothing. I have checked repeatedly.'],
+ ['weights','friendly','permit','Weights saved. The imaginary awards dinner is BYO chair. And dinner.'],
 ];
 export const JOKES: Joke[] = lines.map(([event,tone,expression,text],i)=>({id:`eq-${String(i+1).padStart(3,'0')}`,text,tone,event,requiredFacts:event==='visit'?[]:[`completed:${event}`],exclusions:['tone_above_recipient_limit','cooldown','dismissed'],expression,cooldownDays:14,fallback:'Coach is taking a quiet moment. Your training tools are ready.'}));
 export interface Context { event: Event; aliases: string[]; key: string }
@@ -70,7 +90,7 @@ const ranks = {off:0,friendly:1,cheeky:2,filthy:3};
 export function eligible(j:Joke,ctx:Context,tone:Tone):boolean { return tone!=='off' && ranks[j.tone]<=ranks[tone] && j.event===ctx.event; }
 export function choose(state:CoachState,ctx:Context,now:number,another=false):{state:CoachState;joke?:Joke} {
  if (!state.tone || state.tone==='off') return {state};
- const cached=JOKES.find(j=>j.id===state.current?.id && state.current.key===ctx.key && eligible(j,ctx,state.tone!));
+ const cached=JOKES.find(j=>j.id===state.current?.id && state.current.key===ctx.key && !state.dismissed.includes(j.id) && eligible(j,ctx,state.tone!));
  if(!another && cached) return {state:{...state,seen:[...new Set([...state.seen,...ctx.aliases])]},joke:cached};
  const seen=ctx.aliases.some(id=>state.seen.includes(id)) || state.seen.includes(ctx.key);
  if(!another && seen) return {state:{...state,current:undefined,seen:[...new Set([...state.seen,...ctx.aliases])]}};
