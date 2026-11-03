@@ -87,7 +87,7 @@ export function Today({ repo, today, version, onChanged, theme }: { repo: Repo; 
       {error && <p role="alert" className="error">{error}</p>}
       <Milestones repo={repo} today={today} version={version} />
       <RepeatSession repo={repo} today={today} version={version} onOpen={id => { setOpen(id); void load(); onChanged(); }} />
-      <TrainingMomentum repo={repo} today={today} version={version} onOpen={(id) => { setOpen(id); void load(); onChanged(); }} />
+      <TrainingMomentum repo={repo} today={today} version={version} onChanged={onChanged} onOpen={(id) => { setOpen(id); void load(); onChanged(); }} />
       <section aria-labelledby="today-h" className="today-log">
         <h2 id="today-h">Today <span className="muted">{today}</span></h2>
         {loaded && (

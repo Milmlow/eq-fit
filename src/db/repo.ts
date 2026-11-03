@@ -162,6 +162,22 @@ export class Repo {
     return { workout: await this.createWorkout({ date, name: '', kind: 'weights' }), created: true };
   }
 
+  /** Atomically log a group of identical completed sets into today's open weights session. */
+  async quickLogLift(date: string, movement: { name: string; equipment: string; muscles: string[] }, exerciseId: string | null, input: SetInput, count: number): Promise<{ workout: Workout; exercise: Exercise }> {
+    if (!Number.isInteger(count) || count < 1 || count > 20) throw new Error('Choose 1 to 20 sets.');
+    if (input.reps === null || input.reps < 1) throw new Error('Enter at least one rep.');
+    const errors = validateSet(input);
+    if (errors.length) throw new Error(errors.join('; '));
+    return this.db.transaction('rw', this.db.workouts, this.db.exercises, this.db.sets, async () => {
+      const exercise = exerciseId ? await this.getExercise(exerciseId) : await this.createExercise(movement.name, movement.equipment, movement.muscles);
+      if (!exercise) throw new Error('Exercise no longer exists. Choose it again.');
+      const { workout } = await this.openOrCreateWeightsWorkout(date);
+      await this.updateWorkout(workout.id, { planned_exercise_ids: [...new Set([...workout.planned_exercise_ids, exercise.id])] });
+      for (let i = 0; i < count; i++) await this.addSet(workout.id, exercise.id, input);
+      return { workout, exercise };
+    });
+  }
+
   /** Repeat the exercise plan only. No completed sets, notes, links or status are carried forward. */
   async repeatWorkout(sourceId: string, date: string): Promise<Workout> {
     return this.db.transaction('rw', this.db.workouts, this.db.sets, this.db.exercises, async () => {
