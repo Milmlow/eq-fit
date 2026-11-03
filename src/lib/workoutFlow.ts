@@ -8,7 +8,7 @@ export function workoutChoices(workouts: Workout[], sets: SetRecord[], today: st
   const eligible = workouts.filter(w => w.kind === 'weights' && w.date <= today)
     .sort((a, b) => workoutOrderKey(b).localeCompare(workoutOrderKey(a)));
   return {
-    pending: eligible.filter(w => w.status === 'planned' && (w.date === today || w.planned_exercise_ids.length > 0 || counts.has(w.id))),
+    pending: eligible.filter(w => w.status === 'planned' && (w.planned_exercise_ids.length > 0 || counts.has(w.id))),
     recent: eligible.filter(w => w.status === 'done' && counts.has(w.id)).slice(0, 5),
     counts,
   };

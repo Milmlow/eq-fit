@@ -16,7 +16,7 @@ describe('low-friction workout choices', () => {
     const old = workout('old', '2026-11-01', 'planned', ['bench']);
     const today = workout('today', '2026-11-03', 'planned');
     const rows = [old, today, workout('empty', '2026-10-01', 'planned'), workout('future', '2026-11-04', 'planned', ['bench'])];
-    expect(workoutChoices(rows, [], '2026-11-03').pending).toEqual([today, old]);
+    expect(workoutChoices(rows, [], '2026-11-03').pending).toEqual([old]);
     expect(old.date).toBe('2026-11-01');
   });
   it('only offers repeats with actual sets, with latest first and a short list', () => {

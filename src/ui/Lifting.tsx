@@ -4,7 +4,6 @@ import type { Exercise, SetRecord, Workout } from '../db/types';
 import { bestE1rm, hintText, progressionHint, weeklyWorkingSets, type WeekSets } from '../lib/lifting';
 import { formatSet } from '../lib/training';
 import { StrengthChart } from './StrengthChart';
-import { IconLift } from './Icons';
 import { MovementArt } from './MovementArt';
 import { loadMode } from '../lib/strengthProgress';
 import { localToday } from '../lib/today';
@@ -44,8 +43,8 @@ export function Lifting({ repo, version, onChanged }: { repo: Repo; version: num
         const sessions=history[ex.id]??[];
         const last=sessions.at(-1),working=last?.sets.filter(s=>!s.warmup)??[];
         const best=working.at(-1);
-        const art=/bench/i.test(ex.name)?'Bench press':/squat/i.test(ex.name)?'Squat':/chin|pull.?up/i.test(ex.name)?'Chin-ups':/deadlift/i.test(ex.name)?'Deadlift':null;
-        return <button key={ex.id} className={`exercise-progress-card ${sel===ex.id?'selected':''}`} aria-pressed={sel===ex.id} onClick={()=>setSel(ex.id)}>{art?<MovementArt name={art}/>:<IconLift/>}<span><strong>{ex.name}</strong><small>{ex.equipment||'Equipment unspecified'}</small><b>{best?formatSet(best):'Log your first set'}</b><small>{last?`${last.workout.date} · ${sessions.length} ${sessions.length===1?'session':'sessions'}`:'No history yet'}</small></span><span aria-hidden="true">↗</span></button>;
+
+        return <button key={ex.id} className={`exercise-progress-card ${sel===ex.id?'selected':''}`} aria-pressed={sel===ex.id} onClick={()=>setSel(ex.id)}><MovementArt name={ex.name}/><span><strong>{ex.name}</strong><small>{ex.equipment||'Equipment unspecified'}</small><b>{best?formatSet(best):'Log your first set'}</b><small>{last?`${last.workout.date} · ${sessions.length} ${sessions.length===1?'session':'sessions'}`:'No history yet'}</small></span><span aria-hidden="true">↗</span></button>;
       })}</div>
       {sel && exercises.find(ex=>ex.id===sel) && <section className="card"><h3>{exercises.find(ex=>ex.id===sel)!.name}</h3><StrengthChart key={sel} exercise={exercises.find(ex=>ex.id===sel)!} sessions={history[sel]??[]} today={localToday()}/></section>}
 
