@@ -37,3 +37,29 @@
 .active-exercise-title:focus{outline:none}
 .focused-workout>.row h3>.muted{display:block;font-size:.75rem;font-weight:400;margin-top:4px}
 .more-movements{margin:10px 0}.more-movements>summary{margin-bottom:10px}
+
+/* A workout builder: selected tiles above one explicit multi-select checklist. */
+.workout-builder fieldset{border:0;margin:0;padding:0;min-width:0}
+.builder-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0}
+.builder-heading h3{margin:0;font-size:1.2rem}.builder-heading h3:focus{outline:none}
+.builder-heading button{padding:8px 12px;min-height:44px}
+.workout-builder .builder-name{margin:0 0 16px}.builder-name summary{justify-content:space-between;gap:8px;min-height:44px;font-size:.95rem}.builder-name summary span{color:var(--muted);font-size:.8rem}
+.builder-section-title{display:flex;align-items:center;gap:10px;margin:12px 0;font-size:1rem}.builder-section-title span{border-radius:100%;background:var(--acc);color:var(--on-acc);min-width:26px;min-height:26px;text-align:center;padding:3px;font-size:.85rem}
+.builder-empty{border:1px dashed var(--muted);border-radius:12px;padding:20px 12px;color:var(--muted);font-size:.9rem;margin:0 0 12px}
+.selected-exercise-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:300px;overflow-y:auto;margin-bottom:14px}
+.selected-exercise-tile{position:relative;display:flex;align-items:center;flex-direction:column;gap:4px;min-width:0;border:1px solid var(--acc);border-radius:12px;padding:24px 8px 12px;text-align:center}
+.selected-exercise-tile>svg{width:64px;height:48px;color:var(--acc)}.selected-exercise-tile strong{font-size:.85rem;overflow-wrap:anywhere}.selected-exercise-tile small{font-size:.75rem;color:var(--muted)}
+.exercise-order{position:absolute;left:10px;top:8px;font-size:.75rem;color:var(--muted)}.selected-exercise-tile .remove-selection{position:absolute;right:0;top:0;border:0;padding:0;min-width:44px;min-height:44px;font-size:22px;background:transparent}
+.exercise-checklist{border:1px solid var(--line);border-radius:12px;overflow:hidden}.checklist-toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;border:0;width:100%;min-height:52px;border-radius:0;padding:12px;font-size:.95rem;font-weight:700;text-align:left}
+.checklist-toggle>span:last-child{font-size:22px}.workout-builder .checklist-search{padding:0 12px;margin:8px 0;font-size:.8rem}.checklist-search input{font-size:16px;min-width:0}
+.checklist-scroll{max-height:300px;overflow-y:auto;overscroll-behavior:contain;padding:0 8px;scrollbar-width:thin}
+.exercise-check-row{display:flex;align-items:center;gap:10px;min-height:64px;padding:8px 4px;border-top:1px solid var(--line);cursor:pointer}.exercise-check-row input{width:22px;height:22px;flex:0 0 22px;margin:0;accent-color:var(--acc)}.exercise-check-row>svg{width:36px;height:32px;color:var(--acc);flex-shrink:0}.exercise-check-row>span{min-width:0}.exercise-check-row strong{display:block;font-size:.85rem}.exercise-check-row small{display:block;color:var(--muted);font-size:.75rem;margin-top:3px}.exercise-check-row.is-selected{background:var(--bg)}
+.exercise-checklist .checklist-done{width:100%;min-height:48px;border:0;border-top:1px solid var(--line);border-radius:0;font-size:.9rem}
+.workout-builder .builder-order,.workout-builder .builder-custom{margin:6px 0;font-size:.85rem}.builder-order summary{justify-content:space-between}.builder-order ol{padding-left:20px}.builder-order li{display:flex;align-items:center;gap:6px;margin:8px 0}.builder-order li>span{flex:1}.builder-order small{display:block;color:var(--muted)}.builder-order button{min-width:44px;min-height:44px;padding:4px}
+.builder-actions{position:sticky;bottom:82px;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 0;background:var(--card);border-top:1px solid var(--line);z-index:3;margin-top:12px}.builder-actions button{padding:10px 6px;min-height:50px;font-size:.85rem;margin:0}
+.quick-session-link{width:100%;min-height:44px;font-size:.85rem;margin-bottom:12px}
+.workout-builder [hidden]{display:none}
+@media(min-width:640px){.selected-exercise-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* While choosing, do not let the save bar cover checkbox rows. Done choosing
+   returns to the compact tile review with pinned save actions. */
+.builder-actions.choosing{position:static}

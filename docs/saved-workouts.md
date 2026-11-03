@@ -46,3 +46,34 @@ Native phone keyboards, device offline/relaunch behaviour and actual user usabil
 still need a real-device trial.
 
 ![Mobile workout flow at 390px and 320px, with synthetic QA records](effortless-workouts.jpg)
+
+## Checkbox builder — 4 November 2026
+
+Creation now has a visible entry point on Lift and Today, rather than a nested
+"Plan a workout" menu. The reusable-workout flow is:
+
+1. Create workout. A default name is provided; renaming is optional.
+2. Tick exercises in a single expandable, scrollable checklist. Exercise and
+   equipment are labelled together. The complete built-in list is available even
+   when the user has never saved an exercise; exact existing identities are reused.
+3. Selected picture tiles show what is in the workout. Remove a tile or untick its
+   row to remove it; Change order exposes optional up/down controls. Done choosing
+   collapses the list to review the tiles. Custom exercises remain an optional path.
+4. Save workout for later, or Save & start to save it and open an empty planned
+   session. Only Log set records completed work during training.
+
+Selection is entirely draft state: cancelling, ticking/unticking and custom draft
+creation do not write exercises or routines. Saving resolves choices and persists
+the routine (and optional session) in one transaction, rolling back on failure.
+Editing a routine does not modify an already-started session. Completely empty
+sessions no longer displace useful Continue choices. Quick session remains a
+separate entry point for logging without a saved plan. Lifting history now uses
+the same movement illustrations as selection, including push-ups.
+
+Validation: 419 automated tests passed (12 private-fixture tests skipped), including
+identity deduplication, equipment separation, ordered save, empty planned starts,
+rollback and isolation of existing sessions. Mobile browser checks at 390/320px
+covered multi-selection, tile removal, unticking, ordering, save/reopen, custom
+selection cancellation and Save & start. Native iOS usability still needs a trial.
+
+![Expanded checkbox list and selected-tile review on two phone widths](workout-checklist.jpg)
