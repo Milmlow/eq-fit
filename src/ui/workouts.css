@@ -63,3 +63,34 @@
 /* While choosing, do not let the save bar cover checkbox rows. Done choosing
    returns to the compact tile review with pinned save actions. */
 .builder-actions.choosing{position:static}
+
+/* Compact in-session logging. Keep touch targets large, not the surrounding form. */
+.focused-workout .exercise-strip{padding:8px 0;gap:6px}
+.focused-workout .exercise-strip button{flex-basis:76px;padding:6px 4px;min-height:76px;border-color:transparent}
+.focused-workout .exercise-strip svg{width:30px;height:24px}
+.focused-workout .exercise-strip .add-exercise-tile{flex-basis:48px;font-size:24px}
+.focused-workout .add-exercise-tile span{font-size:.75rem}
+.focused-workout .active-movement{justify-content:space-between;margin:8px 0 0;gap:8px}
+.focused-workout .active-exercise-title{font-size:1.25rem}
+.focused-workout .next-set-form{position:relative;margin-top:4px;padding-top:0}
+.focused-workout .number-picker{font-size:.8rem;margin:4px 0 8px}
+.focused-workout .number-picker input{font-size:22px;min-height:48px;padding:6px 0}
+.focused-workout .visual-set-inputs{gap:8px}
+.focused-workout .visual-set-inputs .picker-control{grid-template-columns:44px minmax(0,1fr) 44px}
+.focused-workout .visual-set-inputs:has(>.number-picker:only-child){grid-template-columns:1fr}
+.focused-workout .set-extras{margin:0;font-size:.8rem}
+.focused-workout .set-extras>summary{min-height:44px;justify-content:flex-end}
+.focused-workout .set-extras:not([open]){position:absolute;right:0;top:-36px}
+.focused-workout .active-movement>.small{margin-right:44px}
+.focused-workout .add-weight{min-height:44px;padding:6px 10px;margin-bottom:6px;font-size:.8rem;border:0}
+.focused-workout .log-set{margin:0;min-height:50px}
+.focused-workout .set-feedback{min-height:0;justify-content:flex-end}
+.focused-workout .set-feedback button{border:0;font-size:.75rem;padding:0 8px}
+.focused-workout .logged-sets{margin:0;max-height:156px;overflow-y:auto}
+.logged-set-row{display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:6px 8px;text-align:left;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;font-size:.85rem}
+.logged-set-row strong{flex:1}.logged-set-row>span:first-child{color:var(--muted);min-width:20px}
+.focused-workout .prior-details{margin:0;font-size:.75rem}
+.focused-workout .workout-more>summary{min-height:44px;justify-content:flex-end}
+.focused-workout .session-end{position:sticky;bottom:82px;background:var(--card);padding:8px 0;margin:0;z-index:2}
+.focused-workout .session-end>details{font-size:.75rem}
+.focused-workout .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
