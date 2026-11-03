@@ -24,7 +24,7 @@ export function SessionFinish({ repo, workoutId, onDone, onEdit }: { repo: Repo;
     {error && <p role="alert">{error}</p>}
     {data && <>
       <p>{data.session.title}</p>
-      <p className="finish-count"><strong>{data.session.sets.length}</strong> working sets · <strong>{new Set(data.session.sets.map(s => s.exercise_id)).size}</strong> exercises</p>
+      <p className="finish-count"><strong>{data.session.sets.length}</strong> working {data.session.sets.length === 1 ? 'set' : 'sets'} · <strong>{new Set(data.session.sets.map(s => s.exercise_id)).size}</strong> {new Set(data.session.sets.map(s => s.exercise_id)).size === 1 ? 'exercise' : 'exercises'}</p>
       <details><summary>Your sets</summary>{data.exercises.filter(e => data.session.sets.some(s => s.exercise_id === e.id)).map(e => <div key={e.id}><h3>{e.name}</h3><p>{data.session.sets.filter(s => s.exercise_id === e.id).map(formatSet).join(' · ')}</p></div>)}</details>
       <CoachEQ session={data.session} today={today} scope={repo.db.name} history={data.history} exercises={data.exercises} share />
     </>}

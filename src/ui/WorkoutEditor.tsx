@@ -7,6 +7,8 @@ import { nextSuggestion, loadMode } from '../lib/strengthProgress';
 import { Badge } from './Badge';
 import { SessionFinish } from './SessionFinish';
 import './workouts.css';
+import { ExercisePicker, type ExercisePickerProps } from './ExercisePicker';
+import { NumberPicker } from './QuickLift';
 
 interface Block {
   exercise: Exercise;
@@ -90,7 +92,7 @@ export function WorkoutEditor({ repo, workoutId, onChanged, onClose }: { repo: R
         <button disabled={active === 0 || setBusy} onClick={() => setActive(n => Math.max(0, n - 1))}>Previous</button>
         {active < blocks.length - 1 && <button className="primary" disabled={setBusy} onClick={() => setActive(n => n + 1)}>Next exercise →</button>}
       </div>}
-      <AddExercise initiallyOpen={!blocks.length} onBusyChange={setSetBusy}
+      <AddExercise selected={blocks.map(b => b.exercise)} initiallyOpen={!blocks.length} onBusyChange={setSetBusy}
         existing={addable}
         onPick={async id => { await repo.updateWorkout(workout.id, { planned_exercise_ids: [...workout.planned_exercise_ids, id] }); await load(); onChanged(); setActive(blocks.length); }}
         onCreate={async (name, equipment, muscles) => {
@@ -136,7 +138,7 @@ function ExerciseBlock({ block, workout, onAdd, onRemove, onEditSet, onEditExerc
   const suggestion = nextSuggestion(block.prior?.sets ?? [], block.sets);
   const last = block.sets[block.sets.length - 1] ?? suggestion.working;
   const [load, setLoad] = useState(last?.load_kg?.toString() ?? '');
-  const [reps, setReps] = useState(last?.reps?.toString() ?? '');
+  const [reps, setReps] = useState(last?.reps?.toString() ?? '8');
   const [rir, setRir] = useState('');
   const [warm, setWarm] = useState(false);
   const [pain, setPain] = useState('');
@@ -186,10 +188,10 @@ function ExerciseBlock({ block, workout, onAdd, onRemove, onEditSet, onEditExerc
       </div>}
       <form className="next-set-form" onSubmit={(e) => void submit(e)} aria-label={`Log a set of ${ex.name}`}>
         <div className="set-compare"><span>{warm ? 'Warm-up' : 'Working set'} {block.sets.filter(s=>s.warmup===warm).length+1}</span><span>Previous: <strong>{(warm?suggestion.warmup:suggestion.working) ? formatSet((warm?suggestion.warmup:suggestion.working)!) : '—'}</strong></span></div>
-        <div className="set-inputs">
-          <label className="field">{loadMode(ex) === 'assisted' ? 'Assistance (kg)' : loadMode(ex) === 'bodyweight' ? 'Added load (kg, optional)' : 'Load (kg)'}<input inputMode="decimal" value={load} onChange={(e) => setLoad(e.target.value)} /></label>
-          <label className="field">Reps<input inputMode="numeric" value={reps} onChange={(e) => setReps(e.target.value)} /></label>
-          
+        {load === '' && loadMode(ex) !== 'bodyweight' && <div className="weight-shortcuts" aria-label="Weight shortcuts">{[20,40,60,80].map(kg => <button key={kg} type="button" onClick={() => setLoad(String(kg))}>{kg} kg</button>)}</div>}
+        <div className="visual-set-inputs">
+          <NumberPicker label={loadMode(ex) === 'assisted' ? 'Assistance (kg)' : loadMode(ex) === 'bodyweight' ? 'Added load (kg)' : 'Load (kg)'} value={load} onChange={setLoad} step={2.5} min={0} max={1000} optional />
+          <NumberPicker label="Reps" value={reps} onChange={setReps} step={1} min={0} max={1000} optional />
         </div>
         <label className="check"><input type="checkbox" checked={warm} onChange={(e) => { const isWarm=e.target.checked; setWarm(isWarm); const s=isWarm?suggestion.warmup:suggestion.working; if(s){setLoad(s.load_kg?.toString()??'');setReps(s.reps?.toString()??'');} }} /> Warm-up set</label>
         <details><summary>RIR / pain note</summary><label className="field">RIR (optional)<input inputMode="decimal" value={rir} onChange={e=>setRir(e.target.value)}/></label>
@@ -213,7 +215,12 @@ function ExerciseBlock({ block, workout, onAdd, onRemove, onEditSet, onEditExerc
   );
 }
 
-export function AddExercise({ existing, onPick, onCreate, initiallyOpen = false, onBusyChange }: {
+export function AddExercise(props: ExercisePickerProps & { initiallyOpen?: boolean; alwaysOpen?: boolean }) {
+  const content = <ExercisePicker {...props}><ManualExerciseForm {...props} initiallyOpen /></ExercisePicker>;
+  return props.alwaysOpen ? content : <details className="add-ex" open={props.initiallyOpen || undefined}><summary>+ Add exercise</summary>{content}</details>;
+}
+
+function ManualExerciseForm({ existing, onPick, onCreate, initiallyOpen = false, onBusyChange }: {
   existing: Exercise[]; onPick: (id: string) => Promise<unknown>; onCreate: (n: string, e: string, m: string[]) => Promise<unknown>; initiallyOpen?: boolean; onBusyChange?: (busy: boolean) => void;
 }) {
   const [pick, setPick] = useState('');
@@ -233,7 +240,7 @@ export function AddExercise({ existing, onPick, onCreate, initiallyOpen = false,
     finally { lock.current = false; setBusy(false); onBusyChange?.(false); }
   }
   return <details className="add-ex" open={initiallyOpen || undefined}>
-    <summary>+ Add exercise</summary>
+    <summary>Custom exercise details</summary>
     <fieldset disabled={busy}>
       {existing.length > 0 && <div className="row gap wrap">
         <label className="field grow">Your exercises<select value={pick} onChange={e => setPick(e.target.value)}>
