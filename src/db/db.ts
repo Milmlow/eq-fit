@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { Activity, Exercise, ImportBatch, MigrationRecord, SetRecord, TypeMapping, Workout } from './types';
+import type { Activity, Exercise, Routine, ImportBatch, MigrationRecord, SetRecord, TypeMapping, Workout } from './types';
 
 export class RecompDB extends Dexie {
   migrations!: Table<MigrationRecord, number>;
@@ -9,6 +9,7 @@ export class RecompDB extends Dexie {
   exercises!: Table<Exercise, string>;
   workouts!: Table<Workout, string>;
   sets!: Table<SetRecord, string>;
+  routines!: Table<Routine, string>;
 
   constructor(name = 'recomp') {
     super(name);
@@ -27,6 +28,7 @@ export class RecompDB extends Dexie {
     });
     // Schema v3 (Stage 3): optional non-indexed fields (exercise rep range). No index change, data untouched.
     this.version(3).stores({});
+    this.version(4).stores({ routines: 'id, name' });
   }
 }
 
@@ -40,6 +42,7 @@ export const MIGRATIONS: Migration[] = [
   { version: 1, name: 'initial schema: batches, activities, type_mappings' },
   { version: 2, name: 'stage 2: exercises, workouts, sets (additive)' },
   { version: 3, name: 'stage 3: optional exercise rep range (no index change)' },
+  { version: 4, name: 'saved routines: exercise lists separate from sessions' },
 ];
 
 export async function recordMigrations(db: RecompDB): Promise<void> {

@@ -9,8 +9,8 @@ class CoachBoundary extends Component<{children:ReactNode},{failed:boolean}> {
  render(){return this.state.failed?<p className="muted">Coach is unavailable. Your training tools are ready.</p>:this.props.children;}
 }
 export function CoachEQ(props:CoachProps) {return <CoachBoundary><CoachCard key={props.scope} {...props}/></CoachBoundary>;}
-interface CoachProps {session?:Session;today:string;scope:string;history?:Session[];exercises?:Exercise[]}
-function CoachCard({session,today,scope,history=[],exercises=[]}:CoachProps) {
+interface CoachProps {session?:Session;today:string;scope:string;history?:Session[];exercises?:Exercise[];share?:boolean}
+function CoachCard({session,today,scope,history=[],exercises=[],share=false}:CoachProps) {
  const key=`eqfit.coach.v1:${scope}`;
  const [state,setState]=useState(()=>readCoach(key));
  const [preview,setPreview]=useState<Tone>('cheeky');
@@ -35,6 +35,13 @@ function CoachCard({session,today,scope,history=[],exercises=[]}:CoachProps) {
  return <aside ref={cardRef} className="coach-card" aria-label="Coach EQ">
  <div className="coach-heading"><div><p className="eyebrow">COACH EQ · {ctx.event==='visit'?'OFFICE HOURS':'SESSION BANTER'}</p><p className="muted">Training numbers. Optional nonsense.</p></div><button aria-expanded={settings} onClick={()=>{setPreview(state.tone??'cheeky');setSettings(!settings);}}>Tone / privacy</button></div>
  {state.tone===null?<><div className="coach-line"><CoachArt/><div><h3>Meet the clipboard behind the attitude.</h3><p>Optional banter. Real training numbers. Preview your coach:</p></div></div>{controls}</>:state.tone==='off'?<p className="muted">Coach is quiet. Change tone whenever you like.</p>:<><div className="coach-line"><CoachArt expression={joke?.expression??'deckchair'}/><div><p className="coach-joke">{joke?.text??'Coach is taking a quiet moment. Your training tools are ready.'}</p><small className="muted">Coach banter</small>{evidence.length>0&&<details className="coach-evidence"><summary>Based on your record</summary>{evidence.map(f=><p key={f}>{f}</p>)}</details>}</div></div><details className="coach-tools"><summary>Banter controls</summary><div className="coach-actions"><button onClick={()=>{persist(choose(state,ctx,Date.now(),true).state);setNotice('');}}>Another one</button>{joke&&<><button onClick={()=>vote('landed')}>That landed</button><button onClick={()=>vote('not-funny')}>Not funny</button></>}<button onClick={mute}>Alright, shut up</button></div></details></>}
+ {share && joke && state.tone !== null && state.tone !== 'off' && <button onClick={async () => {
+   try {
+     if (navigator.share) await navigator.share({ title: 'Coach EQ', text: `${joke.text}\n— Coach EQ` });
+     else if (navigator.clipboard) { await navigator.clipboard.writeText(`${joke.text}\n— Coach EQ`); setNotice('Sledge copied. Choose where to share it.'); }
+     else setNotice('Sharing is unavailable here.');
+   } catch (e) { if (!(e instanceof Error && e.name === 'AbortError')) setNotice('Could not share. Your session is saved.'); }
+ }}>Share the sledge</button>}
  {settings&&<>{state.tone!==null&&controls}<label className="coach-consent"><input type="checkbox" checked={state.consent} onChange={e=>persist({...state,consent:e.target.checked,feedback:e.target.checked&&state.trial?state.feedback:[],trial:e.target.checked?(state.trial??{days:[],shown:[],muted:0}):undefined})}/> Count visible jokes, Coach-view days, votes and mutes on this device</label><p className="muted">No analytics are sent. First enabling these expanded counts starts a fresh trial; older vote-only consent does not enable them. Tone, repetition history and votes stay in this browser, separate for each local trial profile. They are not included in training backups. Turning collection off clears votes and trial counts. No activity details are exported. Counts are capped at 300 visible joke cards; repeated views of the same joke for the same event on the same day count once. Coach-view days are not a measure of exercise adherence.</p>{state.consent&&<p>Visible joke cards: {state.trial?.shown.length??0} · Coach-view days (up to 14): {state.trial?.days.length??0} · Mutes: {state.trial?.muted??0} · That landed: {state.feedback.filter(f=>f.vote==='landed').length} · Not funny: {state.feedback.filter(f=>f.vote==='not-funny').length}</p>}</>}
  {notice&&<p role="status" className="muted">{notice}</p>}
  </aside>;

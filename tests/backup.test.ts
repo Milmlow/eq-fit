@@ -50,8 +50,8 @@ describe('oracle: the app export equals the independently built fixture', () => 
     expect(viaText.schemaVersion).toBe(BACKUP_SCHEMA_VERSION);
     expect(viaText.exportedAt).toBe('2026-11-02T04:00:00.000Z');
     expect(typeof viaText.appVersion).toBe('string');
-    expect(viaText.counts).toEqual(ORACLE.counts_v3);
-    for (const t of TABLE_NAMES) expect(viaText.tables[t], t).toEqual(V3.tables[t]);
+    expect(viaText.counts).toEqual({ ...ORACLE.counts_v3, routines: 0 });
+    for (const t of TABLE_NAMES) expect(viaText.tables[t], t).toEqual(t === 'routines' ? [] : V3.tables[t]);
   });
 
   it('export, wipe, restore gives deep-equal data in every table', async () => {
@@ -60,12 +60,12 @@ describe('oracle: the app export equals the independently built fixture', () => 
     const before = await snapshot(repo);
     const text = serializeBackup(await repo.exportBackup());
     for (const t of TABLE_NAMES) await repo.db[t].clear();
-    expect(await repo.tableCounts()).toEqual({ batches: 0, activities: 0, type_mappings: 0, exercises: 0, workouts: 0, sets: 0 });
+    expect(await repo.tableCounts()).toEqual({ batches: 0, activities: 0, type_mappings: 0, exercises: 0, workouts: 0, sets: 0, routines: 0 });
     const r = await tryRestore(repo, text);
     expect(r.ok).toBe(true);
     const after = await snapshot(repo);
     for (const t of TABLE_NAMES) expect(after[t], t).toEqual(before[t]);
-    expect(await repo.tableCounts()).toEqual(ORACLE.counts_v3);
+    expect(await repo.tableCounts()).toEqual({ ...ORACLE.counts_v3, routines: 0 });
   });
 
   it('restore replaces existing data (it does not merge)', async () => {
@@ -95,9 +95,9 @@ describe('older schema versions migrate on restore', () => {
     const repo = await freshRepo();
     const r = await tryRestore(repo, JSON.stringify(V2));
     expect(r.ok && r.sourceVersion).toBe(2);
-    expect(r.ok && r.backup.schemaVersion).toBe(3);
+    expect(r.ok && r.backup.schemaVersion).toBe(BACKUP_SCHEMA_VERSION);
     const back = await snapshot(repo);
-    for (const t of TABLE_NAMES) expect(back[t], t).toEqual(V2.tables[t]);
+    for (const t of TABLE_NAMES) expect(back[t], t).toEqual(t === 'routines' ? [] : V2.tables[t]);
     expect(back.exercises.every((e) => !('rep_min' in e))).toBe(true); // unknown stays unknown, not defaulted
     // and the restored database is a normal current-schema database: editing a rep range works
     const ex = back.exercises[0];
@@ -111,7 +111,7 @@ describe('older schema versions migrate on restore', () => {
     const r = await tryRestore(repo, JSON.stringify(V1));
     expect(r.ok && r.sourceVersion).toBe(1);
     const c = await repo.tableCounts();
-    expect(c).toEqual({ ...ORACLE.counts_v1, exercises: 0, workouts: 0, sets: 0 });
+    expect(c).toEqual({ ...ORACLE.counts_v1, exercises: 0, workouts: 0, sets: 0, routines: 0 });
     const back = await snapshot(repo);
     for (const t of ['batches', 'activities', 'type_mappings'] as const) expect(back[t], t).toEqual(V1.tables[t]);
   });
@@ -120,7 +120,7 @@ describe('older schema versions migrate on restore', () => {
     const repo = await freshRepo();
     const r = await tryRestore(repo, JSON.stringify(V3));
     expect(r.ok && r.sourceVersion).toBe(3);
-    expect(await repo.tableCounts()).toEqual(ORACLE.counts_v3);
+    expect(await repo.tableCounts()).toEqual({ ...ORACLE.counts_v3, routines: 0 });
   });
 });
 
@@ -135,7 +135,7 @@ describe('bad backups are rejected and existing data is unchanged', () => {
     ['array at top level', '[]', /not an EQ Fit backup/],
     ['null', 'null', /not an EQ Fit backup/],
     ['wrong format marker', mut((d) => { (d as unknown as Record<string, unknown>).format = 'something-else'; }), /wrong format/],
-    ['newer schema version', mut((d) => { d.schemaVersion = 4; }), /version 4/],
+    ['newer schema version', mut((d) => { d.schemaVersion = 5; }), /version 5/],
     ['schema version 0', mut((d) => { d.schemaVersion = 0; }), /schema version/],
     ['schema version as text', mut((d) => { (d as unknown as Record<string, unknown>).schemaVersion = '3'; }), /schema version/],
     ['missing schema version', mut((d) => { delete (d as unknown as Record<string, unknown>).schemaVersion; }), /schema version/],
@@ -219,7 +219,7 @@ describe('restore is one atomic transaction', () => {
   it('restore leaves the migration ledger and a usable database', async () => {
     const repo = await freshRepo();
     await tryRestore(repo, JSON.stringify(V3));
-    expect((await repo.listMigrations()).map((m) => m.version)).toEqual([1, 2, 3]);
+    expect((await repo.listMigrations()).map((m) => m.version)).toEqual([1, 2, 3, 4]);
     const w = await repo.createWorkout({ date: '2026-11-02', name: 'After restore', kind: 'weights' });
     expect(await repo.getWorkout(w.id)).toBeTruthy();
   });
@@ -258,7 +258,7 @@ describe('lossless export', () => {
     const back = (await repo.db.activities.get(t.activities[0].id))!;
     expect(Object.is(back.parsed['Min Elevation'], 0)).toBe(true);
     expect(back.raw_fields['Min Elevation']).toBe("'-0");
-    expect(normalizeNegativeZero(await snapshot(repo))).toEqual(normalizeNegativeZero(t));
+    expect(normalizeNegativeZero(await snapshot(repo))).toEqual(normalizeNegativeZero({ ...t, routines: [] }));
     // any OTHER lossy value still refuses
     const doc = await repo.exportBackup();
     doc.tables.activities[0] = { ...doc.tables.activities[0], calories: Number.NaN };

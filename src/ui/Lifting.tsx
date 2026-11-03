@@ -9,7 +9,8 @@ import { MovementArt } from './MovementArt';
 import { loadMode } from '../lib/strengthProgress';
 import { localToday } from '../lib/today';
 import { Badge } from './Badge';
-import { EditExercise, SetEditForm } from './WorkoutEditor';
+import { Routines } from './Routines';
+import { EditExercise, SetEditForm, WorkoutEditor } from './WorkoutEditor';
 
 interface Session { workout: Workout; sets: SetRecord[] }
 
@@ -19,6 +20,7 @@ export function Lifting({ repo, version, onChanged }: { repo: Repo; version: num
   const [history, setHistory] = useState<Record<string, Session[]>>({});
   const [error, setError] = useState('');
   const [sel, setSel] = useState<string>('');
+  const [open, setOpen] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const all = await repo.allSetsWithContext();
@@ -30,9 +32,11 @@ export function Lifting({ repo, version, onChanged }: { repo: Repo; version: num
   }, [repo]);
   useEffect(() => { void load().catch(()=>setError('Could not load strength history. Please retry.')); }, [load, version]);
 
-  if (!weeks) return <p>Loading...</p>;
+  if (open) return <WorkoutEditor key={open} repo={repo} workoutId={open} onChanged={onChanged} onClose={() => setOpen(null)} />;
+  if (!weeks) return <p>{error || 'Loading...'}</p>;
   return (
     <section aria-labelledby="lift-h">
+      <Routines repo={repo} today={localToday()} version={version} onChanged={onChanged} onOpen={setOpen} />
       <p className="eyebrow">YOUR STRENGTH</p><h2 id="lift-h">Small steps. Real progress.</h2>
       <p className="muted small">Saved on this device · back up from More.</p>
       {error && <p role="alert">{error}</p>}

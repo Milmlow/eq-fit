@@ -78,6 +78,13 @@ export interface Workout extends Base {
   created_at: string; // ISO; orders workouts within a date
 }
 
+/** A reusable exercise list, never a completed workout or a source of logged sets. */
+export interface Routine extends Base {
+  name: string;
+  exercise_ids: string[];
+  created_at: string;
+}
+
 export interface SetRecord extends Base {
   workout_id: string;
   exercise_id: string;

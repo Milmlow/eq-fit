@@ -11,6 +11,7 @@ import { TodayHero } from './TodayHero';
 import { WorkoutEditor } from './WorkoutEditor';
 import { Milestones } from './Milestones';
 import { RepeatSession } from './RepeatSession';
+import { Routines } from './Routines';
 import { TrainingMomentum } from './TrainingMomentum';
 
 type Act = Activity & { group: string };
@@ -81,12 +82,15 @@ export function Today({ repo, today, version, onChanged, theme }: { repo: Repo; 
   const done = workouts.filter((w) => w.status === 'done');
   const label = (w: Workout) => w.name || (w.kind === 'run' ? 'Run' : 'Weights session');
 
+  if (open) return <div ref={editorRef} tabIndex={-1} className="editor-anchor"><WorkoutEditor key={open} repo={repo} workoutId={open} onChanged={() => { void load(); onChanged(); }} onClose={() => { setOpen(null); void load(); }} /></div>;
+
   return (
     <div className="today-wrap">
       <ActivityPulse repo={repo} today={today} version={version} onOpen={setOpen} />
       {hero && <details className="next-session"><summary>Next weights session · Start / continue</summary><TodayHero data={hero} theme={theme} onStart={() => void start()} starting={starting} demo={false} /></details>}
       {!hero && <p>Loading...</p>}
       {error && <p role="alert" className="error">{error}</p>}
+      <Routines repo={repo} today={today} version={version} onChanged={onChanged} onOpen={setOpen} />
       <RepeatSession repo={repo} today={today} version={version} onOpen={id => { setOpen(id); void load(); onChanged(); }} />
       <TrainingMomentum repo={repo} today={today} version={version} onChanged={onChanged} onOpen={(id) => { setOpen(id); void load(); onChanged(); }} />
       <Milestones repo={repo} today={today} version={version} />
