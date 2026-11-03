@@ -17,3 +17,32 @@ Routine setup and in-session Add exercise now offer 12 movement illustrations wi
 Logging now reuses the large minus/plus number controls. New exercises suggest eight reps; missing weight remains blank with optional 20/40/60/80 kg shortcuts. Values remain editable suggestions until Log completed set is pressed; no set is logged merely by choosing a picture or adjusting a number. Unrecognised custom movements use a generic weights icon rather than an incorrect deadlift illustration.
 
 Validation: 408 JavaScript tests passed, 12 unavailable private-fixture tests skipped; production build passed. Browser test created Workout 1 with dumbbell shoulder press and cable lat pulldown, saved it, logged 22.5 kg × 9 using taps only and reached the finish/Coach screen. Picture layouts inspected at 390px and 320px. Actual mobile keyboard/native sharing/offline checks remain device-specific.
+
+## Everyday workout flow — November 2026
+
+Today and Lift now share one entry point: continue the newest unfinished workout,
+repeat the latest completed workout, or start something different. Saved routines
+and other recent sessions remain available behind short disclosures. A completed
+session with actual sets is repeatable without naming it or saving a template.
+Future plans are not offered early. Older unfinished sessions retain their original
+date; stale empty drafts from previous days are not promoted.
+
+During training, picture tabs switch exercises without implying that an exercise is
+complete. The next set appears before saved-set history. Load and reps sit side by
+side, advanced notes are collapsed, and Log set is the explicit completion action.
+Undo removes the last set of the current exercise; saved rows remain editable.
+Reopening restores the exercise of the last saved set. Suggestions follow the next
+previous set, then this session's latest values, keeping warm-ups separate. The
+exercise picker closes after a successful addition and focus moves to the exercise.
+
+Pause preserves logged sets; unlogged input is not a completed set or durable draft.
+No database/backup format changes. No timed holds, prescribed target sets, PDF
+imports, new exercise catalogue expansion, or Garmin strength imports in this change.
+
+Validation: automated workout-choice/suggestion tests plus the existing suite;
+manual browser checks at 390px and 320px for repeat (zero copied sets), adjustment,
+log, undo, correction, pause/reload/resume, adding a movement mid-session and finish.
+Native phone keyboards, device offline/relaunch behaviour and actual user usability
+still need a real-device trial.
+
+![Mobile workout flow at 390px and 320px, with synthetic QA records](effortless-workouts.jpg)

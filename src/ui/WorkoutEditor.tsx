@@ -9,6 +9,9 @@ import { SessionFinish } from './SessionFinish';
 import './workouts.css';
 import { ExercisePicker, type ExercisePickerProps } from './ExercisePicker';
 import { NumberPicker } from './QuickLift';
+import { MovementArt } from './MovementArt';
+import { entryDefaults, resumeExercise } from '../lib/workoutFlow';
+import { nextWorkoutName } from '../lib/exerciseCatalog';
 
 interface Block {
   exercise: Exercise;
@@ -27,6 +30,8 @@ export function WorkoutEditor({ repo, workoutId, onChanged, onClose }: { repo: R
   const [routineName, setRoutineName] = useState<string | null>(null);
   const [routineMessage, setRoutineMessage] = useState('');
   const actionLock = useRef(false);
+  const restored = useRef(false);
+  const panel = useRef<HTMLElement>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -42,9 +47,16 @@ export function WorkoutEditor({ repo, workoutId, onChanged, onClose }: { repo: R
       bs.push({ exercise, sets: sets.filter((s) => s.exercise_id === id), prior: await repo.priorComparable(w, id) });
     }
     setWorkout(w); setBlocks(bs); setAll(exercises);
+    if (!restored.current) { setActive(resumeExercise(bs.map(b => b.exercise.id), sets)); restored.current = true; }
   }, [repo, workoutId]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { void load().catch(() => setError('Could not open this workout. Please close and retry.')); }, [load]);
+
+  useEffect(() => {
+    const heading = panel.current?.querySelector<HTMLElement>('[data-active-exercise] .active-exercise-title');
+    heading?.focus({ preventScroll: true });
+    heading?.scrollIntoView({ block: 'nearest' });
+  }, [active, blocks.length]);
 
   async function run(fn: () => Promise<unknown>) {
     setError(null); setSaving(true);
@@ -61,31 +73,33 @@ export function WorkoutEditor({ repo, workoutId, onChanged, onClose }: { repo: R
   async function saveRoutine() {
     if (actionLock.current) return;
     actionLock.current = true; setSaving(true); setError(null);
-    try { await repo.saveRoutine(routineName ?? workout?.name ?? '', blocks.map(b => b.exercise.id)); setRoutineMessage('Saved in Your workouts.'); onChanged(); }
+    try { const routines = await repo.listRoutines(); await repo.saveRoutine(routineName?.trim() || workout?.name || nextWorkoutName(routines.map(r => r.name)), blocks.map(b => b.exercise.id)); setRoutineMessage('Saved in Your workouts.'); onChanged(); }
     catch (e) { setError(e instanceof Error ? e.message : 'Could not save workout.'); }
     finally { actionLock.current = false; setSaving(false); }
   }
   if (finished) return <SessionFinish repo={repo} workoutId={workoutId} onDone={onClose} onEdit={() => setFinished(false)} />;
-  if (!workout) return <p>Loading workout…</p>;
+  if (!workout) return <div><p role={error ? 'alert' : undefined}>{error || 'Loading workout…'}</p><button onClick={onClose}>Back</button></div>;
   const inWorkout = new Set(blocks.map((b) => b.exercise.id));
   const addable = all.filter((e) => !inWorkout.has(e.id));
+  const totalSets = blocks.reduce((n, b) => n + b.sets.length, 0);
 
   return (
-    <section className="card focused-workout" aria-label={`Workout ${workout.name || workout.kind}`}>
+    <section ref={panel} className="card focused-workout" aria-label={`Workout ${workout.name || workout.kind}`}>
       <div className="row">
         <h3 className="flush">{workout.name || (workout.kind === 'run' ? 'Run' : 'Weights')} <span className="muted">({workout.date})</span></h3>
-        <button disabled={saving || setBusy} onClick={onClose}>Close</button>
+        <button disabled={saving || setBusy} onClick={onClose}>Pause</button>
       </div>
-      {blocks.length > 0 && <div className="exercise-navigation">
-        <label className="field">Exercise {Math.min(active + 1, blocks.length)} of {blocks.length}
-          <select disabled={setBusy} value={Math.min(active, blocks.length - 1)} onChange={e => setActive(Number(e.target.value))}>{blocks.map((b, i) => <option key={b.exercise.id} value={i}>{b.exercise.name}</option>)}</select>
-        </label>
-      </div>}
+      <fieldset className="workout-controls" disabled={saving || setBusy}>
+      {blocks.length > 0 && <nav className="exercise-strip" aria-label="Exercises in this workout">
+        {blocks.map((b, i) => <button key={b.exercise.id} aria-current={i === Math.min(active, blocks.length - 1) ? 'step' : undefined} onClick={() => setActive(i)}>
+          <MovementArt name={b.exercise.name} /><span>{b.exercise.name}</span><small>{b.sets.length ? `${b.sets.length} saved` : 'Not logged'}</small>
+        </button>)}
+      </nav>}
       {error && <p role="alert" className="error">{error}</p>}
 
-      {blocks.length === 0 && <p className="muted" data-testid="no-exercises">No exercises yet. Add one below (nothing is pre-filled).</p>}
+      {blocks.length === 0 && <p className="muted" data-testid="no-exercises">What are you training? Tap a picture to begin.</p>}
       {blocks.map((b, index) => (
-        <div key={b.exercise.id} hidden={index !== Math.min(active, blocks.length - 1)}><ExerciseBlock key={b.exercise.id} block={b} workout={workout} onBusyChange={setSetBusy} onAdd={async input => { await repo.addSet(workout.id, b.exercise.id, input); await load(); onChanged(); }} onRemove={(id) => run(() => repo.removeSet(id))} onEditSet={async (id, input) => { await repo.updateSet(id, input); await load(); onChanged(); }} onEditExercise={async patch => { await repo.updateExercise(b.exercise.id, patch); await load(); onChanged(); }} /></div>
+        <div key={b.exercise.id} data-active-exercise={index === Math.min(active, blocks.length - 1) ? true : undefined} hidden={index !== Math.min(active, blocks.length - 1)}><ExerciseBlock key={b.exercise.id} block={b} workout={workout} onBusyChange={setSetBusy} onAdd={async input => { await repo.addSet(workout.id, b.exercise.id, input); await load(); onChanged(); }} onRemove={async id => { await repo.removeSet(id); await load(); onChanged(); }} onEditSet={async (id, input) => { await repo.updateSet(id, input); await load(); onChanged(); }} onEditExercise={async patch => { await repo.updateExercise(b.exercise.id, patch); await load(); onChanged(); }} /></div>
       ))}
 
       {blocks.length > 1 && <div className="row gap exercise-next">
@@ -113,16 +127,17 @@ export function WorkoutEditor({ repo, workoutId, onChanged, onClose }: { repo: R
       </label>
       </details>
       {workout.kind === 'weights' && blocks.length > 0 && <details className="save-routine"><summary>Save exercise list as a workout</summary>
-        <label className="field">Workout name<input value={routineName ?? workout.name} maxLength={120} onChange={e => setRoutineName(e.target.value)} /></label>
+        <label className="field">Workout name<input placeholder="Name optional" value={routineName ?? workout.name} maxLength={120} onChange={e => setRoutineName(e.target.value)} /></label>
         <button disabled={saving} onClick={() => void saveRoutine()}>Save workout</button>
         {routineMessage && <p role="status">{routineMessage}</p>}
       </details>}
-      <div className="row wrap gap">
+      <div className="row wrap gap session-end">
         {workout.status === 'planned'
-          ? <button className="primary" onClick={() => void finish()} disabled={saving || setBusy || (workout.kind === 'weights' && !blocks.some(b => b.sets.length))} >Finish session ✓</button>
+          ? <button className="primary" onClick={() => void finish()} disabled={saving || setBusy || (workout.kind === 'weights' && !blocks.some(b => b.sets.length))} >{`Finish session · ${totalSets} ${totalSets === 1 ? 'set' : 'sets'}`} ✓</button>
           : <button onClick={() => void run(() => repo.updateWorkout(workout.id, { status: 'planned' }))}>Mark as planned</button>}
         <details><summary>Session options</summary><button className="danger" disabled={saving || setBusy} onClick={() => { if (window.confirm('Remove this workout and its sets?')) void run(async () => { await repo.removeWorkout(workout.id); onClose(); }); }}>Remove workout</button></details>
       </div>
+      </fieldset>
     </section>
   );
 }
@@ -136,14 +151,15 @@ function ExerciseBlock({ block, workout, onAdd, onRemove, onEditSet, onEditExerc
 }) {
   const [editing, setEditing] = useState<string | null>(null);
   const suggestion = nextSuggestion(block.prior?.sets ?? [], block.sets);
-  const last = block.sets[block.sets.length - 1] ?? suggestion.working;
-  const [load, setLoad] = useState(last?.load_kg?.toString() ?? '');
-  const [reps, setReps] = useState(last?.reps?.toString() ?? '8');
+  const initial = entryDefaults(block.prior?.sets ?? [], block.sets);
+  const [load, setLoad] = useState(initial.load);
+  const [reps, setReps] = useState(initial.reps);
   const [rir, setRir] = useState('');
   const [warm, setWarm] = useState(false);
   const [pain, setPain] = useState('');
   const [err, setErr] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [notice, setNotice] = useState('');
   const submitLock = useRef(false);
   const ex = block.exercise;
   const id = `ex-${ex.id}`;
@@ -163,44 +179,61 @@ function ExerciseBlock({ block, workout, onAdd, onRemove, onEditSet, onEditExerc
     setErr(null); setSubmitting(true); onBusyChange(true);
     try {
       await onAdd({ load_kg: l, reps: r, rir: ri, warmup: warm, pain_note: pain.trim() === '' ? null : pain });
-      const next = nextSuggestion(block.prior?.sets ?? [], [...block.sets, { warmup: warm } as SetRecord]).working;
-      setLoad(next?.load_kg?.toString() ?? load); setReps(next?.reps?.toString() ?? reps);
+      const next = entryDefaults(block.prior?.sets ?? [], [...block.sets, { warmup: warm, load_kg: l, reps: r } as SetRecord]);
+      setLoad(next.load); setReps(next.reps);
+      setNotice('Set saved ✓');
       setPain(''); setRir(''); setWarm(false);
     } catch (e) { setErr(e instanceof Error ? e.message : 'Set was not saved. Retry.'); }
     finally { submitLock.current = false; setSubmitting(false); onBusyChange(false); }
   }
 
+  async function changeSet(action: () => Promise<void>, message: string) {
+    if (submitLock.current) return;
+    submitLock.current = true; setSubmitting(true); onBusyChange(true); setErr(null);
+    try { await action(); setNotice(message); }
+    catch (e) { setErr(e instanceof Error ? e.message : 'Could not save that change. Please retry.'); }
+    finally { submitLock.current = false; setSubmitting(false); onBusyChange(false); }
+  }
+  const latest = block.sets.at(-1);
+
   return (
     <div className="exercise" role="group" aria-labelledby={id}>
-      <h4 className="active-exercise-title" id={id}>{ex.name}{ex.equipment && <span className="muted"> ({ex.equipment})</span>}</h4>
-      {block.sets.length > 0 && <div className="logged-sets" role="group" aria-label={`Sets logged today for ${ex.name}`}>
+      <div className="active-movement"><MovementArt name={ex.name} /><h4 className="active-exercise-title" id={id} tabIndex={-1}>{ex.name}{ex.equipment && <span className="muted">{ex.equipment}</span>}</h4></div>
+      <form className="next-set-form" onSubmit={(e) => void submit(e)} aria-label={`Log a set of ${ex.name}`}>
+        <div className="set-compare"><span>{warm ? 'Warm-up' : 'Working set'} {block.sets.filter(s=>s.warmup===warm).length+1}</span><span>Last time: <strong>{(warm?suggestion.warmup:suggestion.working) ? formatSet((warm?suggestion.warmup:suggestion.working)!) : '—'}</strong></span></div>
+        {load === '' && loadMode(ex) !== 'bodyweight' && <div className="weight-shortcuts" aria-label="Weight shortcuts">{[20,40,60,80].map(kg => <button key={kg} type="button" onClick={() => setLoad(String(kg))}>{kg} kg</button>)}</div>}
+        <div className="visual-set-inputs">
+          <NumberPicker label={loadMode(ex) === 'assisted' ? 'Assistance (kg)' : loadMode(ex) === 'bodyweight' ? 'Added load (kg)' : 'Load (kg)'} value={load} onChange={setLoad} step={2.5} min={0} max={1000} optional />
+          <NumberPicker label="Reps" value={reps} onChange={setReps} step={1} min={0} max={1000} optional />
+        </div>
+        <details className="set-extras"><summary>{warm ? 'Warm-up set · Options' : 'Warm-up / notes'}</summary>
+        <label className="check"><input type="checkbox" checked={warm} onChange={(e) => { const isWarm=e.target.checked; setWarm(isWarm); const next=entryDefaults(block.prior?.sets ?? [],block.sets,isWarm); setLoad(next.load);setReps(next.reps); }} /> Warm-up set</label>
+        <label className="field">Reps in reserve (optional)<input inputMode="decimal" value={rir} onChange={e=>setRir(e.target.value)}/></label>
+        <label className="field">Pain note (optional)<input value={pain} maxLength={500} onChange={(e) => setPain(e.target.value)} /></label>
+        </details>
+        {err && <p role="alert" className="error">{err}</p>}
+        <button type="submit" className="primary log-set" disabled={submitting} data-workout={workout.id}>{submitting ? 'Saving…' : '✓ Log set'}</button>
+      </form>
+      <div className="set-feedback"><span role="status">{notice || (latest ? 'Logged sets saved ✓' : 'Tap Log set when you’ve done it.')}</span>
+        {latest && <button type="button" disabled={submitting} aria-label="Undo last logged set" onClick={() => void changeSet(async () => {
+          await onRemove(latest.id); setLoad(latest.load_kg?.toString() ?? ''); setReps(latest.reps?.toString() ?? ''); setWarm(latest.warmup);
+        }, 'Last set removed')}>Undo</button>}
+      </div>
+      {block.sets.length > 0 && <details className="logged-sets" aria-label={`Sets logged today for ${ex.name}`}>
+        <summary>{block.sets.length} {block.sets.length === 1 ? 'set' : 'sets'} saved · View / edit</summary>
         <div className="set-table-head"><span>Set</span><span>Last time</span><span>{loadMode(ex) === 'assisted' ? 'Assist kg' : loadMode(ex) === 'bodyweight' ? '+kg' : 'kg'} × reps</span><span>Saved</span></div>
         {block.sets.map((s, index) => {
           const prior = block.prior?.sets.filter(p => p.warmup === s.warmup)[block.sets.slice(0, index).filter(p => p.warmup === s.warmup).length];
           return <div key={s.id}>
-            {editing === s.id ? <><SetEditForm set={s} onSave={async input => { await onEditSet(s.id, input); setEditing(null); }} onCancel={() => setEditing(null)} /><button aria-label={`Remove set ${s.ordinal}`} onClick={() => void onRemove(s.id)}>Remove set</button></> : <>
+            {editing === s.id ? <><SetEditForm set={s} onSave={input => changeSet(async () => { await onEditSet(s.id, input); const next = entryDefaults(block.prior?.sets ?? [], block.sets.map(x => x.id === s.id ? { ...x, ...input } : x), warm); setLoad(next.load); setReps(next.reps); setEditing(null); }, 'Set updated ✓')} onCancel={() => setEditing(null)} /><button aria-label={`Remove set ${s.ordinal}`} onClick={() => void changeSet(async () => { await onRemove(s.id); const next = entryDefaults(block.prior?.sets ?? [], block.sets.filter(x => x.id !== s.id), warm); setLoad(next.load); setReps(next.reps); setEditing(null); }, 'Set removed')}>Remove set</button></> : <>
               <div className="set-table-row"><span>{s.warmup ? 'W' : block.sets.slice(0, index + 1).filter(p => !p.warmup).length}</span><small>{prior ? `${prior.load_kg ?? '—'} × ${prior.reps ?? '—'}` : '—'}</small><strong>{s.load_kg ?? '—'} × {s.reps ?? '—'}</strong><button aria-label={`Edit set ${s.ordinal}`} onClick={() => setEditing(s.id)}>✓</button></div>
               {(s.rir !== null || s.pain_note) && <p className="muted small">{s.rir !== null && `RIR ${s.rir}`}{s.pain_note && ` · ${s.pain_note}`}</p>}
 
             </>}
           </div>;
         })}
-      </div>}
-      <form className="next-set-form" onSubmit={(e) => void submit(e)} aria-label={`Log a set of ${ex.name}`}>
-        <div className="set-compare"><span>{warm ? 'Warm-up' : 'Working set'} {block.sets.filter(s=>s.warmup===warm).length+1}</span><span>Previous: <strong>{(warm?suggestion.warmup:suggestion.working) ? formatSet((warm?suggestion.warmup:suggestion.working)!) : '—'}</strong></span></div>
-        {load === '' && loadMode(ex) !== 'bodyweight' && <div className="weight-shortcuts" aria-label="Weight shortcuts">{[20,40,60,80].map(kg => <button key={kg} type="button" onClick={() => setLoad(String(kg))}>{kg} kg</button>)}</div>}
-        <div className="visual-set-inputs">
-          <NumberPicker label={loadMode(ex) === 'assisted' ? 'Assistance (kg)' : loadMode(ex) === 'bodyweight' ? 'Added load (kg)' : 'Load (kg)'} value={load} onChange={setLoad} step={2.5} min={0} max={1000} optional />
-          <NumberPicker label="Reps" value={reps} onChange={setReps} step={1} min={0} max={1000} optional />
-        </div>
-        <label className="check"><input type="checkbox" checked={warm} onChange={(e) => { const isWarm=e.target.checked; setWarm(isWarm); const s=isWarm?suggestion.warmup:suggestion.working; if(s){setLoad(s.load_kg?.toString()??'');setReps(s.reps?.toString()??'');} }} /> Warm-up set</label>
-        <details><summary>RIR / pain note</summary><label className="field">RIR (optional)<input inputMode="decimal" value={rir} onChange={e=>setRir(e.target.value)}/></label>
-        <label className="field">Pain note (optional)<input value={pain} maxLength={500} onChange={(e) => setPain(e.target.value)} /></label>
-        </details>
-        {err && <p role="alert" className="error">{err}</p>}
-        <button type="submit" className="primary log-set" disabled={submitting} data-workout={workout.id}>{submitting ? 'Saving…' : '✓ Log completed set'}</button>
-      </form>
-      {ex.primary_muscles.length > 0 && <p className="muted flush">Muscles: {ex.primary_muscles.join(', ')}</p>}
+      </details>}
+
       <details className="prior-details"><summary>Previous session{block.prior ? ' · '+block.prior.workout.date : ''}</summary>
       <p className="prior" data-testid={`prior-${ex.name}`}>
         <strong>Last time</strong> <Badge kind="reported" />{' '}
@@ -216,8 +249,16 @@ function ExerciseBlock({ block, workout, onAdd, onRemove, onEditSet, onEditExerc
 }
 
 export function AddExercise(props: ExercisePickerProps & { initiallyOpen?: boolean; alwaysOpen?: boolean }) {
-  const content = <ExercisePicker {...props}><ManualExerciseForm {...props} initiallyOpen /></ExercisePicker>;
-  return props.alwaysOpen ? content : <details className="add-ex" open={props.initiallyOpen || undefined}><summary>+ Add exercise</summary>{content}</details>;
+  const [open, setOpen] = useState(!!props.initiallyOpen);
+  useEffect(() => { if (props.initiallyOpen) setOpen(true); }, [props.initiallyOpen]);
+  const actions = { ...props,
+    onPick: async (id: string) => { await props.onPick(id); if (!props.alwaysOpen) setOpen(false); },
+    onCreate: async (name: string, equipment: string, muscles: string[]) => {
+      await props.onCreate(name, equipment, muscles); if (!props.alwaysOpen) setOpen(false);
+    },
+  };
+  const content = <ExercisePicker {...actions}><ManualExerciseForm {...actions} initiallyOpen /></ExercisePicker>;
+  return props.alwaysOpen ? content : <details className="add-ex" open={open} onToggle={e => setOpen(e.currentTarget.open)}><summary>+ Add exercise</summary>{content}</details>;
 }
 
 function ManualExerciseForm({ existing, onPick, onCreate, initiallyOpen = false, onBusyChange }: {
