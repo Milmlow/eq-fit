@@ -124,7 +124,7 @@ function History({ repo, exerciseId, onChanged }: { repo: Repo; exerciseId: stri
       {error && <p role="alert" className="error">{error}</p>}
       {hint
         ? <p className="hint" data-testid="hint">Progression idea <Badge kind="proposed" /> {hintText(hint)}</p>
-        : <p className="muted" data-testid="no-hint">{ex.rep_max ? 'No progression hint (no sets logged).' : 'No progression hint: enter a rep range first.'}</p>}
+        : <p className="muted" data-testid="no-hint">{mode !== 'external' ? 'No automatic load increase is suggested for this equipment.' : ex.rep_max ? 'No progression hint (no sets logged).' : 'No progression hint: enter a rep range first.'}</p>}
       {sessions.length === 0 && <p className="empty">No sets logged for this exercise.</p>}
       {newestFirst.map((s) => {
         const best = mode === 'external' ? bestE1rm(s.sets) : null;
