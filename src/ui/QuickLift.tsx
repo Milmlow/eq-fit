@@ -5,7 +5,7 @@ import {exerciseKey,formatSet} from '../lib/training';
 import {loadMode} from '../lib/strengthProgress';
 import {MovementArt} from './MovementArt';
 export interface QuickMovement {name:string;equipment:string;muscles:string[]}
-function NumberPicker({label,value,onChange,step,min,max,optional=false}:{label:string;value:string;onChange:(v:string)=>void;step:number;min:number;max:number;optional?:boolean}) {
+export function NumberPicker({label,value,onChange,step,min,max,optional=false}:{label:string;value:string;onChange:(v:string)=>void;step:number;min:number;max:number;optional?:boolean}) {
  function change(by:number){const current=Number(value);onChange(String(Math.round(Math.min(max,Math.max(min,(Number.isFinite(current)?current:0)+by))*100)/100));}
  return <label className="number-picker"><span>{label}</span><span className="picker-control"><button type="button" aria-label={`Decrease ${label}`} onClick={()=>change(-step)}>−</button><input aria-label={label} type="number" inputMode={step===1?'numeric':'decimal'} min={min} max={max} step={step===1?1:'any'} required={!optional} value={value} onChange={e=>onChange(e.target.value)}/><button type="button" aria-label={`Increase ${label}`} onClick={()=>change(step)}>+</button></span></label>;
 }
