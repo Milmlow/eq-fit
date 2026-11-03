@@ -83,3 +83,12 @@ describe('repeat and strength progress',()=>{
  });
 
 });
+
+ describe('bodyweight names in the compact logger', () => {
+  it('recognises dips without requiring equipment, but keeps assisted dips distinct', () => {
+   expect(loadMode({name:'Dips', equipment:''})).toBe('bodyweight');
+   expect(loadMode({name:'Dip', equipment:''})).toBe('bodyweight');
+   expect(loadMode({name:'Dips', equipment:'Assisted machine'})).toBe('assisted');
+   expect(loadMode({name:'Push-ups', equipment:''})).toBe('bodyweight');
+  });
+ });

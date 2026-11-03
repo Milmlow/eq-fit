@@ -7,7 +7,7 @@ export type StrengthMetric = 'load' | 'reps' | 'estimate';
 export function loadMode(ex: Pick<Exercise,'name'|'equipment'>): 'external'|'assisted'|'bodyweight'|'unknown' {
  const label=`${ex.name} ${ex.equipment}`.toLowerCase();
  if (/assist|counterweight/.test(label)) return 'assisted';
- if (/body\s?weight|chin.?up|pull.?up|push.?up|dip\b/.test(label)) return 'bodyweight';
+ if (/body\s?weight|chin.?up|pull.?up|push.?up|dips?\b/.test(label)) return 'bodyweight';
  return /^(barbell|dumbbells?|kettlebells?)$/i.test(ex.equipment.trim()) ? 'external' : 'unknown';
 }
 export function strengthPoints(sessions: StrengthSession[], metric: StrengthMetric, today: string, all: boolean) {
