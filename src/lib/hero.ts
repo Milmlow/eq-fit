@@ -2,6 +2,7 @@
 import type { Repo } from '../db/repo';
 import { beatLastTime, type BeatResult } from './beatLastTime';
 import { fourWeekPace, formatTodayLabel, lastWeekStats, type LastWeek } from './todayStats';
+import { loadMode } from './strengthProgress';
 import { addDays } from './summary';
 
 export interface HeroData {
@@ -18,9 +19,13 @@ export async function loadHero(repo: Repo, today: string): Promise<HeroData> {
     repo.workoutsBetween(today, today), repo.activitiesBetween(addDays(today, -35), today), repo.latestActivityDate(),
   ]);
   const statRows = rows.map((a) => ({ date: a.date, group: a.group, distance_km: a.distance_km, duration_seconds: a.duration_seconds, avg_pace_sec_per_km: a.avg_pace_sec_per_km }));
+  const importedWeek = lastWeekStats(statRows, today, latest);
+  const [weekWorkouts, linked] = await Promise.all([repo.workoutsBetween(importedWeek.start, importedWeek.end), repo.linkedActivityIds()]);
+  const completedLifts = weekWorkouts.filter(w => w.kind === 'weights' && w.status === 'done').length;
+  const unlinkedLifts = rows.filter(a => a.date >= importedWeek.start && a.date <= importedWeek.end && a.group === 'weights' && !linked.has(a.id)).length;
   const base = {
     dateLabel: formatTodayLabel(today),
-    lastWeek: lastWeekStats(statRows, today, latest),
+    lastWeek: { ...importedWeek, lifts: completedLifts || importedWeek.lifts !== null ? completedLifts + unlinkedLifts : null },
     paceSec: fourWeekPace(statRows, today, latest),
   };
 
@@ -34,6 +39,7 @@ export async function loadHero(repo: Repo, today: string): Promise<HeroData> {
     const ex = await repo.getExercise(id);
     if (!ex) continue;
     firstName ??= ex.name;
+    if (loadMode(ex) !== 'external') continue;
     const prior = await repo.priorComparable(planned, id);
     if (!prior) continue;
     const history = await repo.exerciseHistory(id);

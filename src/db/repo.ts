@@ -235,7 +235,8 @@ export class Repo {
     await this.db.transaction('rw', this.db.sets, this.db.workouts, this.db.exercises, async () => {
       if (!(await this.db.workouts.get(workoutId))) throw new Error('workout not found');
       if (!(await this.db.exercises.get(exerciseId))) throw new Error('exercise not found');
-      const n = await this.db.sets.where('workout_id').equals(workoutId).count();
+      const existingSets = await this.db.sets.where('workout_id').equals(workoutId).toArray();
+      const n = Math.max(0, ...existingSets.map(s => s.ordinal));
       rec = {
         id: newId(), owner_id: null, workout_id: workoutId, exercise_id: exerciseId, ordinal: n + 1,
         load_kg: input.load_kg, reps: input.reps, rir: input.rir, warmup: input.warmup,

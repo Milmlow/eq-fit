@@ -201,3 +201,33 @@ label.inline select { min-width: 0; max-width: 100%; }
 .range-switch button[aria-pressed=true] { background:var(--acc); color:var(--on-acc); }
 @media(max-width:600px) { .exercise-cards { grid-template-columns:1fr; } .exercise-progress-card { min-height:116px; } }
 @media(max-width:300px) { .set-inputs { grid-template-columns:1fr; } .exercise-progress-card > svg { width:42px; } .repeat-session > svg { display:none; } }
+
+.week-overview { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:8px; margin:24px 0 16px; }
+.week-tile { display:flex; align-items:center; flex-direction:column; gap:10px; padding:12px 2px; background:var(--card); min-width:0; }
+.week-tile > strong { font-size:24px; }
+.week-tile > span:first-child { color:var(--muted); font-size:12px; }
+.week-tile.today { border-width:3px; }
+.week-tile[aria-pressed=true] { outline:2px solid var(--fg); outline-offset:2px; }
+.week-tile .tile-activities { display:flex; flex-wrap:wrap; justify-content:center; gap:5px; min-height:28px; }
+.tile-activities > span { display:flex; align-items:center; gap:3px; font-size:12px; }
+.tile-activities svg { width:20px; height:20px; }
+.week-tile small { font-size:11px; min-height:14px; }
+.week-tile .planned-dot { border:1px dashed var(--fg); border-radius:6px; padding:3px; }
+.week-total { font-size:16px; }
+.day[hidden] { display:none; }
+.milestones { border:1px solid var(--acc); border-radius:16px; padding:18px; margin:24px 0; background:var(--card); }
+.milestone { display:flex; align-items:center; gap:14px; padding:12px 0; }
+.milestone > svg { flex-shrink:0; color:var(--fg); }
+.milestone > div { flex:1; min-width:0; }
+.milestone p { margin:8px 0; font-size:24px; font-weight:800; }
+.milestone small { color:var(--muted); }
+.feedback-options { display:flex; flex-wrap:wrap; gap:8px; margin:14px 0; }
+.feedback-options button[aria-pressed=true] { background:var(--acc); color:var(--on-acc); }
+@media(max-width:520px) { .week-overview { gap:5px; } .tile-activities svg { width:16px; height:16px; } .week-tile small { font-size:10px; } }
+@media(max-width:300px) { .week-overview { grid-template-columns:repeat(4,minmax(0,1fr)); } }
+@media(max-width:300px) {
+ .pr { max-width:100%; font-size:14px; padding:4px 6px; transform:none; overflow-wrap:anywhere; }
+ .beat-name-row { min-width:0; }
+ .range-switch { margin-left:0; flex-wrap:wrap; }
+ .week-tile { min-height:120px; }
+}

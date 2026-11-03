@@ -41,7 +41,7 @@ export function Lifting({ repo, version, onChanged }: { repo: Repo; version: num
         const last=sessions.at(-1),working=last?.sets.filter(s=>!s.warmup)??[];
         const best=working.at(-1);
         const art=/bench/i.test(ex.name)?'Bench press':/squat/i.test(ex.name)?'Squat':/chin|pull.?up/i.test(ex.name)?'Chin-ups':/deadlift/i.test(ex.name)?'Deadlift':null;
-        return <button key={ex.id} className={`exercise-progress-card ${sel===ex.id?'selected':''}`} aria-pressed={sel===ex.id} onClick={()=>setSel(ex.id)}>{art?<MovementArt name={art}/>:<IconLift/>}<span><strong>{ex.name}</strong><small>{ex.equipment||'Equipment unspecified'}</small><b>{best?formatSet(best):'Log your first set'}</b><small>{last?`${last.workout.date} · ${sessions.length} sessions`:'No history yet'}</small></span><span aria-hidden="true">↗</span></button>;
+        return <button key={ex.id} className={`exercise-progress-card ${sel===ex.id?'selected':''}`} aria-pressed={sel===ex.id} onClick={()=>setSel(ex.id)}>{art?<MovementArt name={art}/>:<IconLift/>}<span><strong>{ex.name}</strong><small>{ex.equipment||'Equipment unspecified'}</small><b>{best?formatSet(best):'Log your first set'}</b><small>{last?`${last.workout.date} · ${sessions.length} ${sessions.length===1?'session':'sessions'}`:'No history yet'}</small></span><span aria-hidden="true">↗</span></button>;
       })}</div>
       {sel && exercises.find(ex=>ex.id===sel) && <section className="card"><h3>{exercises.find(ex=>ex.id===sel)!.name}</h3><StrengthChart key={sel} exercise={exercises.find(ex=>ex.id===sel)!} sessions={history[sel]??[]} today={localToday()}/></section>}
 
@@ -124,7 +124,7 @@ function History({ repo, exerciseId, onChanged }: { repo: Repo; exerciseId: stri
       {error && <p role="alert" className="error">{error}</p>}
       {hint
         ? <p className="hint" data-testid="hint">Progression idea <Badge kind="proposed" /> {hintText(hint)}</p>
-        : <p className="muted" data-testid="no-hint">{ex.rep_max ? 'No progression hint (no sets logged).' : 'No progression hint: enter a rep range first.'}</p>}
+        : <p className="muted" data-testid="no-hint">{mode !== 'external' ? 'No automatic load increase is suggested for this equipment.' : ex.rep_max ? 'No progression hint (no sets logged).' : 'No progression hint: enter a rep range first.'}</p>}
       {sessions.length === 0 && <p className="empty">No sets logged for this exercise.</p>}
       {newestFirst.map((s) => {
         const best = mode === 'external' ? bestE1rm(s.sets) : null;

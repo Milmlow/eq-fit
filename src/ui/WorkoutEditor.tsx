@@ -210,7 +210,8 @@ function AddExercise({ existing, onPick, onCreate }: {
 }
 
 function HintLine({ block }: { block: Block }) {
-  const h = loadMode(block.exercise) === 'external' ? progressionHint(block.exercise.rep_max ?? null, block.prior?.sets ?? []) : null;
+  if (loadMode(block.exercise) !== 'external') return <p className="muted small">Compare your recorded reps and load; no automatic load increase is suggested for this equipment.</p>;
+  const h = progressionHint(block.exercise.rep_max ?? null, block.prior?.sets ?? []);
   if (!h) {
     return block.exercise.rep_max ? null : <p className="muted flush" data-testid="no-hint">No progression hint: enter a rep range for this exercise (Edit exercise) to get one.</p>;
   }

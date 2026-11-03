@@ -1,3 +1,4 @@
+import { Feedback } from './Feedback';
 import { useState } from 'react';
 import type { Repo } from '../db/repo';
 import { THEME_PREFS, type ThemePref } from '../lib/theme';
@@ -30,6 +31,7 @@ export function More({ repo, version, onChanged, pref, onPref, persisted, demo, 
   return (
     <section aria-labelledby="more-h">
       <h2 id="more-h">More</h2>
+      <Feedback />
       {repo && <BackupBanner repo={repo} version={version} lastBackup={lastBackup} />}
       <fieldset className="card themes">
         <legend>Theme</legend>

@@ -74,7 +74,7 @@ describe('Today hero wiring (real repository, synthetic data)', () => {
     expect(h.exerciseName).toBe('Bench Press');
     expect(h.title).toBe('Weights session');
     expect(h.beat).toMatchObject({ kind: 'target', last: { load_kg: 80, reps: 8 }, target: { load_kg: 80, reps: 9 }, alternative: { load_kg: 82.5, reps: 7 }, pr: true });
-    expect(h.lastWeek).toMatchObject({ lifts: 5, runs: 3, km: 23 });
+    expect(h.lastWeek).toMatchObject({ lifts: 6, runs: 3, km: 23 }); // five imported entries plus one unlinked completed local session
   });
   it('no prior session: exercise name only', async () => {
     const { repo, row2 } = await withHistory();

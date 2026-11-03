@@ -1,5 +1,7 @@
-import {describe,it,expect} from 'vitest';
+import {describe,it,expect,vi} from 'vitest';
 import {freshRepo} from './helpers';
+import {Repo} from '../src/db/repo';
+import {RecompDB} from '../src/db/db';
 import {loadMode,nextSuggestion,strengthPoints} from '../src/lib/strengthProgress';
 const input={load_kg:60,reps:8,rir:null,warmup:false,pain_note:null};
 describe('repeat and strength progress',()=>{
@@ -55,4 +57,29 @@ describe('repeat and strength progress',()=>{
   expect(strengthPoints(sessions,'load','2026-11-03',false)[0].value).toBeNull();
   expect(strengthPoints(sessions,'reps','2026-11-03',false)[0].value).toBe(10);
  });
+ it('logs and reloads without network access, and exports the same saved sets',async()=>{
+  const offline=vi.fn(()=>Promise.reject(new Error('offline')));vi.stubGlobal('fetch',offline);
+  try {
+   const repo=await freshRepo(),name=repo.db.name;
+   const ex=await repo.createExercise('Bench','Barbell',[]),w=await repo.createWorkout({date:'2026-11-03',name:'Offline',kind:'weights'});
+   await repo.addSet(w.id,ex.id,input);
+   await repo.updateWorkout(w.id,{status:'done'});repo.db.close();
+   const reopened=await Repo.open(new RecompDB(name));
+   expect(await reopened.setsForWorkout(w.id)).toHaveLength(1);
+   const before=await reopened.exportBackup();
+   expect(before.tables.sets).toHaveLength(1);
+   const copy=await reopened.repeatWorkout(w.id,'2026-11-04');
+   expect(await reopened.setsForWorkout(copy.id)).toEqual([]);
+   expect((await reopened.exportBackup()).tables.sets).toEqual(before.tables.sets);
+   expect(offline).not.toHaveBeenCalled();reopened.db.close();
+  } finally {vi.unstubAllGlobals();}
+ });
+
+ it('keeps set ordinals unique after a middle set is removed',async()=>{
+  const repo=await freshRepo(),ex=await repo.createExercise('Bench','Barbell',[]),w=await repo.createWorkout({date:'2026-11-03',name:'',kind:'weights'});
+  await repo.addSet(w.id,ex.id,input);const middle=await repo.addSet(w.id,ex.id,input);await repo.addSet(w.id,ex.id,input);
+  await repo.removeSet(middle.id);await repo.addSet(w.id,ex.id,input);
+  expect((await repo.setsForWorkout(w.id)).map(s=>s.ordinal)).toEqual([1,3,4]);
+ });
+
 });
