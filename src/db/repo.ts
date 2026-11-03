@@ -6,7 +6,7 @@ import { buildBackup, restoreBackup, tableCounts, type BackupCounts, type Backup
 import { runningCsv, setsCsv } from '../lib/csvExport';
 import { addDays } from '../lib/summary';
 import { exerciseKey, validateName, validateSet, workoutOrderKey, type SetInput } from '../lib/training';
-import type { Activity, Exercise, ImportBatch, MigrationRecord, SetRecord, Workout, WorkoutKind } from './types';
+import type { Activity, Exercise, Routine, ImportBatch, MigrationRecord, SetRecord, Workout, WorkoutKind } from './types';
 
 let lastMs = 0;
 /** Strictly increasing ISO timestamps within a session, so creation order is never a tie. */
@@ -136,6 +136,37 @@ export class Repo {
 
   listExercises(): Promise<Exercise[]> {
     return this.db.exercises.orderBy('name').toArray();
+  }
+
+  listRoutines(): Promise<Routine[]> { return this.db.routines.orderBy('name').toArray(); }
+
+  async saveRoutine(name: string, exerciseIds: string[], id?: string): Promise<Routine> {
+    const errors = validateName('workout name', name);
+    if (errors.length) throw new Error(errors.join('; '));
+    if (!exerciseIds.length || exerciseIds.length > 100) throw new Error('Choose 1 to 100 exercises.');
+    if (new Set(exerciseIds).size !== exerciseIds.length) throw new Error('An exercise can appear only once.');
+    return this.db.transaction('rw', this.db.routines, this.db.exercises, async () => {
+      const exercises = await this.db.exercises.bulkGet(exerciseIds);
+      if (exercises.some(e => !e)) throw new Error('An exercise is missing. Please choose again.');
+      const existing = id ? await this.db.routines.get(id) : undefined;
+      if (id && !existing) throw new Error('Saved workout not found.');
+      const routine: Routine = { id: existing?.id ?? newId(), owner_id: existing?.owner_id ?? null,
+        name: name.trim(), exercise_ids: [...exerciseIds], created_at: existing?.created_at ?? tickIso() };
+      await this.db.routines.put(routine);
+      return routine;
+    });
+  }
+
+  async startRoutine(id: string, date: string): Promise<Workout> {
+    return this.db.transaction('rw', this.db.routines, this.db.workouts, this.db.exercises, async () => {
+      const routine = await this.db.routines.get(id);
+      if (!routine) throw new Error('Saved workout not found.');
+      const exercises = await this.db.exercises.bulkGet(routine.exercise_ids);
+      if (!exercises.length || exercises.some(e => !e)) throw new Error('Update this workout’s exercises before starting.');
+      const workout = await this.createWorkout({ date, name: routine.name, kind: 'weights' });
+      await this.updateWorkout(workout.id, { planned_exercise_ids: [...routine.exercise_ids] });
+      return { ...workout, planned_exercise_ids: [...routine.exercise_ids] };
+    });
   }
 
   // ---- Stage 2: workouts ------------------------------------------------------------------
@@ -386,7 +417,7 @@ export class Repo {
 
   async hasUserData(): Promise<boolean> {
     const c = await tableCounts(this.db);
-    return c.activities + c.workouts + c.sets + c.exercises > 0;
+    return c.activities + c.workouts + c.sets + c.exercises + c.routines > 0;
   }
 
   async exportSetsCsv(): Promise<string> {

@@ -4,11 +4,11 @@
 import { isGroup } from './mapping';
 import { exerciseKey, MAX_TEXT, validateSet } from './training';
 import type { RecompDB } from '../db/db';
-import type { Activity, Exercise, ImportBatch, SetRecord, TypeMapping, Workout } from '../db/types';
+import type { Activity, Exercise, Routine, ImportBatch, SetRecord, TypeMapping, Workout } from '../db/types';
 
 export const BACKUP_FORMAT = 'eq-fit-backup';
 /** Current IndexedDB schema version (see src/db/db.ts). Backups carry it so older files can be migrated. */
-export const BACKUP_SCHEMA_VERSION = 3;
+export const BACKUP_SCHEMA_VERSION = 4;
 /** Larger files are refused before parsing. A full real history is roughly 10 to 15 MB. */
 export const MAX_BACKUP_BYTES = 64 * 1024 * 1024;
 const MAX_STRING = 100_000;
@@ -17,7 +17,7 @@ const MAX_ERRORS = 25;
 declare const __APP_VERSION__: string;
 export const APP_VERSION: string = typeof __APP_VERSION__ === 'undefined' ? 'dev' : __APP_VERSION__;
 
-export const TABLE_NAMES = ['batches', 'activities', 'type_mappings', 'exercises', 'workouts', 'sets'] as const;
+export const TABLE_NAMES = ['batches', 'activities', 'type_mappings', 'exercises', 'workouts', 'sets', 'routines'] as const;
 export type TableName = (typeof TABLE_NAMES)[number];
 export type BackupCounts = Record<TableName, number>;
 
@@ -28,6 +28,7 @@ export interface BackupTables {
   exercises: Exercise[];
   workouts: Workout[];
   sets: SetRecord[];
+  routines: Routine[];
 }
 
 export interface BackupDoc {
@@ -42,8 +43,9 @@ export interface BackupDoc {
 /** Tables a backup of each schema version contains. Version 1 predates exercises, workouts and sets. */
 const TABLES_BY_VERSION: Record<number, readonly TableName[]> = {
   1: ['batches', 'activities', 'type_mappings'],
-  2: TABLE_NAMES,
-  3: TABLE_NAMES,
+  2: ['batches', 'activities', 'type_mappings', 'exercises', 'workouts', 'sets'],
+  3: ['batches', 'activities', 'type_mappings', 'exercises', 'workouts', 'sets'],
+  4: TABLE_NAMES,
 };
 
 export function backupFileName(now: Date): string {
@@ -52,21 +54,22 @@ export function backupFileName(now: Date): string {
 }
 
 export async function tableCounts(db: RecompDB): Promise<BackupCounts> {
-  const [batches, activities, type_mappings, exercises, workouts, sets] = await Promise.all([
-    db.batches.count(), db.activities.count(), db.type_mappings.count(), db.exercises.count(), db.workouts.count(), db.sets.count(),
+  const [batches, activities, type_mappings, exercises, workouts, sets, routines] = await Promise.all([
+    db.batches.count(), db.activities.count(), db.type_mappings.count(), db.exercises.count(), db.workouts.count(), db.sets.count(), db.routines.count(),
   ]);
-  return { batches, activities, type_mappings, exercises, workouts, sets };
+  return { batches, activities, type_mappings, exercises, workouts, sets, routines };
 }
 
 /** Read every user-data table in one read transaction (a consistent snapshot). */
 export async function buildBackup(db: RecompDB, now: Date = new Date()): Promise<BackupDoc> {
-  const tables = await db.transaction('r', [db.batches, db.activities, db.type_mappings, db.exercises, db.workouts, db.sets], async () => ({
+  const tables = await db.transaction('r', [db.batches, db.activities, db.type_mappings, db.exercises, db.workouts, db.sets, db.routines], async () => ({
     batches: await db.batches.toArray(),
     activities: await db.activities.toArray(),
     type_mappings: await db.type_mappings.toArray(),
     exercises: await db.exercises.toArray(),
     workouts: await db.workouts.toArray(),
     sets: await db.sets.toArray(),
+    routines: await db.routines.toArray(),
   }));
   const counts = Object.fromEntries(TABLE_NAMES.map((t) => [t, tables[t].length])) as BackupCounts;
   return { format: BACKUP_FORMAT, schemaVersion: BACKUP_SCHEMA_VERSION, appVersion: APP_VERSION, exportedAt: now.toISOString(), counts, tables };
@@ -168,6 +171,7 @@ const SCHEMAS: Record<TableName, { fields: Record<string, Check>; optional?: str
       notes: str(MAX_TEXT * 8), planned_exercise_ids: strArray(500), linked_activity_id: strOrNull(100), created_at: iso,
     },
   },
+  routines: { fields: { ...BASE, name: str(120), exercise_ids: strArray(100), created_at: iso } },
   sets: {
     fields: {
       ...BASE, workout_id: id, exercise_id: id, ordinal: (v) => (typeof v === 'number' && Number.isInteger(v) && v >= 1 && v <= 100000 ? null : 'must be a whole number 1 or more'),
@@ -202,7 +206,7 @@ function checkRelations(tb: BackupTables, errs: string[]): void {
     return s;
   };
   const batchIds = ids('batches', tb.batches), actIds = ids('activities', tb.activities), exIds = ids('exercises', tb.exercises);
-  const woIds = ids('workouts', tb.workouts); ids('sets', tb.sets); ids('type_mappings', tb.type_mappings);
+  const woIds = ids('workouts', tb.workouts); ids('sets', tb.sets); ids('type_mappings', tb.type_mappings); ids('routines', tb.routines);
   const uniq = (name: string, vals: string[]) => { const s = new Set<string>(); for (const v of vals) { if (s.has(v)) add(`${name}: duplicate ${v.slice(0, 60)}`); s.add(v); } };
   uniq('activities.dedupe_key', tb.activities.map((a) => a.dedupe_key));
   uniq('type_mappings.original_type', tb.type_mappings.map((m) => m.original_type));
@@ -217,6 +221,11 @@ function checkRelations(tb: BackupTables, errs: string[]): void {
     if (w.linked_activity_id !== null && !actIds.has(w.linked_activity_id)) add(`workouts: ${w.id.slice(0, 40)} is linked to a missing activity`);
     for (const x of w.planned_exercise_ids) if (!exIds.has(x)) add(`workouts: ${w.id.slice(0, 40)} plans a missing exercise`);
   }
+  for (const r of tb.routines) {
+    if (!r.name.trim() || !r.exercise_ids.length) add('routines: name and exercises are required');
+    uniq('routines.exercise_ids', r.exercise_ids);
+    for (const x of r.exercise_ids) if (!exIds.has(x)) add('routines: missing exercise');
+  }
   for (const s of tb.sets) {
     if (!woIds.has(s.workout_id)) add(`sets: ${s.id.slice(0, 40)} belongs to a missing workout`);
     if (!exIds.has(s.exercise_id)) add(`sets: ${s.id.slice(0, 40)} uses a missing exercise`);
@@ -230,6 +239,7 @@ function migrate(tables: Partial<BackupTables>, from: number): BackupTables {
   const t = { ...tables };
   if (v === 1) { t.exercises = []; t.workouts = []; t.sets = []; v = 2; }
   if (v === 2) { v = 3; }
+  if (v === 3) { t.routines = []; }
   return t as BackupTables;
 }
 
@@ -276,14 +286,15 @@ export function validateBackup(text: string, opts: { maxBytes?: number; sizeByte
  */
 export async function restoreBackup(db: RecompDB, backup: BackupDoc): Promise<BackupCounts> {
   const t = backup.tables;
-  await db.transaction('rw', [db.batches, db.activities, db.type_mappings, db.exercises, db.workouts, db.sets], async () => {
-    await Promise.all([db.batches.clear(), db.activities.clear(), db.type_mappings.clear(), db.exercises.clear(), db.workouts.clear(), db.sets.clear()]);
+  await db.transaction('rw', [db.batches, db.activities, db.type_mappings, db.exercises, db.workouts, db.sets, db.routines], async () => {
+    await Promise.all([db.batches.clear(), db.activities.clear(), db.type_mappings.clear(), db.exercises.clear(), db.workouts.clear(), db.sets.clear(), db.routines.clear()]);
     await db.batches.bulkAdd(t.batches);
     await db.activities.bulkAdd(t.activities);
     await db.type_mappings.bulkAdd(t.type_mappings);
     await db.exercises.bulkAdd(t.exercises);
     await db.workouts.bulkAdd(t.workouts);
     await db.sets.bulkAdd(t.sets);
+    await db.routines.bulkAdd(t.routines);
   });
   return tableCounts(db);
 }

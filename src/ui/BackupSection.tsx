@@ -5,7 +5,7 @@ import { canShareFile, dated, saveTextFile, shareTextFile } from '../lib/downloa
 import { backupStatus, describeAge, describePersistence, type PersistState } from '../lib/storage';
 
 const LABELS: Record<keyof BackupCounts, string> = {
-  batches: 'import batches', activities: 'activities', type_mappings: 'type mappings', exercises: 'exercises', workouts: 'workouts', sets: 'sets',
+  batches: 'import batches', activities: 'activities', type_mappings: 'type mappings', exercises: 'exercises', workouts: 'workouts', sets: 'sets', routines: 'saved workouts',
 };
 const JSON_MIME = 'application/json';
 const CSV_MIME = 'text/csv;charset=utf-8';
