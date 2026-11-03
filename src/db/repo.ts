@@ -162,6 +162,22 @@ export class Repo {
     return { workout: await this.createWorkout({ date, name: '', kind: 'weights' }), created: true };
   }
 
+  /** Repeat the exercise plan only. No completed sets, notes, links or status are carried forward. */
+  async repeatWorkout(sourceId: string, date: string): Promise<Workout> {
+    return this.db.transaction('rw', this.db.workouts, this.db.sets, this.db.exercises, async () => {
+      const source = await this.getWorkout(sourceId);
+      if (!source || source.kind !== 'weights') throw new Error('Choose a weights session to repeat.');
+      const sets = await this.setsForWorkout(sourceId);
+      const ids = [...new Set([...source.planned_exercise_ids, ...sets.map(s => s.exercise_id)])];
+      const available = await this.db.exercises.bulkGet(ids);
+      const plan = ids.filter((_, i) => !!available[i]);
+      if (!plan.length) throw new Error('This session has no exercises to repeat.');
+      const workout = await this.createWorkout({ date, name: source.name, kind: 'weights' });
+      await this.updateWorkout(workout.id, { planned_exercise_ids: plan });
+      return { ...workout, planned_exercise_ids: plan };
+    });
+  }
+
   async updateWorkout(id: string, patch: Partial<Pick<Workout, 'date' | 'name' | 'kind' | 'status' | 'notes' | 'planned_exercise_ids'>>): Promise<void> {
     if (patch.date !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(patch.date)) throw new Error('date must be YYYY-MM-DD');
     if (patch.notes !== undefined && patch.notes.length > 2000) throw new Error('notes too long');
