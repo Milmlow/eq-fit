@@ -18,3 +18,10 @@
 .coach-card .eyebrow {color:var(--muted)}
 
 .coach-card .coach-heading {gap:8px}.coach-card .coach-heading .eyebrow {font-size:11px}.coach-card .coach-heading button{font-size:12px;padding:6px 10px}.coach-card .coach-heading .muted{font-size:12px}
+.coach-art{width:100px;min-width:100px;height:100px}
+.coach-card .coach-joke{font-size:1rem;line-height:1.4;margin:8px 0}
+.coach-card .coach-tools>summary,.coach-card .coach-evidence>summary{font-size:12px;min-height:44px;padding:12px 0}
+.coach-evidence p{font-size:12px;line-height:1.4}
+.coach-card .coach-tools{border-top:1px solid var(--muted);margin-top:8px}
+.coach-card .coach-line{align-items:center}
+@media(max-width:400px){.coach-art{width:82px;min-width:82px;height:100px}.coach-card .coach-heading{flex-wrap:nowrap}.coach-card .coach-joke{font-size:14px}.coach-card .coach-heading button{font-size:11px}.coach-card .eyebrow{font-size:10px}}
