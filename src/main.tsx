@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './ui/App';
+import { Trial } from './ui/Trial';
 import './ui/fonts.css';
 import './ui/themes.css';
 import './ui/styles.css';
@@ -14,6 +15,6 @@ registerServiceWorker();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    {new URLSearchParams(window.location.search).get('trial') === '1' ? <Trial /> : <App />}
   </StrictMode>,
 );

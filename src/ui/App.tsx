@@ -16,7 +16,7 @@ import { BackupBanner, StorageWarning, UpdateBanner } from './Banners';
 
 const ls = () => { try { return window.localStorage; } catch { return null; } };
 
-export function App() {
+export function App({ trialRepo }: { trialRepo?: Repo } = {}) {
   const [repo, setRepo] = useState<Repo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('today');
@@ -29,9 +29,10 @@ export function App() {
   const bump = useCallback(() => setVersion((v) => v + 1), []);
 
   useEffect(() => {
+    if (trialRepo) { setRepo(watchStorageErrors(trialRepo)); return; }
     Repo.open(new RecompDB()).then((r) => setRepo(watchStorageErrors(r)), (e: unknown) => setError(e instanceof Error ? e.message : String(e)));
     void requestPersistence().then(setPersist);
-  }, []);
+  }, [trialRepo]);
   const onBackedUp = (iso: string) => { saveLastBackup(ls(), iso); setLastBackup(iso); };
 
   return (
@@ -42,7 +43,7 @@ export function App() {
       <main id="main">
         <UpdateBanner />
         <StorageWarning />
-        {repo && !demo && <CloudSync repo={repo} onChanged={bump} />}
+        {repo && !demo && !trialRepo && <CloudSync repo={repo} onChanged={bump} />}
         {repo && !demo && tab === 'today' && <BackupBanner repo={repo} version={version} lastBackup={lastBackup} onGo={() => setTab('more')} />}
         {error && (
           <p role="alert" className="error">
