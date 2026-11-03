@@ -47,7 +47,7 @@ function Explainer({ id }: { id: string }) {
 }
 
 function BeatBody({ beat }: { beat: BeatResult }) {
-  if (beat.kind === 'none') return <p className="neutral safe">No last time yet.</p>;
+  if (beat.kind === 'none') return <p className="neutral safe">Log sets to build your next comparison.</p>;
   if (beat.kind === 'pain') return <div className="trio single"><Block cls="last" label="Last time" lift={beat.last} /></div>;
   if (beat.kind === 'hold') {
     return (
