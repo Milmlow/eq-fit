@@ -5,15 +5,14 @@ Missing credentials/errors produce an empty feed; the app retains curated humour
 import hashlib
 import json
 import os
-import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError
 from urllib.parse import urlparse
 
-DOMAINS = ['abc.net.au', 'bbc.com', 'bbc.co.uk', 'reuters.com', 'apnews.com',
-           'cricket.com.au', 'afl.com.au', 'nrl.com']
+# Claude rejects the entire request if any allowlisted publisher blocks its crawler.
+DOMAINS = ['abc.net.au', 'cricket.com.au', 'afl.com.au', 'nrl.com']
 POLICY = '''Write original short Australian gym-mate humour for Coach EQ.
 News is context; the fictional coach and everyday gym habits are the butt of the joke.
 Only sport results, harmless entertainment/culture, and light everyday news.
@@ -121,6 +120,7 @@ def error_category(error):
     except (ValueError,AttributeError,TypeError):
         return 'unknown'
     for terms,label in [
+        (('domains are not accessible',),'news_source_configuration'),
         (('credit balance','purchase credits','insufficient credit'),'api_credits_required'),
         (('spend limit','spending limit','usage limit'),'account_spend_limit'),
         (('workspace','anthropic-workspace-id'),'workspace_configuration'),
@@ -134,13 +134,6 @@ def error_category(error):
             return label
     return 'unknown'
 
-def safe_error_detail(raw, key):
-    """Bounded diagnostics from public-news requests; strip credentials before logging."""
-    text=raw.decode('utf-8',errors='replace').replace(key,'[REDACTED]') if key else ''
-    text=re.sub(r'sk-[A-Za-z0-9_-]+','[REDACTED]',text)
-    text=re.sub(r'[A-Za-z0-9_+/=-]{40,}','[REDACTED]',text)
-    return ' '.join(text.split())[:500]
-
 def main():
     now=datetime.now(timezone.utc); jokes=[]
     key=os.getenv('ANTHROPIC_API_KEY')
@@ -151,9 +144,7 @@ def main():
             jokes=generate(key,now)
             print(f'Coach news: {len(jokes)} approved lines.')
         except HTTPError as error:
-            raw=error.read(16000)
-            print(f'::warning::Coach news unavailable: Claude HTTP {error.code}. Using curated humour.')
-            print('Claude setup diagnostic: '+safe_error_detail(raw,key))
+            print(f'::warning::Coach news unavailable: Claude HTTP {error.code} [{error_category(error)}]. Using curated humour.')
         except Exception:
             # Never print provider response bodies, prompts, request headers or credentials.
             print('::warning::Coach news unavailable. Using curated humour.')
