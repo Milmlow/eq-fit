@@ -328,3 +328,18 @@ label.inline select { min-width: 0; max-width: 100%; }
 .my-four-picker{width:min(520px,94vw);max-height:85dvh;padding:16px;border:2px solid var(--line);border-radius:16px;background:var(--paper);color:var(--fg)}.four-options{display:grid;gap:8px;max-height:45dvh;overflow:auto}.four-option{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--muted);border-radius:10px;min-height:60px}.four-option input{width:22px;height:22px}.four-option svg{width:38px;height:38px}.four-option small{display:block;color:var(--muted);font-size:12px}.four-picker-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}.activity-pulse>.routines{padding:10px 12px;margin:8px 0 16px}.activity-pulse .routines .start-training{min-height:48px;margin:0}.activity-pulse .workout-alternatives>summary{font-size:12px;min-height:44px}
 
 .routines .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+.free-training { margin: 16px 0; }
+.free-heading { display:flex; gap:16px; align-items:center; justify-content:space-between; }
+.free-heading h2 { font-size:1.25rem; margin:4px 0; }
+.free-heading>strong { font-size:2rem; text-align:center; }
+.free-heading small,.free-session>small { display:block; font-size:.75rem; font-weight:normal; }
+.body-tiles { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.body-tiles>div { padding:10px 6px; border:1px solid currentColor; border-radius:12px; text-align:center; opacity:.65; }
+.body-tiles>div.body-covered { opacity:1; background:color-mix(in srgb,var(--accent,#97d755) 14%,transparent); }
+.body-tiles small { display:block; font-size:.7rem; margin-top:4px; }
+.body-tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.body-tags button { min-height:44px; flex:1 0 27%; padding:6px; }
+.body-tags button[aria-pressed=true] { outline:2px solid currentColor; background:color-mix(in srgb,var(--accent,#97d755) 25%,transparent); font-weight:bold; }
+.free-session { padding:12px 0; border-bottom:1px solid color-mix(in srgb,currentColor 15%,transparent); }
+.free-training h3 small { font-size:.75rem; font-weight:normal; }

@@ -24,9 +24,9 @@ describe('personal dashboard focus',()=>{
  });
  it('persists focus separately per profile and survives unavailable storage',()=>{
   const values=new Map<string,string>();vi.stubGlobal('localStorage',{getItem:(k:string)=>values.get(k),setItem:(k:string,v:string)=>values.set(k,v)});
-  expect(saveFocus('emma','strength-cardio')).toBe(true);expect(readFocus('emma')).toBe('strength-cardio');expect(readFocus('royce')).toBe('running');
+  expect(saveFocus('emma','strength-cardio')).toBe(true);expect(readFocus('emma')).toBe('strength-cardio');expect(readFocus('royce')).toBe('free');
   expect(readFocus('new','?focus=all')).toBe('all');expect(readFocus('emma','?focus=running')).toBe('strength-cardio');
   vi.stubGlobal('localStorage',{getItem:()=>{throw Error();},setItem:()=>{throw Error();}});
-  expect(readFocus('emma')).toBe('running');expect(saveFocus('emma','all')).toBe(false);
+  expect(readFocus('emma')).toBe('free');expect(saveFocus('emma','all')).toBe(false);
  });
 });

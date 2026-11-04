@@ -194,7 +194,7 @@ export class Repo {
   }
 
   /** Atomically log a group of identical completed sets into today's open weights session. */
-  async quickLogLift(date: string, movement: { name: string; equipment: string; muscles: string[] }, exerciseId: string | null, input: SetInput, count: number): Promise<{ workout: Workout; exercise: Exercise }> {
+  async quickLogLift(date: string, movement: { name: string; equipment: string; muscles: string[] }, exerciseId: string | null, input: SetInput, count: number, checkIn = false): Promise<{ workout: Workout; exercise: Exercise }> {
     if (!Number.isInteger(count) || count < 1 || count > 20) throw new Error('Choose 1 to 20 sets.');
     if (input.reps === null || input.reps < 1) throw new Error('Enter at least one rep.');
     const errors = validateSet(input);
@@ -202,7 +202,9 @@ export class Repo {
     return this.db.transaction('rw', this.db.workouts, this.db.exercises, this.db.sets, async () => {
       const exercise = exerciseId ? await this.getExercise(exerciseId) : await this.createExercise(movement.name, movement.equipment, movement.muscles);
       if (!exercise) throw new Error('Exercise no longer exists. Choose it again.');
-      const { workout } = await this.openOrCreateWeightsWorkout(date);
+      const existing = checkIn ? (await this.workoutsBetween(date, date)).find(w => w.kind === 'weights' && w.status === 'done') : undefined;
+      const workout = existing ?? (checkIn ? await this.createWorkout({ date, name: 'Strength check-in', kind: 'weights' }) : (await this.openOrCreateWeightsWorkout(date)).workout);
+      if (checkIn) await this.updateWorkout(workout.id, { status: 'done' });
       await this.updateWorkout(workout.id, { planned_exercise_ids: [...new Set([...workout.planned_exercise_ids, exercise.id])] });
       for (let i = 0; i < count; i++) await this.addSet(workout.id, exercise.id, input);
       return { workout, exercise };
