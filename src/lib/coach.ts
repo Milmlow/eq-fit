@@ -104,7 +104,7 @@ export interface CoachRating { id:string; vote:CoachVote; bucket:string }
 export interface CoachState { ratings?:CoachRating[]; topical?:boolean; tone: Tone | null; seen: string[]; recent: {id:string;at:number}[]; dismissed:string[]; current?: {key:string;id:string}; consent:boolean; trial?: {days:string[]; shown:{key:string;id:string;day:string}[]; muted:number}; feedback:{id:string;vote:string;day:string}[] }
 export const freshCoach = ():CoachState=>({tone:null,seen:[],recent:[],dismissed:[],consent:false,feedback:[]});
 const ranks = {off:0,friendly:1,cheeky:2,filthy:3};
-export function eligible(j:Joke,ctx:Context,tone:Tone):boolean { return tone!=='off' && ranks[j.tone]<=ranks[tone] && j.event===ctx.event && j.requiredFacts.every(f=>f===`completed:${ctx.event}` || Boolean(ctx.facts?.[f])); }
+export function eligible(j:Joke,ctx:Context,tone:Tone):boolean { return tone!=='off' && ranks[j.tone]<=ranks[tone] && (j.event===ctx.event || (Boolean(j.source) && j.event==='visit')) && j.requiredFacts.every(f=>f===`completed:${ctx.event}` || Boolean(ctx.facts?.[f])); }
 export function choose(state:CoachState,ctx:Context,now:number,another=false,catalogue:readonly Joke[]=JOKES):{state:CoachState;joke?:Joke} {
  if (!state.tone || state.tone==='off') return {state};
  const pool=catalogue.filter(j=>!j.expiresAt || (state.topical!==false && Date.parse(j.expiresAt)>now));

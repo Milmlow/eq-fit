@@ -343,3 +343,7 @@ label.inline select { min-width: 0; max-width: 100%; }
 .body-tags button[aria-pressed=true] { outline:2px solid currentColor; background:color-mix(in srgb,var(--accent,#97d755) 25%,transparent); font-weight:bold; }
 .free-session { padding:12px 0; border-bottom:1px solid color-mix(in srgb,currentColor 15%,transparent); }
 .free-training h3 small { font-size:.75rem; font-weight:normal; }
+
+.session-tag-summary { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:6px; }
+.session-tag-summary button { min-height:44px; }
+.coach-news-button { width:100%; margin-top:6px; }
