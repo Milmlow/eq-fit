@@ -109,11 +109,21 @@ export function choose(state:CoachState,ctx:Context,now:number,another=false):{s
  if(!another && cached) return {state:{...state,seen:[...new Set([...state.seen,...ctx.aliases])]},joke:cached};
  const seen=ctx.aliases.some(id=>state.seen.includes(id)) || state.seen.includes(ctx.key);
  if(!another && seen) return {state:{...state,current:undefined,seen:[...new Set([...state.seen,...ctx.aliases])]}};
- const candidates=JOKES.filter(j=>eligible(j,ctx,state.tone!)&&!state.dismissed.includes(j.id)&&!state.recent.some(r=>r.id===j.id&&now-r.at<j.cooldownDays*86400000));
+ let candidates=JOKES.filter(j=>eligible(j,ctx,state.tone!)&&!state.dismissed.includes(j.id)&&!state.recent.some(r=>r.id===j.id&&now-r.at<j.cooldownDays*86400000));
  // Prefer the chosen intensity; cycle through lower intensities when its pool is exhausted.
  candidates.sort((a,b)=>b.requiredFacts.length-a.requiredFacts.length||ranks[b.tone]-ranks[a.tone]||a.id.localeCompare(b.id));
+ // Explicit requests may recycle the least recently used line after the fresh pool.
+ // Automatic visits still honour cooldown. Never revive a dismissed line.
+ if(another){
+  candidates=candidates.filter(j=>j.id!==state.current?.id);
+  if(!candidates.length){
+   const lastSeen=(id:string)=>Math.max(0,...state.recent.filter(r=>r.id===id).map(r=>r.at));
+   candidates=JOKES.filter(j=>eligible(j,ctx,state.tone!)&&!state.dismissed.includes(j.id)&&j.id!==state.current?.id)
+    .sort((a,b)=>lastSeen(a.id)-lastSeen(b.id)||a.id.localeCompare(b.id));
+  }
+ }
  const joke=candidates[0];
- return {joke,state:{...state,seen:[...new Set([...state.seen,ctx.key,...ctx.aliases])],current:joke?{key:ctx.key,id:joke.id}:undefined,recent:joke?[...state.recent.filter(r=>now-r.at<14*86400000),{id:joke.id,at:now}]:state.recent}};
+ return {joke,state:{...state,seen:[...new Set([...state.seen,ctx.key,...ctx.aliases])],current:joke?{key:ctx.key,id:joke.id}:undefined,recent:joke?[...state.recent.filter(r=>r.id!==joke.id&&now-r.at<14*86400000),{id:joke.id,at:now}]:state.recent}};
 }
 export function readCoach(key:string):CoachState {
  try { const raw=localStorage.getItem(key); if(!raw)return freshCoach(); const s=JSON.parse(raw) as CoachState;
