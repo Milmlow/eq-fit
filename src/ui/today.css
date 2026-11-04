@@ -304,3 +304,13 @@ label.inline select { min-width: 0; max-width: 100%; }
 .activity-pulse .big-four>details summary{min-height:44px;padding:4px 0}
 .activity-pulse .coach-card{margin:4px 0 8px;padding:10px}.activity-pulse .coach-heading .muted{display:none}.activity-pulse .coach-art{width:58px;min-width:58px;height:66px}.activity-pulse .coach-line{gap:8px}.activity-pulse .coach-joke{font-size:14px;line-height:1.35;margin:6px 0}
 }
+
+/* A quiet dashboard with deliberate doors into the deeper tools. */
+.today-drawer{max-width:640px;margin:0 auto;border-top:1px solid var(--line)}
+.today-drawer>summary,.workout-alternatives>summary{display:flex;justify-content:space-between;gap:12px;min-height:48px;padding:10px 2px;font-size:.85rem}
+.today-drawer>summary>span,.workout-alternatives>summary>span{color:var(--acc);font-size:22px}
+.today-drawer[open]>summary>span,.workout-alternatives[open]>summary>span{transform:rotate(45deg)}
+.today-wrap>.routines{max-width:640px;margin:8px auto 12px;padding:12px;border-color:var(--acc)}
+.today-wrap>.routines h2{font-size:1.1rem;margin:0 0 6px}.today-wrap>.routines .start-training{margin:4px 0;min-height:50px}
+.today-wrap>.routines .workout-alternatives>summary{padding-bottom:0}
+.today-drawer .today-log,.today-drawer .progress-panel{margin-top:0}
