@@ -24,6 +24,7 @@ export interface ImportBatch extends Base {
 }
 
 export interface Activity extends Base {
+  body_parts?: string[];
   batch_id: string;
   source_file_sha256: string;
   row_index: number; // 0-based position in source file
@@ -67,6 +68,7 @@ export type WorkoutKind = 'weights' | 'run' | 'other';
 export type WorkoutStatus = 'planned' | 'done';
 
 export interface Workout extends Base {
+  body_parts?: string[];
   date: string; // YYYY-MM-DD (date-only; multiple workouts per date allowed)
   name: string;
   kind: WorkoutKind;
