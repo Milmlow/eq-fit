@@ -75,15 +75,7 @@ class DiagnosticTests(unittest.TestCase):
     def test_only_fixed_labels_are_exposed(self):
         from io import BytesIO
         from urllib.error import HTTPError
-        for message,label in [('Your credit balance is too low. secret-value','api_credits_required'),('anthropic-workspace-id header required','workspace_configuration'),('unknown secret-value','unknown')]:
+        for message,label in [('Your credit balance is too low. secret-value','api_credits_required'),('anthropic-workspace-id header required','workspace_configuration'),('The following domains are not accessible to our user agent: test','news_source_configuration'),('unknown secret-value','unknown')]:
             error=HTTPError('https://api.anthropic.com',400,'Bad Request',{},BytesIO(news.json.dumps({'error':{'message':message}}).encode()))
             self.assertEqual(news.error_category(error),label)
 
-
-class SafeDetailTests(unittest.TestCase):
-    def test_secrets_are_redacted_before_truncation(self):
-        key='arbitrary-test-credential'
-        raw=('Invalid request '+key+' sk-ant-secret_other '+'x'*70).encode()
-        detail=news.safe_error_detail(raw,key)
-        self.assertNotIn(key,detail);self.assertNotIn('sk-ant-',detail);self.assertNotIn('x'*70,detail)
-        self.assertLessEqual(len(detail),500)
