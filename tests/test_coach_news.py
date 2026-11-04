@@ -38,3 +38,34 @@ class NewsTests(unittest.TestCase):
             self.assertEqual(news.generate('fake-key',self.now),[])
 
 if __name__=='__main__':unittest.main()
+
+class ClaudeResponseTests(unittest.TestCase):
+    def test_search_narration_is_ignored_and_source_provenance_preserved(self):
+        result={'stop_reason':'end_turn','content':[
+            {'type':'text','text':'I will search now.'},
+            {'type':'server_tool_use','name':'web_search'},
+            {'type':'web_search_tool_result','content':[{'type':'web_search_result','url':'https://abc.net.au/a'}]},
+            {'type':'text','text':'{"jokes":[]}', 'citations':[{'type':'web_search_result_location','url':'https://bbc.com/b'}]}]}
+        value,urls=news.parse_response(result)
+        self.assertEqual(value,{'jokes':[]})
+        self.assertEqual(urls,{'https://abc.net.au/a','https://bbc.com/b'})
+    def test_pause_and_truncation_fail_closed(self):
+        for reason in ('pause_turn','max_tokens','refusal'):
+            with self.assertRaises(ValueError):
+                news.parse_response({'stop_reason':reason,'content':[{'type':'text','text':'{"jokes":[]}'}]})
+    def test_failed_search_does_not_supply_sources(self):
+        value,urls=news.parse_response({'stop_reason':'end_turn','content':[
+            {'type':'web_search_tool_result','content':{'type':'web_search_tool_result_error','error_code':'unavailable'}},
+            {'type':'text','text':'```json\n{"jokes":[]}\n```'}]})
+        self.assertEqual(value,{'jokes':[]});self.assertEqual(urls,set())
+    def test_request_uses_anthropic_key_and_bounded_search(self):
+        from unittest.mock import MagicMock
+        response=MagicMock();response.__enter__.return_value.read.return_value=b'{"stop_reason":"end_turn","content":[{"type":"text","text":"{\\"jokes\\":[]}"}]}'
+        with patch.object(news,'urlopen',return_value=response) as request:
+            news.call_api('test-secret','Test request',True)
+        req=request.call_args.args[0];body=news.json.loads(req.data)
+        self.assertEqual(req.full_url,'https://api.anthropic.com/v1/messages')
+        self.assertEqual(req.get_header('X-api-key'),'test-secret')
+        self.assertNotIn('Authorization',req.headers)
+        self.assertEqual(body['tools'][0]['max_uses'],4)
+        self.assertEqual(body['max_tokens'],6000)
