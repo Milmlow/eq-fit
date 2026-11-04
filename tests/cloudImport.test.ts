@@ -1,11 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { freshRepo, csvOf, row } from './helpers';
-import { applyCloudRows, prepareCloudRows } from '../src/lib/cloudImport';
+import { applyCloudRows, prepareCloudRows, prepareTrialRows } from '../src/lib/cloudImport';
 import { buildPreview, commitPreview } from '../src/lib/importer';
 import { serializeBackup, validateBackup } from '../src/lib/backup';
 
 const payload = (km = '5', title = 'Run', id = '123') => [['Running', '2026-11-03 04:00:00', title, km, '00:30:00', '6:00', id, '140']];
 describe('private Garmin ingestion', () => {
+  it('imports mixed trial sessions idempotently while keeping owner sync run-only',async()=>{
+    const repo=await freshRepo();
+    const rows=[['Strength Training','2026-11-03 04:00:00','Lift','','00:45:00','','321',''],['Cardio','2026-11-03 05:00:00','Cardio','','00:20:00','','322','140']];
+    await expect(prepareCloudRows(rows,repo)).rejects.toThrow();
+    for(let i=0;i<2;i++)await applyCloudRows(repo,await prepareTrialRows(rows,repo),'local-trial');
+    expect(await repo.countActivities()).toBe(2);
+    expect((await repo.db.activities.toArray()).map(a=>a.original_type).sort()).toEqual(['Cardio','Strength Training']);
+    repo.db.close();
+  });
   it('syncing one run 100 times yields one run and one batch', async () => {
     const repo = await freshRepo();
     for (let i = 0; i < 100; i++) await applyCloudRows(repo, await prepareCloudRows(payload(), repo), 'owner');
