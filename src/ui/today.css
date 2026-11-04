@@ -280,3 +280,16 @@ label.inline select { min-width: 0; max-width: 100%; }
 .sync-status>summary { min-height:44px; padding:10px 0; font-size:14px; }
 @media(max-width:340px){ .pulse-numbers { gap:6px; } .pulse-numbers b { font-size:26px; } .pulse-numbers span { font-size:12px; } }
 @media(max-width:340px){ .pulse-numbers b { font-size:clamp(18px,8vw,26px); white-space:nowrap; } }
+
+/* Running trends and four meaningful lifting records lead Today. */
+.running-averages{grid-template-columns:repeat(2,minmax(0,1fr))}
+.big-four{border-top:1px solid var(--line);padding:14px 0 4px}
+.big-four-heading{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:12px}
+.big-four-heading h2{font-size:1.2rem;margin:0}.big-four-heading>span{color:var(--muted);font-size:.8rem}
+.big-four-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.big-four-tile{display:flex;flex-direction:column;align-items:flex-start;position:relative;gap:4px;text-align:left;padding:12px;background:var(--card);min-width:0;border:1px solid var(--line);border-radius:12px}
+.big-four-tile:disabled{opacity:1;cursor:default}.big-four-tile>svg{position:absolute;right:8px;top:10px;width:30px;height:26px;color:var(--muted)}
+.big-four-tile>span{font-size:.85rem;padding-right:28px}.big-four-tile>strong{font-size:clamp(24px,7vw,32px);line-height:1.2;font-variant-numeric:tabular-nums}.big-four-tile>small{font-size:.75rem;color:var(--muted)}
+.big-four>details{font-size:.75rem}
+
+.sync-status[hidden]{display:none}
