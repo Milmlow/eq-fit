@@ -38,3 +38,9 @@
 @keyframes coach-idle {0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-7px) rotate(3deg)}}
 @keyframes coach-react {0%{rotate:0deg;translate:0 0}25%{rotate:-12deg;translate:0 -8px}55%{rotate:10deg;translate:0 -3px}80%{rotate:-5deg}100%{rotate:0deg;translate:0 0}}
 @keyframes coach-line-in {from{opacity:.3;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.coach-feedback{display:flex;gap:2px;margin-top:2px}
+.coach-card .coach-feedback button{min-width:44px;min-height:44px;padding:8px;background:transparent;border:1px solid transparent;color:var(--muted);font-size:15px}
+.coach-card .coach-feedback button[aria-pressed="true"]{border-color:var(--muted);background:var(--paper)}
+.coach-feedback button:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.coach-source{display:block;color:var(--muted);font-size:12px;line-height:1.4;text-decoration:underline;padding:6px 0}

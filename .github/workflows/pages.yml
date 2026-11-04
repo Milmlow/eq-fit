@@ -1,11 +1,11 @@
-# Prepared, NOT enabled. Nothing runs until this file is pushed to the default branch AND Pages is switched on
-# (repo Settings > Pages > Source: "GitHub Actions"). Royce does both. See README "Hosting".
 name: Deploy EQ Fit to GitHub Pages
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: "15 17 * * *" # Daily 04:15 Sydney during daylight saving, 03:15 otherwise.
 
 permissions:
   contents: read
@@ -27,6 +27,15 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test            # real-data tests skip themselves: data-local/ is never in the repo
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Prepare current-news banter (optional)
+        run: python scripts/generate_coach_news.py
+        timeout-minutes: 5
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          COACH_NEWS_MODEL: ${{ vars.COACH_NEWS_MODEL || 'gpt-6-astra' }}
       - run: npm run build
         env:
           VITE_SUPABASE_URL: https://hihqnnxnlkjfbixhcgaa.supabase.co

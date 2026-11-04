@@ -26,6 +26,8 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
+  // Daily public news must never be frozen into the offline app shell.
+  if (url.href.split('?')[0] === abs('./coach-news.json')) return;
   if (req.mode === 'navigate') {
     event.respondWith(caches.match(abs('./index.html')).then((r) => r || fetch(req)));
     return;
