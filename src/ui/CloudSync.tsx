@@ -3,6 +3,7 @@ import type { Repo } from '../db/repo';
 import { cloud, cloudOwner, parseSyncState, type SyncState } from '../lib/cloud';
 import { applyCloudRows, prepareCloudRows, garminId, type PendingRun } from '../lib/cloudImport';
 import { backupFileName, serializeBackup } from '../lib/backup';
+import { syncFailure, type SyncStage } from '../lib/syncFailure';
 import { saveTextFile } from '../lib/download';
 
 export function CloudSync({ repo, onChanged, showControls = false }: { repo: Repo; onChanged: () => void; showControls?: boolean }) {
@@ -25,17 +26,23 @@ export function CloudSync({ repo, onChanged, showControls = false }: { repo: Rep
   const refresh = useCallback(async () => {
     if (!cloud || owner.current !== cloudOwner || locked.current || !navigator.onLine) return;
     locked.current = true; setBusy(true);
+    let stage:SyncStage='download';
     try {
       const { data, error } = await cloud.rpc('eqfit_snapshot');
       if (error || !data || typeof data !== 'object') throw new Error();
+      stage='validation';
       const nextState = parseSyncState(data.state);
+      if (owner.current !== cloudOwner) return;
+      setState(nextState);
+      try { localStorage.setItem(`eqfit.sync-status:${cloudOwner}`, JSON.stringify(nextState)); } catch { /* Status storage is optional. */ }
       const prepared = await prepareCloudRows(data.rows, repo);
       if (owner.current !== cloudOwner) return;
+      stage='save';
       const result = await applyCloudRows(repo, prepared, owner.current!);
       setPending(result.pending); setState(nextState); setMessage('');
       try { localStorage.setItem(`eqfit.sync-status:${cloudOwner}`, JSON.stringify(nextState)); } catch { /* Records remain in IndexedDB. */ }
       if (result.changed) onChanged();
-    } catch { setMessage('Could not refresh private runs. Your saved history is available; retry when online or sign in again.'); }
+    } catch (error) { setMessage(syncFailure(stage,error)); }
     finally { locked.current = false; setBusy(false); }
   }, [repo, onChanged]);
   useEffect(() => {
@@ -97,7 +104,7 @@ export function CloudSync({ repo, onChanged, showControls = false }: { repo: Rep
   if (hideStatus) return null;
   return <details className="card sync-status"><summary>Garmin · {signedIn ? busy ? 'Checking…' : pending.length ? `Review ${pending.length} overlaps` : stale || state?.status === 'failed' ? 'Needs attention' : message ? 'Needs attention' : 'Settings' : 'Sign in once'}</summary>
     {!signedIn ? <form onSubmit={e => void login(e)}><p>Sign in to your private EQ Fit account. Your session is remembered on this trusted device.</p><label className="field">Email<input type="email" autoComplete="username" required value={email} onChange={e => setEmail(e.target.value)} /></label><label className="field">Password<input type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} /></label><button disabled={busy}>Sign in</button></form> : <>
-      <p>Last successful Garmin sync: <strong>{state?.last_success ? new Date(state.last_success).toLocaleString() : 'Not verified yet'}</strong></p>
+      <p>Last successful Garmin → server sync: <strong>{state?.last_success ? new Date(state.last_success).toLocaleString() : 'Not verified yet'}</strong></p>
       <p className="muted">Garmin is checked hourly; scheduled jobs can be delayed. This app retrieves private runs automatically when opened or resumed. Lifting history stays on this device.</p>
       {(stale || state?.status === 'failed') && <p className="warn">Garmin updates are overdue or the last attempt failed. Saved runs are still available.</p>}
       <button disabled={busy} onClick={() => void refresh()}>Refresh private records</button>{' '}
