@@ -4,7 +4,7 @@ import { coachFacts } from './coachFacts';
 export type Tone = 'off' | 'friendly' | 'cheeky' | 'filthy';
 export type Event = 'visit' | 'run' | 'weights';
 export type Expression = 'clipboard' | 'eyebrow' | 'proud' | 'permit' | 'robe' | 'deckchair' | 'trophy';
-export interface Joke { id: string; text: string; tone: Exclude<Tone,'off'>; event: Event; requiredFacts: string[]; exclusions: string[]; expression: Expression; cooldownDays: number; fallback: string }
+export interface Joke { topic?: 'sport' | 'culture' | 'everyday'; source?: {title:string;url:string;publishedAt:string}; expiresAt?: string; id: string; text: string; tone: Exclude<Tone,'off'>; event: Event; requiredFacts: string[]; exclusions: string[]; expression: Expression; cooldownDays: number; fallback: string }
 // Each tuple is editorial content; metadata is explicit in the compiled catalogue.
 const lines: [string, Event, Exclude<Tone,'off'>, Expression, string][] = [
  ['eq-001','visit','friendly','clipboard','Welcome in. The clipboard has no opinions. I have several.'],
@@ -99,26 +99,31 @@ export function contextFor(session: Session | undefined, today: string, history:
  const aliases=[...(session.activity?[`activity:${session.activity.id}`]:[]),...(session.workout?[`workout:${session.workout.id}`]:[])];
  return {event:session.kind,aliases,key:aliases[0]??`session:${session.id}`,facts:coachFacts(session,history,exercises)};
 }
-export interface CoachState { tone: Tone | null; seen: string[]; recent: {id:string;at:number}[]; dismissed:string[]; current?: {key:string;id:string}; consent:boolean; trial?: {days:string[]; shown:{key:string;id:string;day:string}[]; muted:number}; feedback:{id:string;vote:string;day:string}[] }
+export type CoachVote = 'landed' | 'not-funny';
+export interface CoachRating { id:string; vote:CoachVote; bucket:string }
+export interface CoachState { ratings?:CoachRating[]; topical?:boolean; tone: Tone | null; seen: string[]; recent: {id:string;at:number}[]; dismissed:string[]; current?: {key:string;id:string}; consent:boolean; trial?: {days:string[]; shown:{key:string;id:string;day:string}[]; muted:number}; feedback:{id:string;vote:string;day:string}[] }
 export const freshCoach = ():CoachState=>({tone:null,seen:[],recent:[],dismissed:[],consent:false,feedback:[]});
 const ranks = {off:0,friendly:1,cheeky:2,filthy:3};
 export function eligible(j:Joke,ctx:Context,tone:Tone):boolean { return tone!=='off' && ranks[j.tone]<=ranks[tone] && j.event===ctx.event && j.requiredFacts.every(f=>f===`completed:${ctx.event}` || Boolean(ctx.facts?.[f])); }
-export function choose(state:CoachState,ctx:Context,now:number,another=false):{state:CoachState;joke?:Joke} {
+export function choose(state:CoachState,ctx:Context,now:number,another=false,catalogue:readonly Joke[]=JOKES):{state:CoachState;joke?:Joke} {
  if (!state.tone || state.tone==='off') return {state};
- const cached=JOKES.find(j=>j.id===state.current?.id && state.current.key===ctx.key && !state.dismissed.includes(j.id) && eligible(j,ctx,state.tone!));
+ const pool=catalogue.filter(j=>!j.expiresAt || (state.topical!==false && Date.parse(j.expiresAt)>now));
+ const preference=(j:Joke)=>{const votes=(state.ratings??[]).filter(r=>r.bucket===humourBucket(j));return votes.reduce((n,r)=>n+(r.vote==='landed'?1:-1),0)/(votes.length+2)+(j.source ? 0.2 : 0);};
+ const cached=pool.find(j=>j.id===state.current?.id && state.current.key===ctx.key && !state.dismissed.includes(j.id) && eligible(j,ctx,state.tone!));
  if(!another && cached) return {state:{...state,seen:[...new Set([...state.seen,...ctx.aliases])]},joke:cached};
  const seen=ctx.aliases.some(id=>state.seen.includes(id)) || state.seen.includes(ctx.key);
  if(!another && seen) return {state:{...state,current:undefined,seen:[...new Set([...state.seen,...ctx.aliases])]}};
- let candidates=JOKES.filter(j=>eligible(j,ctx,state.tone!)&&!state.dismissed.includes(j.id)&&!state.recent.some(r=>r.id===j.id&&now-r.at<j.cooldownDays*86400000));
+ const rotation=pool.filter(j=>!(j.source && pool.find(x=>x.id===state.current?.id)?.source));
+ let candidates=rotation.filter(j=>eligible(j,ctx,state.tone!)&&!state.dismissed.includes(j.id)&&!state.recent.some(r=>r.id===j.id&&now-r.at<j.cooldownDays*86400000));
  // Prefer the chosen intensity; cycle through lower intensities when its pool is exhausted.
- candidates.sort((a,b)=>b.requiredFacts.length-a.requiredFacts.length||ranks[b.tone]-ranks[a.tone]||a.id.localeCompare(b.id));
+ candidates.sort((a,b)=>b.requiredFacts.length-a.requiredFacts.length||ranks[b.tone]-ranks[a.tone]||preference(b)-preference(a)||a.id.localeCompare(b.id));
  // Explicit requests may recycle the least recently used line after the fresh pool.
  // Automatic visits still honour cooldown. Never revive a dismissed line.
  if(another){
   candidates=candidates.filter(j=>j.id!==state.current?.id);
   if(!candidates.length){
    const lastSeen=(id:string)=>Math.max(0,...state.recent.filter(r=>r.id===id).map(r=>r.at));
-   candidates=JOKES.filter(j=>eligible(j,ctx,state.tone!)&&!state.dismissed.includes(j.id)&&j.id!==state.current?.id)
+   candidates=rotation.filter(j=>eligible(j,ctx,state.tone!)&&!state.dismissed.includes(j.id)&&j.id!==state.current?.id)
     .sort((a,b)=>lastSeen(a.id)-lastSeen(b.id)||a.id.localeCompare(b.id));
   }
  }
@@ -130,6 +135,8 @@ export function readCoach(key:string):CoachState {
  if(![null,'off','friendly','cheeky','filthy'].includes(s.tone)||!Array.isArray(s.seen)||!s.seen.every(x=>typeof x==='string')||!Array.isArray(s.recent)||!s.recent.every(x=>typeof x.id==='string'&&Number.isFinite(x.at))||!Array.isArray(s.dismissed)||!Array.isArray(s.feedback)||typeof s.consent!=='boolean')return freshCoach();
  if(s.trial && (!Array.isArray(s.trial.days)||!s.trial.days.every(x=>typeof x==='string')||!Array.isArray(s.trial.shown)||!s.trial.shown.every(x=>typeof x.key==='string'&&typeof x.id==='string'&&typeof x.day==='string')||!Number.isFinite(s.trial.muted)))s.trial=undefined;
  if(!s.trial)s.consent=false;
+ s.ratings=Array.isArray(s.ratings)?s.ratings.filter(r=>r&&typeof r.id==='string'&&typeof r.bucket==='string'&&r.bucket.length<60&&['landed','not-funny'].includes(r.vote)).slice(-300):[];
+ s.topical=s.topical!==false;
  return s;
  }catch{return freshCoach();}
 }
@@ -142,4 +149,12 @@ export function observeCoach(s:CoachState,ctx:Context,id:string|undefined,day:st
  const shown=id&&!t.shown.some(x=>x.key===ctx.key&&x.id===id&&x.day===day);
  if(t.days.includes(day)&&!shown)return s;
  return {...s,trial:{...t,days:[...new Set([...t.days,day])].slice(-14),shown:shown?[...t.shown,{key:ctx.key,id:id!,day}].slice(-300):t.shown}};
+}
+
+/** Explicit tastes are preferences, separate from opt-in trial measurements. */
+export function humourBucket(j:Joke):string {return j.topic?`news:${j.topic}`:`style:${j.expression}`;}
+export function rateCoach(s:CoachState,j:Joke,vote:CoachVote,day:string):CoachState {
+ const ratings=[...(s.ratings??[]).filter(r=>r.id!==j.id),{id:j.id,vote,bucket:humourBucket(j)}].slice(-300);
+ return {...s,ratings,dismissed:vote==='not-funny'?[...new Set([...s.dismissed,j.id])]:s.dismissed.filter(id=>id!==j.id),
+ feedback:s.consent?[...s.feedback.filter(f=>!(f.id===j.id&&f.day===day)),{id:j.id,vote,day}].slice(-300):s.feedback};
 }

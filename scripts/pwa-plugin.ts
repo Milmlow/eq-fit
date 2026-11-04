@@ -19,7 +19,7 @@ export function pwaPlugin(templatePath: string): Plugin {
     enforce: 'post',
     configResolved(c) { outDir = c.build.outDir; },
     closeBundle() {
-      const files = walk(outDir).filter((f) => relative(outDir, f) !== 'sw.js').sort();
+      const files = walk(outDir).filter((f) => !['sw.js','coach-news.json'].includes(relative(outDir, f))).sort();
       const urls = files.map((f) => `./${relative(outDir, f).split(sep).join('/')}`);
       const h = createHash('sha256');
       files.forEach((f, i) => { h.update(urls[i]); h.update(readFileSync(f)); });

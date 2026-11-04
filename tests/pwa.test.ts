@@ -88,6 +88,13 @@ describe('service worker generation', () => {
       './assets/archivo-latin-wdth-normal-111.woff2', './assets/archivo-latin-wdth-italic-222.woff2']) expect(list, u).toContain(u);
     expect(list).not.toContain('./sw.js');
   });
+  it('news changes do not require an app update or enter the offline cache', () => {
+    const first=build({...files,'coach-news.json':'batch one'});
+    const second=build({...files,'coach-news.json':'batch two'});
+    expect(first).toBe(second);
+    const list=JSON.parse(/const PRECACHE = (\[[\s\S]*?\]);/.exec(first)![1]) as string[];
+    expect(list).not.toContain('./coach-news.json');
+  });
   it('cache name changes when any file changes (so updates are detected) and is stable otherwise', () => {
     const name = (sw: string) => /const CACHE = '([^']+)'/.exec(sw)![1];
     expect(name(build(files))).toBe(name(build(files)));
