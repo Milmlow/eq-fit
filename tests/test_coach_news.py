@@ -69,3 +69,12 @@ class ClaudeResponseTests(unittest.TestCase):
         self.assertNotIn('Authorization',req.headers)
         self.assertEqual(body['tools'][0]['max_uses'],4)
         self.assertEqual(body['max_tokens'],6000)
+
+
+class DiagnosticTests(unittest.TestCase):
+    def test_only_fixed_labels_are_exposed(self):
+        from io import BytesIO
+        from urllib.error import HTTPError
+        for message,label in [('Your credit balance is too low. secret-value','api_credits_required'),('anthropic-workspace-id header required','workspace_configuration'),('unknown secret-value','unknown')]:
+            error=HTTPError('https://api.anthropic.com',400,'Bad Request',{},BytesIO(news.json.dumps({'error':{'message':message}}).encode()))
+            self.assertEqual(news.error_category(error),label)
