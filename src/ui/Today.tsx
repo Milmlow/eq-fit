@@ -76,8 +76,13 @@ export function Today({ repo, today, version, onChanged }: { repo: Repo; today: 
       <ActivityPulse repo={repo} today={today} version={version} onOpen={setOpen} />
       {error && <p role="alert" className="error">{error}</p>}
       <Routines repo={repo} today={today} version={version} onChanged={onChanged} onOpen={setOpen} />
+      <details className="today-drawer"><summary>Quick lifts & weekly progress <span aria-hidden="true">＋</span></summary>
       <TrainingMomentum repo={repo} today={today} version={version} onChanged={onChanged} onOpen={(id) => { setOpen(id); void load(); onChanged(); }} />
+      </details>
+      <details className="today-drawer"><summary>Achievements <span aria-hidden="true">＋</span></summary>
       <Milestones repo={repo} today={today} version={version} />
+      </details>
+      <details className="today-drawer"><summary>Today’s log & activity links <span aria-hidden="true">＋</span></summary>
       <section aria-labelledby="today-h" className="today-log">
         <h2 id="today-h">Today <span className="muted">{today}</span></h2>
         {loaded && (
@@ -131,6 +136,7 @@ export function Today({ repo, today, version, onChanged }: { repo: Repo; today: 
           {open && <WorkoutEditor key={open} repo={repo} workoutId={open} onChanged={() => { void load(); onChanged(); }} onClose={() => { setOpen(null); void load(); }} />}
         </div>
       </section>
+      </details>
     </div>
   );
 }

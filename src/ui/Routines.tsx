@@ -42,6 +42,7 @@ export function Routines({ repo, today, version, onOpen, onChanged }: {
     return <div className="workout-pictures" aria-hidden="true">{ids.slice(0, 4).map(id => <MovementArt key={id} name={exercises.find(e => e.id === id)?.name ?? ''} />)}{ids.length > 4 && <span>+{ids.length - 4}</span>}</div>;
   }
   function repeatCard(w: Workout, primary = false) {
+    if (primary) return <button className="primary start-training" disabled={busy} onClick={() => void start(undefined, w)}>Repeat last workout →</button>;
     return <article key={w.id} className="routine-card">
       {pictures(w.planned_exercise_ids)}<h3>{w.name || 'Weights session'}</h3>
       <p className="muted small">{w.date} · {counts.get(w.id)} {counts.get(w.id) === 1 ? 'set' : 'sets'} recorded</p>
@@ -49,7 +50,7 @@ export function Routines({ repo, today, version, onOpen, onChanged }: {
     </article>;
   }
   return <section className="card routines" aria-labelledby={editing ? 'builder-title' : 'routines-title'}>
-    {!editing && <><p className="eyebrow">PICK · LOG · LAUGH</p><h2 id="routines-title">Ready to lift?</h2></>}
+    {!editing && <><h2 id="routines-title">Ready to lift?</h2></>}
     {error && <p role="alert" className="error">{error}</p>}
     {!loaded && !error && <p className="muted">Loading your workouts…</p>}
     {editing ? <WorkoutBuilder today={today} defaultName={nextWorkoutName(routines.map(r => r.name))} key={typeof editing === 'string' ? editing : editing.id} repo={repo} routine={editing === 'new' ? undefined : editing}
@@ -62,6 +63,7 @@ export function Routines({ repo, today, version, onOpen, onChanged }: {
       </div> : recent[0] ? repeatCard(recent[0], true) : <>
         <p className="muted">Choose your exercises once. Your workout will be ready next time.</p>
       </>}
+      <details className="workout-alternatives"><summary>Choose or create a workout <span aria-hidden="true">＋</span></summary>
       <button className={`start-fresh ${!pending.length && !recent.length ? 'primary' : ''}`} disabled={busy} onClick={() => setEditing('new')}>+ Create workout</button>
       <button className="quick-session-link" disabled={busy} onClick={() => void start()}>Quick session · no saved plan</button>
       {routines.length > 0 && <details className="workout-choices" open={showSaved || (!pending.length && !recent.length)}><summary>Saved workouts · {routines.length}</summary>
@@ -77,6 +79,7 @@ export function Routines({ repo, today, version, onOpen, onChanged }: {
         <div className="routine-list">{recent.slice(pending.length ? 0 : 1).map(w => repeatCard(w))}</div>
       </details>}
 
+      </details>
     </>}
   </section>;
 }
