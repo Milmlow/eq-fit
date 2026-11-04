@@ -16,11 +16,14 @@ export function candidatesFor(incoming: PreparedRow, existing: Activity[]): Acti
   const id = garminId(incoming);
   const exact = existing.filter(a => garminId(a) === id);
   if (exact.length) return exact;
-  return existing.filter(a => !garminId(a) && a.date === incoming.date && /run/i.test(a.original_type));
+  return existing.filter(a => !garminId(a) && a.date === incoming.date && (/run/i.test(incoming.original_type) ? /run/i.test(a.original_type) : a.original_type===incoming.original_type));
 }
 
-export async function prepareCloudRows(value: unknown, repo: Repo): Promise<PreparedRow[]> {
+export function prepareCloudRows(value:unknown,repo:Repo):Promise<PreparedRow[]> {return prepareRows(value,repo,['Running','Treadmill Running']);}
+export function prepareTrialRows(value:unknown,repo:Repo):Promise<PreparedRow[]> {return prepareRows(value,repo,['Running','Treadmill Running','Strength Training','Cardio','HIIT','Cycling','Indoor Cycling','Walking','Elliptical','Stair Stepper','Indoor Rowing','Rowing','Swimming']);}
+async function prepareRows(value: unknown, repo: Repo, allowedTypes:string[]): Promise<PreparedRow[]> {
   if (!Array.isArray(value) || value.length > 15000 || value.some(r => !Array.isArray(r) || r.length !== CLOUD_HEADERS.length || r.some(v => typeof v !== 'string' || v.length > 1000))) throw new Error('Invalid private running response.');
+  if (value.length === 0) return [];
   const quote = (s: string) => `"${s.replace(/"/g, '""')}"`;
   const csv = [CLOUD_HEADERS, ...value as string[][]].map(r => r.map(quote).join(',')).join('\n');
   const preview = await buildPreview(new TextEncoder().encode(csv), repo, 'Private Garmin sync');
@@ -28,7 +31,7 @@ export async function prepareCloudRows(value: unknown, repo: Repo): Promise<Prep
   const ids = new Set<string>();
   for (const row of preview.prepared) {
     const id = garminId(row);
-    if (!id || ids.has(id) || !['Running', 'Treadmill Running'].includes(row.original_type) || (row.distance_km !== null && (row.distance_km < 0 || row.distance_km > 2000))) throw new Error('Invalid private running response.');
+    if (!id || ids.has(id) || !allowedTypes.includes(row.original_type) || (row.distance_km !== null && (row.distance_km < 0 || row.distance_km > 2000))) throw new Error('Invalid private running response.');
     ids.add(id);
   }
   return preview.prepared;

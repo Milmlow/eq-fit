@@ -2,7 +2,7 @@ import { describe,it,expect,vi } from 'vitest';
 import { handleTrial,runRow } from '../supabase/functions/garmin-trial/handler';
 import { trialDatabaseName } from '../src/ui/Trial';
 const origin='https://milmlow.github.io';
-const request=(key='test-key')=>new Request('https://example.test',{method:'POST',headers:{origin,Authorization:'Bearer '+'a'.repeat(43),'Content-Type':'application/json'},body:JSON.stringify({key})});
+const request=(key='test-key',training=false)=>new Request('https://example.test',{method:'POST',headers:{origin,Authorization:'Bearer '+'a'.repeat(43),'Content-Type':'application/json'},body:JSON.stringify({key,training})});
 const allowed=async()=>true;
 const now=new Date('2026-11-03T00:00:00Z');
 const run={activityId:123,startTimeLocal:'2026-11-02T05:00:00',activityType:{typeKey:'running'},distance:5000,duration:1800,averageSpeed:5000/1800,averageHR:140};
@@ -13,6 +13,15 @@ describe('stateless mate trial',()=>{
   expect(runRow({...run,distance:null,duration:null,averageSpeed:null,averageHR:null})?.slice(3)).toEqual(['','','','123','']);
   expect(runRow({...run,activityType:'cycling'})).toBeNull();
   expect(()=>runRow({...run,distance:-1})).toThrow();
+ });
+ it('imports strength and cardio summaries only when requested, without invented pace',async()=>{
+  const strength={...run,activityType:'strength_training',distance:null,averageSpeed:null};
+  const cardio={...run,activityId:124,activityType:'cardio_training'};
+  expect(runRow(strength)).toBeNull();expect(runRow(strength,true)?.[0]).toBe('Strength Training');
+  expect(runRow(cardio,true)?.[5]).toBe('');
+  const http=vi.fn().mockResolvedValueOnce(new Response('token')).mockResolvedValueOnce(Response.json([run,strength,cardio]));
+  const result=await handleTrial(request('test-key',true),http,now,allowed);
+  const data=await result.json();expect(data.rows.map((r:string[])=>r[0])).toEqual(['Strength Training','Cardio']);
  });
  it('rejects other origins and malformed credentials without contacting Garmin',async()=>{
   const http=vi.fn();

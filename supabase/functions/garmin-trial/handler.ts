@@ -2,11 +2,13 @@
 const ORIGIN = 'https://milmlow.github.io';
 const BASE = 'https://personal.connectapi.garmin.com';
 const TYPES: Record<string,string> = { running:'Running',trail_running:'Running',track_running:'Running',ultra_run:'Running',treadmill_running:'Treadmill Running',indoor_running:'Treadmill Running' };
-export function runRow(value: unknown): string[] | null {
+const TRAINING_TYPES: Record<string,string> = { strength_training:'Strength Training',cardio_training:'Cardio',cardio:'Cardio',hiit:'HIIT',cycling:'Cycling',indoor_cycling:'Indoor Cycling',walking:'Walking',elliptical:'Elliptical',stair_climbing:'Stair Stepper',stair_stepper:'Stair Stepper',indoor_rowing:'Indoor Rowing',rowing:'Rowing',lap_swimming:'Swimming',open_water_swimming:'Swimming' };
+export function runRow(value: unknown, training=false): string[] | null {
   if (!value || typeof value !== 'object') throw new Error('Invalid activity');
   const a = value as Record<string,unknown>;
   const type = typeof a.activityType === 'object' && a.activityType ? (a.activityType as Record<string,unknown>).typeKey : a.activityType;
-  const label = TYPES[String(type).toLowerCase()];
+  const typeKey=String(type).toLowerCase();
+  const label = TYPES[typeKey] ?? (training ? TRAINING_TYPES[typeKey] : undefined);
   if (!label) return null;
   const id = String(a.activityId ?? '');
   const date = String(a.startTimeLocal ?? '').replace('T',' ').slice(0,19);
@@ -14,8 +16,8 @@ export function runRow(value: unknown): string[] | null {
   const number = (key: string, max: number) => { const n = a[key]; if (n == null) return null; if (typeof n !== 'number' || !Number.isFinite(n) || n < 0 || n > max) throw new Error('Invalid number'); return n; };
   const distance = number('distance',2_000_000), seconds = number('duration',604800), speed = number('averageSpeed',25), hr = number('averageHR',300);
   const duration = seconds === null ? null : Math.round(seconds);
-  const pace = speed ? Math.round(1000/speed) : null;
-  return [label,date,String(a.activityName || 'Garmin run').slice(0,120),distance === null ? '' : (distance/1000).toFixed(4),duration === null ? '' : `${Math.floor(duration/3600)}:${String(Math.floor(duration/60)%60).padStart(2,'0')}:${String(duration%60).padStart(2,'0')}`,pace !== null && pace >= 60 && pace <= 3600 ? `${Math.floor(pace/60)}:${String(pace%60).padStart(2,'0')}` : '',id,hr ? String(hr) : ''];
+  const pace = TYPES[typeKey] && speed ? Math.round(1000/speed) : null;
+  return [label,date,String(a.activityName || (TYPES[typeKey] ? 'Garmin run' : label)).slice(0,120),distance === null ? '' : (distance/1000).toFixed(4),duration === null ? '' : `${Math.floor(duration/3600)}:${String(Math.floor(duration/60)%60).padStart(2,'0')}:${String(duration%60).padStart(2,'0')}`,pace !== null && pace >= 60 && pace <= 3600 ? `${Math.floor(pace/60)}:${String(pace%60).padStart(2,'0')}` : '',id,hr ? String(hr) : ''];
 }
 export async function handleTrial(req: Request, http: typeof fetch = fetch, now = new Date(), authorizeInvite: (token: string) => Promise<boolean> = async () => false): Promise<Response> {
   const headers = { 'Access-Control-Allow-Origin':ORIGIN,'Access-Control-Allow-Headers':'content-type, authorization','Access-Control-Allow-Methods':'POST, OPTIONS','Vary':'Origin','Cache-Control':'no-store','Content-Type':'application/json' };
@@ -27,12 +29,14 @@ export async function handleTrial(req: Request, http: typeof fetch = fetch, now 
   const invite = req.headers.get('authorization')?.match(/^Bearer ([A-Za-z0-9_-]{43})$/)?.[1];
   if (!invite || !await authorizeInvite(invite)) return reply(403,{error:'This private trial invite is missing, expired or has reached its 20-import limit.'});
   let key: string;
+  let training=false;
   try {
     const text = await req.text();
     if (text.length > 4096) return reply(413,{error:'API key is too long.'});
     const body = JSON.parse(text);
     if (typeof body.key !== 'string' || !body.key.trim() || body.key.length > 3000 || /[\r\n]/.test(body.key)) return reply(400,{error:'Paste your Garmin Personal API key.'});
     key = body.key.trim();
+    training = body.training === true;
   } catch { return reply(400,{error:'Paste your Garmin Personal API key.'}); }
   try {
     const signal = AbortSignal.timeout(45000);
@@ -52,7 +56,7 @@ export async function handleTrial(req: Request, http: typeof fetch = fetch, now 
       if (text.length > 4_000_000) throw new Error('Oversize response');
       const page: unknown = JSON.parse(text);
       if (!Array.isArray(page) || page.length>100) throw new Error('Invalid page');
-      for (const a of page) { const row=runRow(a); if (row) rows.set(row[6],row); }
+      for (const a of page) { const row=runRow(a,training); if (row) rows.set(row[6],row); }
       if (page.length < 100) return reply(200,{rows:[...rows.values()],start,end});
     }
     return reply(422,{error:'More than 1,000 activities in 90 days. This trial cannot import the complete range.'});
