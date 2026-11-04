@@ -87,3 +87,10 @@
   --tabbar-h: 68px;
   --radius: 10px;
 }
+
+[data-theme="girl-power"] {
+ color-scheme:dark;--bg:#1e1035;--paper:#1e1035;--fg:#fff5ff;--muted:#d3bde9;--card:#321b50;--line:#bd8cf0;--acc:#8a4fbc;--on-acc:#ffffff;--accent:#b6377e;--on-accent:#ffffff;--blue:#8a4fbc;--on-blue:#ffffff;--pr-ink:#ffb9e0;--tab-bg:#381457;--tab-ink:#fff5ff;--tab-active:#ffc4e5;--tab-focus:#ffffff;--focus:#edc4ff;--err:#ffb5bc;--warn:#ffe0a3;--disabled-bg:#463253;--disabled-fg:#e5d5ee;
+}
+.flower-rain{position:fixed;inset:0;pointer-events:none;z-index:30;overflow:hidden}.flower-rain span{position:absolute;top:-60px;font-size:26px;animation:flower-fall 4.5s ease-in both;opacity:0}.flower-replay{position:fixed;right:12px;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 12px);z-index:20;border:1px solid var(--line);border-radius:50%;width:44px;height:44px;padding:0;background:var(--card);color:var(--fg);box-shadow:0 3px 14px #0005}
+@keyframes flower-fall{0%{opacity:0;transform:translateY(0) rotate(0)}10%{opacity:.8}85%{opacity:.7}100%{opacity:0;transform:translateY(calc(100dvh + 80px)) rotate(230deg)}}
+@media(prefers-reduced-motion:reduce){.flower-rain{display:none}.flower-replay{display:none}}

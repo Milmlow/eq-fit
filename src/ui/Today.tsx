@@ -73,9 +73,8 @@ export function Today({ repo, today, version, onChanged }: { repo: Repo; today: 
 
   return (
     <div className="today-wrap">
-      <ActivityPulse key={repo.db.name} repo={repo} today={today} version={version} onOpen={setOpen} />
+      <ActivityPulse key={repo.db.name} repo={repo} today={today} version={version} onOpen={setOpen} onChanged={onChanged} trainingAction={<Routines repo={repo} today={today} version={version} onChanged={onChanged} onOpen={setOpen} />} />
       {error && <p role="alert" className="error">{error}</p>}
-      <Routines repo={repo} today={today} version={version} onChanged={onChanged} onOpen={setOpen} />
       <details className="today-drawer"><summary>Quick lifts & weekly progress <span aria-hidden="true">＋</span></summary>
       <TrainingMomentum repo={repo} today={today} version={version} onChanged={onChanged} onOpen={(id) => { setOpen(id); void load(); onChanged(); }} />
       </details>

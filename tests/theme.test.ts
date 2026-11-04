@@ -16,7 +16,7 @@ describe('theme preference', () => {
   });
   it('persists the explicit choice under one key and reads it back', () => {
     const s = memStore();
-    for (const p of ['system', 'light', 'dark', 'crazy'] as const) {
+    for (const p of ['system', 'light', 'dark', 'crazy', 'girl-power'] as const) {
       expect(savePref(s, p)).toBe(true);
       expect(s.m.get(THEME_KEY)).toBe(p);
       expect(loadPref(s)).toBe(p);

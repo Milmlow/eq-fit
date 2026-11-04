@@ -1,9 +1,9 @@
 // Theme preference. A tiny local preference (one localStorage key); NOT part of workout data or any backup.
 export const THEME_KEY = 'eqfit.theme';
-export type ThemePref = 'system' | 'light' | 'dark' | 'crazy';
-export type ThemeName = 'light' | 'dark' | 'crazy';
+export type ThemePref = 'system' | 'light' | 'dark' | 'crazy' | 'girl-power';
+export type ThemeName = 'light' | 'dark' | 'crazy' | 'girl-power';
 export const THEME_PREFS: { pref: ThemePref; label: string }[] = [
-  { pref: 'system', label: 'System' }, { pref: 'light', label: 'Light' }, { pref: 'dark', label: 'Dark' }, { pref: 'crazy', label: 'Crazy' },
+  { pref: 'system', label: 'System' }, { pref: 'light', label: 'Light' }, { pref: 'dark', label: 'Dark' }, { pref: 'crazy', label: 'Crazy' }, { pref: 'girl-power', label: 'Girl Power 🌸' },
 ];
 /** Used until Royce picks one. */
 export const DEFAULT_PREF: ThemePref = 'dark';
@@ -12,7 +12,7 @@ type ReadStore = { getItem(k: string): string | null } | undefined | null;
 type WriteStore = { setItem(k: string, v: string): void } | undefined | null;
 
 export function parsePref(v: unknown): ThemePref | null {
-  return v === 'system' || v === 'light' || v === 'dark' || v === 'crazy' ? v : null;
+  return v === 'system' || v === 'light' || v === 'dark' || v === 'crazy' || v === 'girl-power' ? v : null;
 }
 
 /** Stored explicit choice, else the default. Storage failures (private mode, blocked) fall back to the default. */

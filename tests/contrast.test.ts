@@ -7,7 +7,7 @@ const css = readFileSync(new URL('../src/ui/themes.css', import.meta.url), 'utf8
 function tokens(): Record<string, Record<string, string>> {
   const out: Record<string, Record<string, string>> = {};
   for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
-    const names = [...m[1].matchAll(/data-theme="(\w+)"/g)].map((x) => x[1]);
+    const names = [...m[1].matchAll(/data-theme="([\w-]+)"/g)].map((x) => x[1]);
     for (const n of names) {
       const t = (out[n] ??= {});
       for (const d of m[2].matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{6})\b/g)) t[d[1]] = d[2].toLowerCase();
@@ -44,11 +44,11 @@ const T = tokens();
 const REQUIRED = [...new Set(PAIRS.flatMap(([a, b]) => [a, b]))];
 
 describe('contrast: themes.css tokens (WCAG AA)', () => {
-  it('all three themes are defined, each with every token the pairs use', () => {
-    expect(Object.keys(T).sort()).toEqual(['crazy', 'dark', 'light']);
+  it('all themes are defined, each with every token the pairs use', () => {
+    expect(Object.keys(T).sort()).toEqual(['crazy', 'dark', 'girl-power', 'light']);
     for (const [name, t] of Object.entries(T)) for (const k of REQUIRED) expect(t[k], `${name} --${k}`).toMatch(/^#[0-9a-f]{6}$/);
   });
-  for (const theme of ['light', 'dark', 'crazy']) {
+  for (const theme of ['light', 'dark', 'crazy', 'girl-power']) {
     describe(theme, () => {
       for (const [fg, bg, min, what] of PAIRS) {
         it(`${what}: --${fg} on --${bg} >= ${min}:1`, () => {

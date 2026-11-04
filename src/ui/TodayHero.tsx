@@ -68,7 +68,7 @@ function BeatBody({ beat }: { beat: BeatResult }) {
 
 export interface HeroProps {
   data: HeroData;
-  theme: 'light' | 'dark' | 'crazy';
+  theme: import('../lib/theme').ThemeName;
   onStart: () => void;
   starting: boolean;
   demo: boolean;
