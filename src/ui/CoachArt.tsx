@@ -1,12 +1,12 @@
 import type { Expression } from '../lib/coach';
-/** Original vector character, built for small screens; no external images or animation. */
+/** Original vector character, built for small screens; no external images. */
 export function CoachArt({expression='clipboard'}:{expression?:Expression}) {
  const robe=expression==='robe', rest=expression==='deckchair', proud=expression==='proud', trophy=expression==='trophy', permit=expression==='permit';
  return <svg className="coach-art" viewBox="0 0 180 180" role="img" aria-label={`Coach EQ: ${expression}`}>
   <circle cx="90" cy="90" r="85" fill="var(--paper)"/>
   <g stroke="var(--fg)" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
    {rest&&<g fill="none"><path d="M25 98l43 65m-45 -4l56 -57m-48 4h48l-21 39H39"/><path d="M30 108l29 37m-17 -37l25 26" stroke="var(--accent)"/></g>}
-   <g transform={rest?'translate(12 6) rotate(12 82 100)':proud?'translate(0 -3)':'translate(0 0)'}>
+   <g className="coach-body" transform={rest?'translate(12 6) rotate(12 82 100)':proud?'translate(0 -3)':'translate(0 0)'}>
     <path d={robe?'M46 99L31 165h105l-17 -66 -35 11z':'M48 102Q28 115 31 160h106q3 -46 -20 -58z'} fill={robe?'var(--blue)':'var(--accent)'}/>
     {robe?<><path d="M61 99l23 49 22 -49 -22 10z" fill="var(--paper)"/><path d="M36 146h94m-48 0l-8 18m10 -18l12 18"/><path d="M42 128h17v14H42z" fill="none"/></>:<path d="M65 102l19 36 19 -36" fill="none"/>}
     <path d="M79 134h13v10H79z" fill="var(--paper)"/>

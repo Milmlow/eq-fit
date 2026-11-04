@@ -10,7 +10,21 @@ describe('Coach isolated humour policy',()=>{
  it('linking an activity to a workout does not celebrate twice',()=>{let state=choose({...freshCoach(),tone:'cheeky'},run,now).state;const linked={event:'weights' as const,key:'activity:a',aliases:['activity:a','workout:b']};const r=choose(state,linked,now);expect(r.joke).toBeUndefined();state=r.state;expect(choose(state,{event:'weights',key:'workout:b',aliases:['workout:b']},now).joke).toBeUndefined();});
  it('same-kind linking remembers both aliases even when retaining the joke',()=>{const state=choose({...freshCoach(),tone:'cheeky'},run,now).state;const linked=choose(state,{...run,aliases:['activity:a','workout:b']},now);expect(linked.state.seen).toContain('workout:b');expect(choose(linked.state,{event:'run',key:'workout:b',aliases:['workout:b']},now).joke).toBeUndefined();});
  it('a historical correction removes an ineligible line',()=>{const state=choose({...freshCoach(),tone:'cheeky'},run,now).state;expect(choose(state,{...run,event:'weights'},now).joke).toBeUndefined();});
- it('Another one exhausts the pool without breaking cooldown',()=>{let state={...freshCoach(),tone:'filthy' as const};const ids=new Set();for(let i=0;i<50;i++){const r=choose(state,run,now,true);if(r.joke){expect(ids.has(r.joke.id)).toBe(false);ids.add(r.joke.id);}state=r.state as typeof state;}expect(ids.size).toBe(JOKES.filter(j=>eligible(j,run,'filthy')).length);});
+ it('explicit requests keep cycling without consecutive repeats or unbounded history',()=>{
+  let state={...freshCoach(),tone:'filthy' as const};
+  let previous='';
+  for(let i=0;i<200;i++){
+   const r=choose(state,run,now+i,true);
+   expect(r.joke).toBeDefined();expect(r.joke!.id).not.toBe(previous);
+   previous=r.joke!.id;state=r.state as typeof state;
+  }
+  expect(state.recent.length).toBeLessThanOrEqual(JOKES.length);
+ });
+ it('automatic selection still respects exhausted cooldowns',()=>{
+  const state={...freshCoach(),tone:'cheeky' as const,recent:JOKES.map(j=>({id:j.id,at:now}))};
+  expect(choose(state,run,now).joke).toBeUndefined();
+ });
+
  it('retired jokes never return, even after cooldown',()=>{const state={...freshCoach(),tone:'cheeky' as const,dismissed:JOKES.map(j=>j.id)};expect(choose(state,run,now,true).joke).toBeUndefined();});
  it('Not funny immediately hides the cached line without automatically replacing it',()=>{
   const first=choose({...freshCoach(),tone:'cheeky'},run,now);
