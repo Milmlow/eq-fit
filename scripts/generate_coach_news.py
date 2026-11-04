@@ -111,6 +111,27 @@ Use only retrieved source URLs. Do not guess publication dates. Empty jokes arra
         return []
     return [j for j in candidates if j['id'] in review['approved'] and j['source']['url'] in review_urls]
 
+def error_category(error):
+    """Return only fixed diagnostic labels; never emit provider-supplied text."""
+    try:
+        raw=error.read(16000)
+        message=json.loads(raw).get('error',{}).get('message','').lower()
+    except (ValueError,AttributeError,TypeError):
+        return 'unknown'
+    for terms,label in [
+        (('credit balance','purchase credits','insufficient credit'),'api_credits_required'),
+        (('spend limit','spending limit','usage limit'),'account_spend_limit'),
+        (('workspace','anthropic-workspace-id'),'workspace_configuration'),
+        (('web search','web_search'),'web_search_configuration'),
+        (('model',),'model_access_or_configuration'),
+        (('max_tokens','max tokens'),'output_token_configuration'),
+        (('api key','api_key','authentication'),'key_authentication'),
+        (('anthropic-version','api version'),'api_version_configuration'),
+    ]:
+        if any(term in message for term in terms):
+            return label
+    return 'unknown'
+
 def main():
     now=datetime.now(timezone.utc); jokes=[]
     key=os.getenv('ANTHROPIC_API_KEY')
@@ -121,7 +142,7 @@ def main():
             jokes=generate(key,now)
             print(f'Coach news: {len(jokes)} approved lines.')
         except HTTPError as error:
-            print(f'::warning::Coach news unavailable: Claude HTTP {error.code}. Check API billing, model access and key permissions. Using curated humour.')
+            print(f'::warning::Coach news unavailable: Claude HTTP {error.code} [{error_category(error)}]. Check API billing, model access and key permissions. Using curated humour.')
         except Exception:
             # Never print provider response bodies, prompts, request headers or credentials.
             print('::warning::Coach news unavailable. Using curated humour.')
