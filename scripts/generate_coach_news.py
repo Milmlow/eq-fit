@@ -5,6 +5,7 @@ Missing credentials/errors produce an empty feed; the app retains curated humour
 import hashlib
 import json
 import os
+import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.request import Request, urlopen
@@ -115,7 +116,8 @@ def error_category(error):
     """Return only fixed diagnostic labels; never emit provider-supplied text."""
     try:
         raw=error.read(16000)
-        message=json.loads(raw).get('error',{}).get('message','').lower()
+        payload=json.loads(raw)
+        message=str(payload.get('error',{}).get('message') or payload.get('message') or payload.get('detail') or '').lower()
     except (ValueError,AttributeError,TypeError):
         return 'unknown'
     for terms,label in [
@@ -132,6 +134,13 @@ def error_category(error):
             return label
     return 'unknown'
 
+def safe_error_detail(raw, key):
+    """Bounded diagnostics from public-news requests; strip credentials before logging."""
+    text=raw.decode('utf-8',errors='replace').replace(key,'[REDACTED]') if key else ''
+    text=re.sub(r'sk-[A-Za-z0-9_-]+','[REDACTED]',text)
+    text=re.sub(r'[A-Za-z0-9_+/=-]{40,}','[REDACTED]',text)
+    return ' '.join(text.split())[:500]
+
 def main():
     now=datetime.now(timezone.utc); jokes=[]
     key=os.getenv('ANTHROPIC_API_KEY')
@@ -142,7 +151,9 @@ def main():
             jokes=generate(key,now)
             print(f'Coach news: {len(jokes)} approved lines.')
         except HTTPError as error:
-            print(f'::warning::Coach news unavailable: Claude HTTP {error.code} [{error_category(error)}]. Check API billing, model access and key permissions. Using curated humour.')
+            raw=error.read(16000)
+            print(f'::warning::Coach news unavailable: Claude HTTP {error.code}. Using curated humour.')
+            print('Claude setup diagnostic: '+safe_error_detail(raw,key))
         except Exception:
             # Never print provider response bodies, prompts, request headers or credentials.
             print('::warning::Coach news unavailable. Using curated humour.')
