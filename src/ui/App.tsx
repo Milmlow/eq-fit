@@ -43,7 +43,7 @@ export function App({ trialRepo }: { trialRepo?: Repo } = {}) {
       <main id="main">
         <UpdateBanner />
         <StorageWarning />
-        {repo && !demo && !trialRepo && <CloudSync repo={repo} onChanged={bump} />}
+        {repo && !demo && !trialRepo && <CloudSync repo={repo} onChanged={bump} showControls={tab === 'more'} />}
 
         {error && (
           <p role="alert" className="error">
