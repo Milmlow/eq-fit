@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { FlowerRain } from './FlowerRain';
 import { RecompDB } from '../db/db';
 import { Repo } from '../db/repo';
 import { demoFromSearch } from '../lib/demo';
@@ -37,6 +38,7 @@ export function App({ trialRepo, trialControls }: { trialRepo?: Repo; trialContr
 
   return (
     <div className="app">
+      {theme==='girl-power'&&<FlowerRain/>}
       {tab !== 'today' && (
         <header className="app-head"><p className="wordmark sm" aria-hidden="true">EQ FIT</p></header>
       )}
