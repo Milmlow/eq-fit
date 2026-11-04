@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { RecompDB } from '../db/db';
 import { Repo } from '../db/repo';
 import { demoFromSearch } from '../lib/demo';
@@ -16,7 +16,7 @@ import { BackupBanner, StorageWarning, UpdateBanner } from './Banners';
 
 const ls = () => { try { return window.localStorage; } catch { return null; } };
 
-export function App({ trialRepo }: { trialRepo?: Repo } = {}) {
+export function App({ trialRepo, trialControls }: { trialRepo?: Repo; trialControls?: ReactNode } = {}) {
   const [repo, setRepo] = useState<Repo | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('today');
@@ -57,6 +57,7 @@ export function App({ trialRepo }: { trialRepo?: Repo } = {}) {
         {repo && tab === 'week' && <Week repo={repo} today={today} version={version} onChanged={bump} />}
         {repo && tab === 'lift' && <Lifting repo={repo} version={version} onChanged={bump} />}
         {repo && tab === 'run' && <Running repo={repo} today={today} version={version} />}
+        {tab === 'more' && trialControls}
         {tab === 'more' && (
           <More repo={repo} version={version} onChanged={bump} pref={pref} onPref={setPref} persisted={persisted} demo={demo} onDemo={setDemo}
             today={today} lastBackup={lastBackup} onBackedUp={onBackedUp} persist={persist} onAskPersist={() => void requestPersistence().then(setPersist)} />

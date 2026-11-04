@@ -94,7 +94,8 @@ export function CloudSync({ repo, onChanged, showControls = false }: { repo: Rep
   }
   const stale = state?.last_success ? Date.now() - Date.parse(state.last_success) > 3 * 3600_000 : true;
   const hideStatus = !showControls && (!connectionChecked || (signedIn && !stale && state?.status === 'ok' && pending.length === 0 && !message));
-  return <details hidden={hideStatus} className="card sync-status"><summary>Garmin · {signedIn ? busy ? 'Checking…' : pending.length ? `Review ${pending.length} overlaps` : stale || state?.status === 'failed' ? 'Needs attention' : 'Connected' : 'Sign in once'}</summary>
+  if (hideStatus) return null;
+  return <details className="card sync-status"><summary>Garmin · {signedIn ? busy ? 'Checking…' : pending.length ? `Review ${pending.length} overlaps` : stale || state?.status === 'failed' ? 'Needs attention' : message ? 'Needs attention' : 'Settings' : 'Sign in once'}</summary>
     {!signedIn ? <form onSubmit={e => void login(e)}><p>Sign in to your private EQ Fit account. Your session is remembered on this trusted device.</p><label className="field">Email<input type="email" autoComplete="username" required value={email} onChange={e => setEmail(e.target.value)} /></label><label className="field">Password<input type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} /></label><button disabled={busy}>Sign in</button></form> : <>
       <p>Last successful Garmin sync: <strong>{state?.last_success ? new Date(state.last_success).toLocaleString() : 'Not verified yet'}</strong></p>
       <p className="muted">Garmin is checked hourly; scheduled jobs can be delayed. This app retrieves private runs automatically when opened or resumed. Lifting history stays on this device.</p>
