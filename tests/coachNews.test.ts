@@ -7,7 +7,7 @@ const batch={version:1,generatedAt:'2026-11-05T00:00:00Z',jokes:[entry]};
 const ctx={event:'visit' as const,key:'visit:today',aliases:[]};
 const line=(id:string,expression:Joke['expression']):Joke=>({id,expression,text:id,tone:'cheeky',event:'visit',requiredFacts:[],exclusions:[],cooldownDays:14,fallback:''});
 describe('topical coach',()=>{
- it('accepts bounded fresh sources and forces visit-only context',()=>{const j=parseCoachNews(batch,now)[0];expect(j.event).toBe('visit');expect(j.requiredFacts).toEqual([]);expect(j.source?.url).toBe(entry.source.url);});
+ it('accepts bounded fresh sources and keeps news free of workout-specific facts',()=>{const j=parseCoachNews(batch,now)[0];expect(j.event).toBe('visit');expect(j.requiredFacts).toEqual([]);expect(j.source?.url).toBe(entry.source.url);});
  it('rejects expired, future, malformed, duplicated and untrusted input',()=>{
   expect(parseCoachNews(batch,now+3*86400000)).toEqual([]);
   expect(parseCoachNews({...batch,generatedAt:'2026-12-01'},now)).toEqual([]);
@@ -23,11 +23,12 @@ describe('topical coach',()=>{
   expect(choose({...s,topical:false},ctx,now,false,pool).joke).toBeUndefined();
   expect(choose({...s,tone:'friendly'},ctx,now,false,pool).joke).toBeUndefined();
  });
- it('keeps news out of completed-session reactions and alternates with usual lines',()=>{
+ it('allows sourced news after workouts and alternates with usual lines',()=>{
   const pool=[...parseCoachNews(batch,now),line('plain','clipboard')],s={...freshCoach(),tone:'cheeky' as const};
   const first=choose(s,ctx,now,true,pool);expect(first.joke?.id).toBe(entry.id);
   expect(choose(first.state,ctx,now,true,pool).joke?.id).toBe('plain');
-  expect(choose(s,{...ctx,event:'run'},now,true,pool).joke).toBeUndefined();
+  expect(choose(s,{...ctx,event:'run'},now,true,pool).joke?.id).toBe(entry.id);
+  expect(choose({...s,topical:false},{...ctx,event:'run'},now,true,pool).joke).toBeUndefined();
  });
 });
 describe('explicit humour preferences',()=>{

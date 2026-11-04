@@ -46,7 +46,12 @@ function CoachCard({session,today,scope,history=[],exercises=[],share=false}:Coa
  const next=choose(state,ctx,Date.now(),true,catalogue);
  if(next.joke){persist(next.state);setSledgeCount(n=>n+1);setNotice('');setUndo(undefined);}
  else setNotice('No more lines in this tone. Change tone for a fresh batch.');
-}}>Sledge me again <span aria-hidden="true">↻</span></button></>}
+}}>Sledge me again <span aria-hidden="true">↻</span></button>
+ {state.topical!==false&&!!news?.length&&<button className="coach-news-button" onClick={()=>{
+   const next=choose(state,ctx,Date.now(),true,news.filter(j=>j.id!==state.current?.id));
+   if(next.joke){persist(next.state);setSledgeCount(n=>n+1);setNotice('');setUndo(undefined);}
+   else setNotice('No more news sledges available in your tone. Try again after the next news refresh.');
+ }}>News sledge · current headlines</button>}</>}
  {share && joke && state.tone !== null && state.tone !== 'off' && <button onClick={async () => {
    try {
      if (navigator.share) await navigator.share({ title: 'Coach EQ', text: `${joke.text}\n— Coach EQ` });
