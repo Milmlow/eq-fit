@@ -6,7 +6,7 @@ import { ImportScreen } from './ImportScreen';
 import { RecentView } from './RecentView';
 import { BackupSection } from './BackupSection';
 import { BackupBanner } from './Banners';
-import { usePwa } from '../pwa';
+import { refreshApp, usePwa } from '../pwa';
 import { APP_VERSION } from '../lib/backup';
 import type { PersistState } from '../lib/storage';
 
@@ -18,6 +18,14 @@ export function More({ repo, version, onChanged, pref, onPref, persisted, demo, 
 }) {
   const [sub, setSub] = useState<Sub>('menu');
   const pwa = usePwa();
+  const [refreshing,setRefreshing]=useState(false);
+  const [refreshError,setRefreshError]=useState('');
+  async function refresh() {
+    if(refreshing)return;
+    setRefreshing(true);setRefreshError('');
+    try { await refreshApp(); } catch(e) { setRefreshError(e instanceof Error?e.message:'Could not refresh. Please try again.'); }
+    finally { setRefreshing(false); }
+  }
   if (sub !== 'menu') {
     return (
       <section aria-label={sub === 'import' ? 'Import' : 'Recent'}>
@@ -31,6 +39,13 @@ export function More({ repo, version, onChanged, pref, onPref, persisted, demo, 
   return (
     <section aria-labelledby="more-h">
       <h2 id="more-h">More</h2>
+      <section className="card" aria-labelledby="setup-heading">
+        <h3 id="setup-heading">Setup</h3>
+        <button type="button" className="primary" disabled={refreshing} onClick={()=>void refresh()}>{refreshing?'Checking for updates…':'↻ Refresh app'}</button>
+        <p className="muted small">Get the latest version and reload. Saved workouts, Garmin connection and settings stay on this device. Finish any unsaved edits first.</p>
+        {refreshing&&<p role="status">Checking and downloading the latest app…</p>}
+        {refreshError&&<p role="alert">{refreshError}</p>}
+      </section>
       <Feedback />
       {repo && <BackupBanner repo={repo} version={version} lastBackup={lastBackup} />}
       <fieldset className="card themes">
