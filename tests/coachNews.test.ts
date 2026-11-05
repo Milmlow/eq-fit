@@ -46,3 +46,31 @@ describe('explicit humour preferences',()=>{
   s=rateCoach(s,j,'landed','2026-11-05');expect(s.dismissed).toEqual([]);expect(s.ratings).toHaveLength(1);expect(choose(s,ctx,now,true,[j]).joke?.id).toBe(j.id);
  });
 });
+
+describe('news event variety',()=>{
+ const newsLine=(id:string,storyKey:string,topic:Joke['topic']='sport',url=`https://abc.net.au/${id}`):Joke=>({...line(id,'eyebrow'),storyKey,topic,source:{...entry.source,url},expiresAt:entry.expiresAt});
+ it('blocks different wording and publishers covering the same event for 24 hours, including recycling',()=>{
+  const first=newsLine('a','melbourne-cup-2026');
+  const second=newsLine('b','melbourne-cup-2026');
+  let s=choose({...freshCoach(),tone:'cheeky'},ctx,now,true,[first]).state;
+  s=choose(s,ctx,now,true,[first,line('plain','robe')]).state;
+  // Feed regeneration removed the old joke: persisted event identity still blocks it.
+  expect(choose(s,ctx,now+1000,true,[second]).joke).toBeUndefined();
+  expect(choose(s,ctx,now+86400001,true,[{...second,expiresAt:'2026-11-07T00:00:00Z'}]).joke?.id).toBe('b');
+ });
+ it('blocks same-source relabelling and supports older history without event metadata',()=>{
+  const first=newsLine('a','melbourne-cup-2026');
+  const second=newsLine('b','racing-2026','sport',first.source!.url);
+  const s={...freshCoach(),tone:'cheeky' as const,recent:[{id:first.id,at:now}]};
+  expect(choose(s,ctx,now+1,true,[first,second]).joke).toBeUndefined();
+ });
+ it('prefers an unseen category over highly liked sport at the same tone',()=>{
+  const sport=newsLine('a','cricket-2026'),politics=newsLine('z','press-conference-2026','politics');
+  const s={...freshCoach(),tone:'cheeky' as const,recent:[{id:'old',at:now-1000,topic:'sport' as const}],ratings:[{id:'liked',bucket:'news:sport',vote:'landed' as const}]};
+  expect(choose(s,ctx,now,true,[sport,politics]).joke?.id).toBe('z');
+ });
+ it('accepts politics and new trusted publishers but rejects malformed event keys',()=>{
+  for(const host of ['sbs.com.au','theguardian.com'])expect(parseCoachNews({...batch,jokes:[{...entry,topic:'politics',storyKey:'press-conference-2026',source:{...entry.source,url:`https://${host}/news/example`}}]},now)).toHaveLength(1);
+  for(const storyKey of [12,'x','bad key','x'.repeat(101)])expect(parseCoachNews({...batch,jokes:[{...entry,storyKey}]},now)).toEqual([]);
+ });
+});

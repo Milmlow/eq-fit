@@ -5,18 +5,24 @@ Missing credentials/errors produce an empty feed; the app retains curated humour
 import hashlib
 import json
 import os
+import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError
 from urllib.parse import urlparse
 
-# Claude rejects the entire request if any allowlisted publisher blocks its crawler.
-DOMAINS = ['abc.net.au', 'cricket.com.au', 'afl.com.au', 'nrl.com']
+# Validate publishers locally: a blocked domain in the API allowlist can reject
+# the whole search request. Search broadly, accept only retrieved trusted sources.
+DOMAINS = ['abc.net.au', 'sbs.com.au', 'theguardian.com', 'bbc.com', 'bbc.co.uk',
+           'cricket.com.au', 'afl.com.au', 'nrl.com']
 POLICY = '''Write original short Australian gym-mate humour for Coach EQ.
 News is context; the fictional coach and everyday gym habits are the butt of the joke.
-Only sport results, harmless entertainment/culture, and light everyday news.
-No tragedy, deaths, illness, disasters, crime, allegations, politics, identity insults,
+Use sport, entertainment/culture, everyday news and political public antics.
+Political jokes may mock documented public statements, photo ops, spin and bureaucracy
+from any party. No voting advice, partisan campaigning or invented quotes/claims.
+Satirical publications (including Betoota) are not factual sources; do not copy their jokes.
+No tragedy, deaths, illness, disasters, crime, allegations, identity insults,
 body-shaming, dietary guilt, medical advice or encouragement to overtrain.
 Never imply knowledge of a user's actual workout, body, location or private life.
 Friendly is warm with no profanity; cheeky is playful with no strong profanity;
@@ -57,7 +63,7 @@ def call_api(key, prompt, search=False):
                 messages=[{'role':'user','content':prompt}])
     if search:
         body['tools']=[{'type':'web_search_20250305','name':'web_search',
-                        'max_uses':4,'allowed_domains':DOMAINS}]
+                        'max_uses':4}]
     req = Request('https://api.anthropic.com/v1/messages', data=json.dumps(body).encode(),
                   headers={'x-api-key':key,'anthropic-version':'2023-06-01',
                            'Content-Type':'application/json'})
@@ -81,15 +87,18 @@ def validate(draft, urls, now):
                 continue
             if source['url'] not in urls or not timedelta(0)<=now-published<=timedelta(days=2):
                 continue
-            if j['tone'] not in ('friendly','cheeky','filthy') or j['topic'] not in ('sport','culture','everyday'):
+            if j['tone'] not in ('friendly','cheeky','filthy') or j['topic'] not in ('sport','culture','everyday','politics'):
                 continue
             if not isinstance(j['text'],str) or not 10<=len(j['text'])<=280 or not isinstance(source['title'],str) or not 1<=len(source['title'])<=140:
+                continue
+            story=j.get('storyKey')
+            if not isinstance(story,str) or not re.fullmatch(r'[a-z0-9]+(?:-[a-z0-9]+){1,15}',story) or len(story)>100:
                 continue
             # Source+text IDs survive daily regeneration without attaching votes to revised lines.
             identity=hashlib.sha256((source['url']+'\n'+j['text']).encode()).hexdigest()[:16]
             if any(x['id']=='news-'+identity for x in valid):
                 continue
-            valid.append(dict(id='news-'+identity,text=j['text'],tone=j['tone'],topic=j['topic'],
+            valid.append(dict(id='news-'+identity,text=j['text'],tone=j['tone'],topic=j['topic'],storyKey=story,
                               source={k:source[k] for k in ('url','title','publishedAt')},
                               expiresAt=min(now+timedelta(days=2),published+timedelta(days=3)).isoformat()))
         except (KeyError,TypeError,ValueError,AttributeError):
@@ -97,19 +106,46 @@ def validate(draft, urls, now):
     return valid
 
 def generate(key, now):
-    prompt=f'''UTC now: {now.isoformat()}. Search for 2-3 suitable stories published within the last 48 hours, favour Australian sport and culture.
-Create up to 6 different jokes, mixed tones. Each must make a recognisable connection to the sourced story and have a punchline, not just a news summary.
-Output {{"jokes":[{{"text":"...","tone":"friendly|cheeky|filthy","topic":"sport|culture|everyday","source":{{"title":"short factual context","url":"exact retrieved article URL","publishedAt":"ISO UTC publication timestamp"}}}}]}}.
-Use only retrieved source URLs. Do not guess publication dates. Empty jokes array is acceptable.'''
+    prompt=f'''UTC now: {now.isoformat()}. Search for four DISTINCT events published within the last 48 hours:
+seek one sport, one culture/entertainment, one everyday/technology and one politics/public-antics story.
+Do not favour sport. Search across these publishers: {', '.join(DOMAINS)}.
+Use up to four targeted searches to find a mix. Skip a category if nothing suitable is verified.
+For each event write one friendly, one cheeky and one filthy version (up to 12 jokes total).
+Each must connect recognisably to the sourced story and have an original gym-mate punchline.
+Give all coverage and tone variants of the SAME event the SAME storyKey, even across publishers.
+Use a stable lowercase hyphenated event identifier including its year,
+not a headline, publication date, tone or individual angle. Do not split one event into several stories.
+Output {{"jokes":[]}} using this entry schema:
+{{"text":"...","tone":"friendly|cheeky|filthy","topic":"sport|culture|everyday|politics","storyKey":"event-name-year","source":{{"title":"short factual context","url":"exact retrieved article URL","publishedAt":"ISO UTC publication timestamp"}}}}.
+Use only retrieved factual source URLs. Never use satire as evidence. Do not guess publication dates.
+Empty jokes array is acceptable.'''
     draft,urls=call_api(key,prompt,True)
     candidates=validate(draft,urls,now)
     print(f'Coach news: {len(candidates)} source-validated candidates.')
     if not candidates:
         return []
-    review,review_urls=call_api(key,'Use web search to independently verify each source URL and every factual claim against the article. Reject anything you cannot verify, including publication dates. Independently review these candidate jokes as an editor. Reject any that violate the policy, misstate their supplied source context, exceed their tone, or lack a real punchline. Do not rewrite or add facts. Return only {"approved":["exact approved id", ...]}. Candidates: '+json.dumps(candidates),True)
+    review,review_urls=call_api(key,'Use web search to independently verify each source URL and every factual claim against the article. Reject anything you cannot verify, including publication dates. Also reject misclassified topics or inconsistent storyKeys: all coverage of the same event must share one key. Independently review these candidate jokes as an editor. Reject any that violate the policy, misstate their supplied source context, exceed their tone, or lack a real punchline. Do not rewrite or add facts. Return only {"approved":["exact approved id", ...]}. Candidates: '+json.dumps(candidates),True)
     if not isinstance(review,dict) or not isinstance(review.get('approved'),list):
         return []
-    return [j for j in candidates if j['id'] in review['approved'] and j['source']['url'] in review_urls]
+    return diversify([j for j in candidates if j['id'] in review['approved'] and j['source']['url'] in review_urls])
+
+def diversify(jokes):
+    """One event per topic; tone variants share one event identity for rotation."""
+    result=[]; topics={}; stories={}; variants=set(); sources={}
+    for j in jokes:
+        topic,story,tone=j['topic'],j['storyKey'],j['tone']
+        url=j['source']['url']
+        if topic in topics and topics[topic]!=story:
+            continue
+        if story in stories and stories[story]!=topic:
+            continue
+        if url in sources and sources[url]!=story:
+            continue
+        if (story,tone) in variants:
+            continue
+        topics[topic]=story; stories[story]=topic; sources[url]=story
+        variants.add((story,tone)); result.append(j)
+    return result
 
 def error_category(error):
     """Return only fixed diagnostic labels; never emit provider-supplied text."""

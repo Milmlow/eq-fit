@@ -12,7 +12,7 @@ class NewsTests(unittest.TestCase):
     def setUp(self):
         self.now=datetime(2026,11,5,tzinfo=timezone.utc)
         self.url='https://www.abc.net.au/news/sport/example'
-        self.draft={'jokes':[{'text':'An original fictional sports joke for testing.', 'tone':'cheeky','topic':'sport','source':{'title':'Example sport result','url':self.url,'publishedAt':'2026-11-04T12:00:00Z'}}]}
+        self.draft={'jokes':[{'text':'An original fictional sports joke for testing.', 'tone':'cheeky','topic':'sport','storyKey':'example-event-2026','source':{'title':'Example sport result','url':self.url,'publishedAt':'2026-11-04T12:00:00Z'}}]}
     def test_provenance_expiry_and_stable_identity(self):
         valid=news.validate(self.draft,{self.url},self.now)
         self.assertEqual(len(valid),1)
@@ -22,7 +22,7 @@ class NewsTests(unittest.TestCase):
         self.draft['jokes'][0]['source']['publishedAt']='2020-01-01T00:00:00Z'
         self.assertEqual(news.validate(self.draft,{self.url},self.now),[])
     def test_bad_sources_and_schema(self):
-        for url in ['https://abc.net.au.evil.test/x','javascript:alert(1)','https://secret@abc.net.au/x']:
+        for url in ['https://abc.net.au.evil.test/x','javascript:alert(1)','https://secret@abc.net.au/x','https://www.betootaadvocate.com/example']:
             draft=copy.deepcopy(self.draft);draft['jokes'][0]['source']['url']=url
             self.assertEqual(news.validate(draft,{url},self.now),[])
         self.draft['jokes'][0]['tone']='off'
@@ -69,6 +69,7 @@ class ClaudeResponseTests(unittest.TestCase):
         self.assertNotIn('Authorization',req.headers)
         self.assertEqual(body['tools'][0]['max_uses'],4)
         self.assertEqual(body['max_tokens'],6000)
+        self.assertNotIn('allowed_domains',body['tools'][0])
 
 
 class DiagnosticTests(unittest.TestCase):
@@ -79,3 +80,20 @@ class DiagnosticTests(unittest.TestCase):
             error=HTTPError('https://api.anthropic.com',400,'Bad Request',{},BytesIO(news.json.dumps({'error':{'message':message}}).encode()))
             self.assertEqual(news.error_category(error),label)
 
+
+class VarietyTests(unittest.TestCase):
+    def item(self,story='melbourne-cup-2026',topic='sport',tone='cheeky',url=None):
+        return {'storyKey':story,'topic':topic,'tone':tone,'source':{'url':url or 'https://abc.net.au/'+story}}
+    def test_one_event_per_category_and_one_variant_per_tone(self):
+        a=self.item()
+        result=news.diversify([a,a,self.item(tone='friendly'),self.item('cup-fashions-2026'),self.item('press-conference-2026','politics')])
+        self.assertEqual(len(result),3)
+        self.assertEqual([j['topic'] for j in result],['sport','sport','politics'])
+    def test_same_event_or_source_cannot_fill_multiple_categories(self):
+        a=self.item()
+        self.assertEqual(news.diversify([a,self.item(topic='culture'),self.item('cup-fashions-2026','everyday',url=a['source']['url'])]),[a])
+    def test_invalid_event_keys_fail_closed(self):
+        fixture=NewsTests();fixture.setUp()
+        for key in [None,'x','bad key',123,'a-'*60+'b']:
+            draft=copy.deepcopy(fixture.draft);draft['jokes'][0]['storyKey']=key
+            self.assertEqual(news.validate(draft,{fixture.url},fixture.now),[])
