@@ -27,15 +27,31 @@ class NewsTests(unittest.TestCase):
             self.assertEqual(news.validate(draft,{url},self.now),[])
         self.draft['jokes'][0]['tone']='off'
         self.assertEqual(news.validate(self.draft,{self.url},self.now),[])
-    def test_editor_must_retrieve_and_approve_the_source(self):
+    def test_editor_must_approve_and_metadata_comes_from_publisher(self):
+        story={**self.draft['jokes'][0]['source'],'topic':'sport'}
         identity=news.validate(self.draft,{self.url},self.now)[0]['id']
-        for urls,expected in [(set(),0),({self.url},1)]:
-            with patch.object(news,'call_api',side_effect=[(self.draft,{self.url}),({'approved':[identity]},urls)]):
+        for approved,expected in [([],0),([identity],1)]:
+            with patch.object(news,'fetch_stories',return_value=[story]), patch.object(news,'call_api',side_effect=[(self.draft,set()),({'approved':approved},set())]):
                 self.assertEqual(len(news.generate('fake-key',self.now)),expected)
+        altered=copy.deepcopy(self.draft)
+        altered['jokes'][0]['source']['publishedAt']='2099-01-01T00:00:00Z'
+        bound=news.bind_sources(altered,[story])
+        self.assertEqual(bound['jokes'][0]['source']['publishedAt'],story['publishedAt'])
+        self.assertEqual(news.bind_sources(self.draft,[]),{'jokes':[]})
 
     def test_editor_cannot_inject_unapproved_lines(self):
-        with patch.object(news,'call_api',side_effect=[(self.draft,{self.url}),({'approved':['invented-id']},set())]):
+        story={**self.draft['jokes'][0]['source'],'topic':'sport'}
+        with patch.object(news,'fetch_stories',return_value=[story]), patch.object(news,'call_api',side_effect=[(self.draft,set()),({'approved':['invented-id']},set())]):
             self.assertEqual(news.generate('fake-key',self.now),[])
+
+    def test_publisher_feed_rejects_stale_and_unsafe_sources(self):
+        def feed(url,date):
+            return f'<rss><channel><item><title>A headline</title><link>{url}</link><pubDate>{date}</pubDate></item></channel></rss>'.encode()
+        date='Wed, 04 Nov 2026 12:00:00 GMT'
+        self.assertEqual(len(news.parse_feed(feed(self.url,date),'sport',self.now)),1)
+        self.assertEqual(news.parse_feed(feed('https://evil.test/a',date),'sport',self.now),[])
+        self.assertEqual(news.parse_feed(feed(self.url,'Mon, 02 Nov 2026 12:00:00 GMT'),'sport',self.now),[])
+        with self.assertRaises(ValueError):news.parse_feed(b'<!DOCTYPE rss><rss/>','sport',self.now)
 
 if __name__=='__main__':unittest.main()
 

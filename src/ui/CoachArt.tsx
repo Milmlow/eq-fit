@@ -1,8 +1,9 @@
+import { CHARACTERS, type Character } from '../lib/coachCharacters';
 import type { Expression } from '../lib/coach';
 /** Original vector character, built for small screens; no external images. */
-export function CoachArt({expression='clipboard'}:{expression?:Expression}) {
+export function CoachArt({expression='clipboard',character='coach'}:{expression?:Expression;character?:Character}) {
  const robe=expression==='robe', rest=expression==='deckchair', proud=expression==='proud', trophy=expression==='trophy', permit=expression==='permit';
- return <svg className="coach-art" viewBox="0 0 180 180" role="img" aria-label={`Coach EQ: ${expression}`}>
+ return <svg className="coach-art" viewBox="0 0 180 180" role="img" aria-label={`${CHARACTERS.find(c=>c.id===character)?.name}: ${expression}`}>
   <circle cx="90" cy="90" r="85" fill="var(--paper)"/>
   <g stroke="var(--fg)" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
    {rest&&<g fill="none"><path d="M25 98l43 65m-45 -4l56 -57m-48 4h48l-21 39H39"/><path d="M30 108l29 37m-17 -37l25 26" stroke="var(--accent)"/></g>}
@@ -18,6 +19,9 @@ export function CoachArt({expression='clipboard'}:{expression?:Expression}) {
     <path d="M84 63l-4 13h9" fill="none"/>
     <path d={proud?'M68 84q16 17 32 0':robe?'M77 88q7 -10 14 0q-6 10 -14 0':'M70 89l28 -5'} fill={robe?'var(--fg)':'none'}/>
     <path d="M60 78l5 2m41 -2l-4 2" stroke="var(--muted)"/>
+    {character==='dazza'&&<><path d="M40 40h88v8H40z M48 39q0 -28 36 -28t36 28" fill="#f8bc3b"/><path d="M81 12v26M60 107v49m48 -49v49M34 144h99" stroke="#f8bc3b" strokeWidth="7"/><path d="M69 83q15 -10 30 0l-4 7 -11 -4 -11 4z" fill="var(--fg)"/></>}
+    {character==='auntie'&&<><path d="M43 49q-14 -42 31 -39q46 -19 54 38l-17 -10q-27 9 -48 -11z" fill="#ba87d8"/><circle cx="40" cy="78" r="8" fill="none" stroke="#f8bc3b"/><circle cx="127" cy="78" r="8" fill="none" stroke="#f8bc3b"/><path d="M63 104q21 28 44 0" fill="none" stroke="#f8bc3b" strokeWidth="8"/><path d="M72 87q12 10 25 -1" stroke="#da71ad" strokeWidth="5"/></>}
+    {character==='commentator'&&<><path d="M36 57q-2 -55 49 -55t49 55" fill="none" stroke="#8cafff" strokeWidth="8"/><rect x="29" y="49" width="13" height="29" rx="5" fill="#8cafff"/><rect x="128" y="49" width="13" height="29" rx="5" fill="#8cafff"/><path d="M135 77v16H99" fill="none"/><rect x="90" y="88" width="17" height="9" rx="4" fill="var(--fg)"/><path d="M68 109l17 12 17 -12 -17 35z" fill="#8cafff"/></>}
    </g>
    {trophy?<><path d="M109 130l29 -25" fill="none" strokeWidth="10"/><path d="M136 98h15v10q-7 11 -15 0z M143 115v9m-7 0h14m-14 -23h-6q-2 13 11 12m10 -12h6q2 13 -10 12" fill="var(--warn)"/><path d="M138 83v-6m17 13l6 -5m-30 5l-6 -5" stroke="var(--muted)"/></>:permit?<><rect x="104" y="108" width="61" height="48" rx="4" fill="var(--paper)"/><path d="M114 120h38m-38 10h25m-25 12h34" stroke="var(--muted)"/><path d="M112 112l44 36m0 -36l-44 36" stroke="var(--accent)" strokeWidth="6"/></>:robe?<><path d="M120 126h27v27h-27z m27 5q20 -3 10 13h-10" fill="var(--paper)"/><path d="M126 116q-7 -9 0 -15m13 15q-7 -9 0 -15" fill="none" stroke="var(--muted)"/></>:proud?<path d="M121 131l13 -8v-15q9 -7 10 7v8h16l-4 24h-22z" fill="var(--paper)"/>:!rest?<><rect x="110" y="109" width="47" height="54" rx="4" fill="var(--paper)"/><path d="M121 106h24v9h-24z M119 127h29m-29 11h22m-22 11h26" fill="none"/></>:null}
   </g>

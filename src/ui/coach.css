@@ -44,3 +44,13 @@
 .coach-card .coach-feedback button[aria-pressed="true"]{border-color:var(--muted);background:var(--paper)}
 .coach-feedback button:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
 .coach-source{display:block;color:var(--muted);font-size:12px;line-height:1.4;text-decoration:underline;padding:6px 0}
+.coach-card .coach-avatar{background:none;border:0;padding:0;display:flex;flex-direction:column;align-items:center;color:var(--muted);flex-shrink:0;font-size:11px}
+.coach-characters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
+.coach-card .coach-characters button{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px;min-width:0;text-align:center}
+.coach-characters button[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:1px}
+.coach-characters span{font-size:12px;color:var(--muted)}
+.coach-characters .coach-art{width:70px;min-width:70px;height:70px;animation:none}
+.coach-news-button{width:100%;margin-top:8px;font-size:13px}
+.coach-settings label{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.coach-settings select{min-width:0;max-width:100%}
+.coach-tools{font-size:13px;line-height:1.5}
