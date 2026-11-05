@@ -1,6 +1,6 @@
 import type { Joke } from './coach';
 const DAY=86400000;
-const sources=['abc.net.au','bbc.com','bbc.co.uk','reuters.com','apnews.com','cricket.com.au','afl.com.au','nrl.com'];
+const sources=['abc.net.au','sbs.com.au','theguardian.com','bbc.com','bbc.co.uk','reuters.com','apnews.com','cricket.com.au','afl.com.au','nrl.com'];
 export function parseCoachNews(raw:unknown,now=Date.now()):Joke[] {
  if(!raw || typeof raw!=='object')return [];
  const data=raw as Record<string,unknown>;
@@ -10,11 +10,12 @@ export function parseCoachNews(raw:unknown,now=Date.now()):Joke[] {
  for(const entry of data.jokes){
   if(!entry || typeof entry!=='object')continue;
   const j=entry as Record<string,unknown>, source=j.source as Record<string,unknown>|undefined;
-  if(typeof j.id!=='string'||!/^news-[a-f0-9]{16}$/.test(j.id)||result.some(x=>x.id===j.id)||typeof j.text!=='string'||j.text.length<10||j.text.length>280||!['friendly','cheeky','filthy'].includes(String(j.tone))||!['sport','culture','everyday'].includes(String(j.topic))||typeof j.expiresAt!=='string'||!source||typeof source.url!=='string'||typeof source.title!=='string'||source.title.length>140||typeof source.publishedAt!=='string')continue;
+  if(typeof j.id!=='string'||!/^news-[a-f0-9]{16}$/.test(j.id)||result.some(x=>x.id===j.id)||typeof j.text!=='string'||j.text.length<10||j.text.length>280||!['friendly','cheeky','filthy'].includes(String(j.tone))||!['sport','culture','everyday','politics'].includes(String(j.topic))||typeof j.expiresAt!=='string'||!source||typeof source.url!=='string'||typeof source.title!=='string'||source.title.length>140||typeof source.publishedAt!=='string')continue;
+  if(j.storyKey!==undefined&&(typeof j.storyKey!=='string'||j.storyKey.length>100||!/^[a-z0-9]+(?:-[a-z0-9]+){1,15}$/.test(j.storyKey)))continue;
   const expiry=Date.parse(j.expiresAt),published=Date.parse(source.publishedAt);
   if(!Number.isFinite(expiry)||expiry<=now||expiry>generated+2*DAY||!Number.isFinite(published)||published>generated+300000||generated-published>2*DAY)continue;
   try {const u=new URL(source.url);if(u.protocol!=='https:'||u.username||u.password||!sources.some(d=>u.hostname===d||u.hostname.endsWith(`.${d}`)))continue;}catch{continue;}
-  result.push({id:j.id,text:j.text,tone:j.tone as Joke['tone'],topic:j.topic as Joke['topic'],source:{title:source.title,url:source.url,publishedAt:source.publishedAt},expiresAt:j.expiresAt,event:'visit',expression:'eyebrow',requiredFacts:[],exclusions:[],cooldownDays:14,fallback:'Your training tools are ready.'});
+  result.push({storyKey:j.storyKey as string|undefined,id:j.id,text:j.text,tone:j.tone as Joke['tone'],topic:j.topic as Joke['topic'],source:{title:source.title,url:source.url,publishedAt:source.publishedAt},expiresAt:j.expiresAt,event:'visit',expression:'eyebrow',requiredFacts:[],exclusions:[],cooldownDays:14,fallback:'Your training tools are ready.'});
  }
  return result;
 }

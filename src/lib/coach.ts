@@ -4,7 +4,7 @@ import { coachFacts } from './coachFacts';
 export type Tone = 'off' | 'friendly' | 'cheeky' | 'filthy';
 export type Event = 'visit' | 'run' | 'weights';
 export type Expression = 'clipboard' | 'eyebrow' | 'proud' | 'permit' | 'robe' | 'deckchair' | 'trophy';
-export interface Joke { topic?: 'sport' | 'culture' | 'everyday'; source?: {title:string;url:string;publishedAt:string}; expiresAt?: string; id: string; text: string; tone: Exclude<Tone,'off'>; event: Event; requiredFacts: string[]; exclusions: string[]; expression: Expression; cooldownDays: number; fallback: string }
+export interface Joke { topic?: 'sport' | 'culture' | 'everyday' | 'politics'; storyKey?: string; source?: {title:string;url:string;publishedAt:string}; expiresAt?: string; id: string; text: string; tone: Exclude<Tone,'off'>; event: Event; requiredFacts: string[]; exclusions: string[]; expression: Expression; cooldownDays: number; fallback: string }
 // Each tuple is editorial content; metadata is explicit in the compiled catalogue.
 const lines: [string, Event, Exclude<Tone,'off'>, Expression, string][] = [
  ['eq-001','visit','friendly','clipboard','Welcome in. The clipboard has no opinions. I have several.'],
@@ -101,19 +101,24 @@ export function contextFor(session: Session | undefined, today: string, history:
 }
 export type CoachVote = 'landed' | 'not-funny';
 export interface CoachRating { id:string; vote:CoachVote; bucket:string }
-export interface CoachState { ratings?:CoachRating[]; topical?:boolean; tone: Tone | null; seen: string[]; recent: {id:string;at:number}[]; dismissed:string[]; current?: {key:string;id:string}; consent:boolean; trial?: {days:string[]; shown:{key:string;id:string;day:string}[]; muted:number}; feedback:{id:string;vote:string;day:string}[] }
+export interface CoachState { ratings?:CoachRating[]; topical?:boolean; tone: Tone | null; seen: string[]; recent: {id:string;at:number;storyKey?:string;sourceUrl?:string;topic?:Joke['topic']}[]; dismissed:string[]; current?: {key:string;id:string}; consent:boolean; trial?: {days:string[]; shown:{key:string;id:string;day:string}[]; muted:number}; feedback:{id:string;vote:string;day:string}[] }
 export const freshCoach = ():CoachState=>({tone:null,seen:[],recent:[],dismissed:[],consent:false,feedback:[]});
 const ranks = {off:0,friendly:1,cheeky:2,filthy:3};
 export function eligible(j:Joke,ctx:Context,tone:Tone):boolean { return tone!=='off' && ranks[j.tone]<=ranks[tone] && (j.event===ctx.event || (Boolean(j.source) && j.event==='visit')) && j.requiredFacts.every(f=>f===`completed:${ctx.event}` || Boolean(ctx.facts?.[f])); }
 export function choose(state:CoachState,ctx:Context,now:number,another=false,catalogue:readonly Joke[]=JOKES):{state:CoachState;joke?:Joke} {
  if (!state.tone || state.tone==='off') return {state};
  const pool=catalogue.filter(j=>!j.expiresAt || (state.topical!==false && Date.parse(j.expiresAt)>now));
- const preference=(j:Joke)=>{const votes=(state.ratings??[]).filter(r=>r.bucket===humourBucket(j));return votes.reduce((n,r)=>n+(r.vote==='landed'?1:-1),0)/(votes.length+2)+(j.source ? 0.2 : 0);};
+ const lastTopic=(j:Joke)=>j.topic?Math.max(0,...state.recent.filter(r=>r.topic===j.topic).map(r=>r.at)):0;
+ const preference=(j:Joke)=>{const votes=(state.ratings??[]).filter(r=>r.bucket===humourBucket(j));return votes.reduce((n,r)=>n+(r.vote==='landed'?1:-1),0)/(votes.length+2)+(j.source ? 0.2 : 0)-2*Math.max(0,1-(now-lastTopic(j))/(2*86400000));};
  const cached=pool.find(j=>j.id===state.current?.id && state.current.key===ctx.key && !state.dismissed.includes(j.id) && eligible(j,ctx,state.tone!));
  if(!another && cached) return {state:{...state,seen:[...new Set([...state.seen,...ctx.aliases])]},joke:cached};
  const seen=ctx.aliases.some(id=>state.seen.includes(id)) || state.seen.includes(ctx.key);
  if(!another && seen) return {state:{...state,current:undefined,seen:[...new Set([...state.seen,...ctx.aliases])]}};
- const rotation=pool.filter(j=>!(j.source && pool.find(x=>x.id===state.current?.id)?.source));
+ // Event/source cooldown also applies to explicit requests and regenerated wording.
+ const storyAvailable=(j:Joke)=>!j.source || !state.recent.some(r=>now-r.at<86400000 && (
+  (Boolean(j.storyKey) && (r.storyKey??pool.find(x=>x.id===r.id)?.storyKey)===j.storyKey) ||
+  (r.sourceUrl??pool.find(x=>x.id===r.id)?.source?.url)===j.source!.url));
+ const rotation=pool.filter(j=>storyAvailable(j)&&!(j.source && pool.find(x=>x.id===state.current?.id)?.source));
  let candidates=rotation.filter(j=>eligible(j,ctx,state.tone!)&&!state.dismissed.includes(j.id)&&!state.recent.some(r=>r.id===j.id&&now-r.at<j.cooldownDays*86400000));
  // Prefer the chosen intensity; cycle through lower intensities when its pool is exhausted.
  candidates.sort((a,b)=>b.requiredFacts.length-a.requiredFacts.length||ranks[b.tone]-ranks[a.tone]||preference(b)-preference(a)||a.id.localeCompare(b.id));
@@ -128,7 +133,7 @@ export function choose(state:CoachState,ctx:Context,now:number,another=false,cat
   }
  }
  const joke=candidates[0];
- return {joke,state:{...state,seen:[...new Set([...state.seen,ctx.key,...ctx.aliases])],current:joke?{key:ctx.key,id:joke.id}:undefined,recent:joke?[...state.recent.filter(r=>r.id!==joke.id&&now-r.at<14*86400000),{id:joke.id,at:now}]:state.recent}};
+ return {joke,state:{...state,seen:[...new Set([...state.seen,ctx.key,...ctx.aliases])],current:joke?{key:ctx.key,id:joke.id}:undefined,recent:joke?[...state.recent.filter(r=>r.id!==joke.id&&now-r.at<14*86400000),{id:joke.id,at:now,...(joke.source?{storyKey:joke.storyKey,sourceUrl:joke.source.url,topic:joke.topic}:{})}]:state.recent}};
 }
 export function readCoach(key:string):CoachState {
  try { const raw=localStorage.getItem(key); if(!raw)return freshCoach(); const s=JSON.parse(raw) as CoachState;
