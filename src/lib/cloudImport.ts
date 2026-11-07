@@ -19,19 +19,19 @@ export function candidatesFor(incoming: PreparedRow, existing: Activity[]): Acti
   return existing.filter(a => !garminId(a) && a.date === incoming.date && (/run/i.test(incoming.original_type) ? /run/i.test(a.original_type) : a.original_type===incoming.original_type));
 }
 
-export function prepareCloudRows(value:unknown,repo:Repo):Promise<PreparedRow[]> {return prepareRows(value,repo,['Running','Treadmill Running']);}
+export function prepareCloudRows(value:unknown,repo:Repo):Promise<PreparedRow[]> {return prepareTrialRows(value,repo);}
 export function prepareTrialRows(value:unknown,repo:Repo):Promise<PreparedRow[]> {return prepareRows(value,repo,['Running','Treadmill Running','Strength Training','Cardio','HIIT','Cycling','Indoor Cycling','Walking','Elliptical','Stair Stepper','Indoor Rowing','Rowing','Swimming']);}
 async function prepareRows(value: unknown, repo: Repo, allowedTypes:string[]): Promise<PreparedRow[]> {
-  if (!Array.isArray(value) || value.length > 15000 || value.some(r => !Array.isArray(r) || r.length !== CLOUD_HEADERS.length || r.some(v => typeof v !== 'string' || v.length > 1000))) throw new Error('Invalid private running response.');
+  if (!Array.isArray(value) || value.length > 15000 || value.some(r => !Array.isArray(r) || r.length !== CLOUD_HEADERS.length || r.some(v => typeof v !== 'string' || v.length > 1000))) throw new Error('Invalid private activity response.');
   if (value.length === 0) return [];
   const quote = (s: string) => `"${s.replace(/"/g, '""')}"`;
   const csv = [CLOUD_HEADERS, ...value as string[][]].map(r => r.map(quote).join(',')).join('\n');
   const preview = await buildPreview(new TextEncoder().encode(csv), repo, 'Private Garmin sync');
-  if (preview.blocked) throw new Error('Invalid private running response.');
+  if (preview.blocked) throw new Error('Invalid private activity response.');
   const ids = new Set<string>();
   for (const row of preview.prepared) {
     const id = garminId(row);
-    if (!id || ids.has(id) || !allowedTypes.includes(row.original_type) || (row.distance_km !== null && (row.distance_km < 0 || row.distance_km > 2000))) throw new Error('Invalid private running response.');
+    if (!id || ids.has(id) || !allowedTypes.includes(row.original_type) || (row.distance_km !== null && (row.distance_km < 0 || row.distance_km > 2000))) throw new Error('Invalid private activity response.');
     ids.add(id);
   }
   return preview.prepared;
@@ -64,7 +64,7 @@ export async function applyCloudRows(repo: Repo, rows: PreparedRow[], owner: str
       if (prior?.row_hash === incoming.row_hash && prior.dedupe_key === `garmin:${id}`) continue;
       const raw_fields = { ...incoming.raw_fields };
       if (prior) raw_fields['EQ Fit original import'] = prior.raw_fields['EQ Fit original import'] || JSON.stringify(prior.raw_fields);
-      const next: Activity = { ...incoming, id: prior?.id ?? incoming.id, owner_id: owner, batch_id: batchId, dedupe_key: `garmin:${id}`, mapping_override: prior?.mapping_override ?? null, raw_fields };
+      const next: Activity = { ...incoming, id: prior?.id ?? incoming.id, owner_id: owner, batch_id: batchId, dedupe_key: `garmin:${id}`, mapping_override: prior?.mapping_override ?? null, ...(prior?.body_parts ? {body_parts:prior.body_parts} : {}), ...(prior?.session_activity !== undefined ? {session_activity:prior.session_activity} : {}), raw_fields };
       writes.push(next);
       if (prior) existing.splice(existing.indexOf(prior), 1, next); else existing.push(next);
     }

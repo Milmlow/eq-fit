@@ -35,13 +35,16 @@ TYPE_MAP = {
 LOCAL_TIME = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$")
 
 
-def to_row(item: object) -> list[str] | None:
+TRAINING_TYPES = {"strength_training":"Strength Training","cardio_training":"Cardio","cardio":"Cardio","hiit":"HIIT","cycling":"Cycling","indoor_cycling":"Indoor Cycling","walking":"Walking","elliptical":"Elliptical","stair_climbing":"Stair Stepper","stair_stepper":"Stair Stepper","indoor_rowing":"Indoor Rowing","rowing":"Rowing","lap_swimming":"Swimming","open_water_swimming":"Swimming"}
+
+
+def to_row(item: object, training: bool = False) -> list[str] | None:
     """Normalise a Garmin summary. Reject invalid timestamps, do not invent pace."""
     if not isinstance(item, dict):
         return None
     category = item.get("activityType")
     type_key = category.get("typeKey") if isinstance(category, dict) else category
-    activity_type = TYPE_MAP.get(str(type_key or "").lower())
+    activity_type = TYPE_MAP.get(str(type_key or "").lower()) or (TRAINING_TYPES.get(str(type_key or "").lower()) if training else None)
     if activity_type is None:
         return None
     id_value = str(item.get("activityId", ""))
@@ -84,7 +87,7 @@ def to_row(item: object) -> list[str] | None:
         total = round(duration_s)
         duration = f"{total // 3600:02d}:{total // 60 % 60:02d}:{total % 60:02d}"
     pace = ""
-    if speed and speed > 0:
+    if activity_type in TYPE_MAP.values() and speed and speed > 0:
         seconds = round(1000 / speed)
         # Pace may genuinely be unavailable or out of sensible bounds.
         if 60 <= seconds <= 3600:

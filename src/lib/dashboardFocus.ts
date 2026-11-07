@@ -1,4 +1,5 @@
 import type { Activity, Workout, SetRecord } from '../db/types';
+import { allocatedCategory, sessionActivity } from './sessionActivity';
 import { mondayOf } from './summary';
 export type DashboardFocus = 'free' | 'running' | 'strength-cardio' | 'all';
 export const FOCUS_OPTIONS: {value:DashboardFocus;label:string}[] = [
@@ -22,8 +23,8 @@ export function trainingDashboard(activities:Activity[],workouts:Workout[],sets:
  const acts=activities.filter(a=>a.date<=today);
  const completed=workouts.filter(w=>w.date<=today&&(w.status==='done'||acts.some(a=>a.id===w.linked_activity_id)));
  const linked=new Set(completed.map(w=>w.linked_activity_id));
- const entries:TrainingEntry[]=acts.filter(a=>!linked.has(a.id)).map(a=>({id:a.id,date:a.date,order:a.timestamp_local,title:a.title||a.original_type,category:trainingCategory(a.original_type),activity:a,sets:[]}));
- for(const w of completed){const a=acts.find(x=>x.id===w.linked_activity_id);entries.push({id:w.id,date:a?.date??w.date,order:a?.timestamp_local??w.created_at,title:w.name||a?.title||'Training session',category:a?trainingCategory(a.original_type):w.kind==='weights'?'strength':w.kind==='run'?'run':'other',activity:a,workout:w,sets:sets.filter(s=>s.workout_id===w.id&&!s.warmup)});}
+ const entries:TrainingEntry[]=acts.filter(a=>!linked.has(a.id)).map(a=>({id:a.id,date:a.date,order:a.timestamp_local,title:a.title||a.original_type,category:allocatedCategory(sessionActivity(a),trainingCategory(a.original_type)),activity:a,sets:[]}));
+ for(const w of completed){const a=acts.find(x=>x.id===w.linked_activity_id);entries.push({id:w.id,date:a?.date??w.date,order:a?.timestamp_local??w.created_at,title:w.name||a?.title||'Training session',category:allocatedCategory(sessionActivity(a,w),a?trainingCategory(a.original_type):w.kind==='weights'?'strength':w.kind==='run'?'run':'other'),activity:a,workout:w,sets:sets.filter(s=>s.workout_id===w.id&&!s.warmup)});}
  // Running is cardio in the mixed dashboard, but remains separately labelled.
  const selected=entries.filter(e=>(focus==='all'||focus==='free')||(focus==='running'?e.category==='run':e.category!=='other')).sort((a,b)=>b.date.localeCompare(a.date)||b.order.localeCompare(a.order)||a.id.localeCompare(b.id));
  const week=selected.filter(e=>e.date>=mondayOf(today));

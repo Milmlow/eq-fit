@@ -42,7 +42,7 @@ def gather(client, start, end):
         if not isinstance(page, list):
             raise ValueError('Invalid activity response')
         for item in page:
-            row = to_row(item)
+            row = to_row(item, training=True)
             if row is None:
                 continue
             hr = item.get('averageHR')

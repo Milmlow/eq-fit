@@ -347,3 +347,11 @@ label.inline select { min-width: 0; max-width: 100%; }
 .session-tag-summary { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:6px; }
 .session-tag-summary button { min-height:44px; }
 .coach-news-button { width:100%; margin-top:6px; }
+.session-week-totals{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.session-week-totals>div{border:1px solid var(--muted);border-radius:12px;padding:12px}
+.session-week-totals strong{display:block;font-size:1.6rem}
+.session-week-totals span{font-size:.8rem}
+.session-allocation summary{min-height:44px;padding:12px 0;font-size:.8rem;cursor:pointer}
+.activity-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.activity-tags button{min-height:44px;font-size:.8rem}
+.activity-tags button[aria-pressed="true"]{background:var(--fg);color:var(--paper)}

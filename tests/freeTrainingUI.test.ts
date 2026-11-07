@@ -13,5 +13,8 @@ it('collapses saved strength tags and offers Edit',()=>{
  const html=render(entry('strength',['Shoulders']));expect(html).not.toContain('body-tags');expect(html).toContain('Shoulders</span>');expect(html).toContain('Edit body parts');
 });
 it('shows choices for an untagged strength session',()=>{
- const html=render(entry('strength',[]));expect(html).toContain('body-tags');expect(html.match(/aria-pressed="false"/g)).toHaveLength(6);
+ const html=render(entry('strength',[]));expect(html).toContain('body-tags');expect(html.split('class="body-tags"')[1].split('</div>')[0].match(/aria-pressed="false"/g)).toHaveLength(6);
+});
+it('shows this week before body coverage and exposes cardio allocation choices',()=>{
+ const html=render(entry('cardio',[]));expect(html).toContain('Cardio · Choose activity');expect(html).toContain('Walking</button>');expect(html.indexOf('This week')).toBeLessThan(html.indexOf('Whole-body coverage'));
 });
