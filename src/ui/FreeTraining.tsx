@@ -4,6 +4,7 @@ import { trainingCategory, type TrainingEntry } from '../lib/dashboardFocus';
 import { mondayOf } from '../lib/summary';
 import { SESSION_ACTIVITIES, sessionActivity, allocatedCategory, allocateSession, type SessionActivity } from '../lib/sessionActivity';
 import { formatTodayLabel } from '../lib/todayStats';
+import { weeklyEffort, needsInput, formatEffortMinutes } from '../lib/weeklyEffort';
 
 export const BODY_PARTS = ['Chest', 'Back', 'Shoulders', 'Legs', 'Arms', 'Core'];
 export function sessionParts(e: TrainingEntry): string[] {
@@ -26,6 +27,8 @@ export function FreeTraining({repo,today,entries,days,onChanged}:{repo:Repo;toda
     try {await allocateSession(repo,e,label);setAllocations(p=>({...p,[e.id]:label}));onChanged();}
     catch {setError('Activity was not saved. Please try again.');}finally{setBusy(false);}
   }
+  const effort=weeklyEffort(week);
+  const pending=week.filter(e=>needsInput(e,partsFor(e))),settled=week.filter(e=>!needsInput(e,partsFor(e)));
   const untagged=recent.filter(e=>e.category==='strength'&&!partsFor(e).length).length;
   async function toggle(e:TrainingEntry,part:string) {
     if(busy||e.category!=='strength')return;
@@ -59,12 +62,15 @@ export function FreeTraining({repo,today,entries,days,onChanged}:{repo:Repo;toda
     <p className="muted small">Let Garmin record your session. Afterwards, tap what you trained.</p>
     {error&&<p role="alert">{error}</p>}
     <h3>This week</h3>
-    <div className="session-week-totals"><div><strong>{week.filter(e=>e.category==='strength').length}</strong><span>Strength sessions</span></div><div><strong>{week.filter(e=>e.category==='cardio'||e.category==='run').length}</strong><span>Cardio sessions · includes runs</span></div></div>
+    <div className="session-week-totals" aria-label="Weekly effort"><div><strong>{effort.strength}</strong><span>Strength sessions</span></div><div><strong>{effort.cardio}</strong><span>Cardio sessions · includes runs</span></div><div><strong>{formatEffortMinutes(effort.minutes)}</strong><span>Active time</span>{effort.minutes!==null&&effort.missingDuration>0&&<small>from {effort.sessions-effort.missingDuration} of {effort.sessions} sessions</small>}</div><div><strong>{effort.km===null?'-':`${effort.km.toFixed(1)} km`}</strong><span>Running distance</span>{effort.km!==null&&effort.missingDistance>0&&<small>from {effort.runs-effort.missingDistance} of {effort.runs} runs</small>}</div></div>
     {!week.length&&<p>Your sessions will appear here after Garmin syncs. Nothing to enter during your workout.</p>}
-    {week.map(renderSession)}
+    {pending.length>0&&<p className="muted small">{pending.length} session{pending.length===1?' needs':'s need'} your input.</p>}
+    {pending.map(renderSession)}
+    {settled.length>0&&<details className="settled-sessions"><summary>{pending.length?`Sorted sessions · ${settled.length}`:`All sorted · ${settled.length} session${settled.length===1?'':'s'}`}</summary>{settled.map(renderSession)}</details>}
     {older.length>0&&<details><summary>Earlier sessions · {older.length} sessions</summary>{older.map(renderSession)}</details>}
-    <h3>Whole-body coverage <small>· last 14 days</small></h3>
+    <details className="coverage-fold" key={pending.length?'open':'closed'} open={pending.length>0}><summary>Whole-body coverage <small>· last 14 days</small></summary>
     <div className="body-tiles">{BODY_PARTS.map(p=>{const count=recent.filter(e=>partsFor(e).includes(p)).length;return <div key={p} className={count?'body-covered':''}><strong>{p}</strong><small>{count?`${count} session${count===1?'':'s'}`:'Not tagged yet'}</small></div>;})}</div>
     {untagged>0&&<p className="muted small">{untagged} strength session{untagged===1?' needs':'s need'} tags. Coverage shows what you’ve tagged, not everything you’ve trained.</p>}
+    </details>
   </section>;
 }

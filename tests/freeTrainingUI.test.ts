@@ -18,3 +18,20 @@ it('shows choices for an untagged strength session',()=>{
 it('shows this week before body coverage and exposes cardio allocation choices',()=>{
  const html=render(entry('cardio',[]));expect(html).toContain('Cardio · Choose activity');expect(html).toContain('Walking</button>');expect(html.indexOf('This week')).toBeLessThan(html.indexOf('Whole-body coverage'));
 });
+const cycling=():TrainingEntry=>({id:'c',date:'2026-11-04',order:'',title:'Cycling',category:'cardio',sets:[],activity:{id:'c',date:'2026-11-04',original_type:'Cycling',duration_seconds:3600} as TrainingEntry['activity']});
+const renderMany=(es:TrainingEntry[])=>renderToStaticMarkup(createElement(FreeTraining,{repo:{} as Repo,today:'2026-11-05',entries:es,days:1,onChanged:()=>{}}));
+it('collapses sessions and coverage into the weekly effort once every session is sorted',()=>{
+ const html=renderMany([cycling()]);
+ expect(html).toContain('aria-label="Weekly effort"');expect(html).toContain('1h 00m');expect(html).toContain('All sorted · 1 session');
+ expect(html).toMatch(/<details class="settled-sessions">/);expect(html).not.toMatch(/<details class="settled-sessions" open/);
+ expect(html).toMatch(/<details class="coverage-fold">/);expect(html).not.toContain('Choose activity');
+});
+it('keeps sessions that still need input visible above the collapsed rest',()=>{
+ const html=renderMany([entry('cardio',[]),cycling()]);
+ expect(html.indexOf('Choose activity')).toBeLessThan(html.indexOf('<details class="settled-sessions">'));
+ expect(html.indexOf('<details class="settled-sessions">')).toBeLessThan(html.indexOf('Cardio · Cycling'));
+ expect(html).toContain('1 session needs your input');expect(html).toMatch(/<details class="coverage-fold" open/);
+});
+it('shows unknown time as - and not 0 min when nothing has a duration',()=>{
+ const html=render(entry('cardio',[]));expect(html).not.toContain('0 min');expect(html).toContain('Active time</span>');
+});
