@@ -32,7 +32,7 @@ Deno.serve(async req => {
       const ids = new Set();
       for (const row of body.rows) {
         if (!Array.isArray(row) || row.length !== 8 || row.some(x => typeof x !== 'string' || x.length > 1000)
-          || !/^[1-9]\d{0,29}$/.test(row[6]) || ids.has(row[6]) || !['Running', 'Treadmill Running'].includes(row[0])) return reply(400, { error: 'Invalid row' });
+          || !/^[1-9]\d{0,29}$/.test(row[6]) || ids.has(row[6]) || !['Running','Treadmill Running','Strength Training','Cardio','HIIT','Cycling','Indoor Cycling','Walking','Elliptical','Stair Stepper','Indoor Rowing','Rowing','Swimming'].includes(row[0])) return reply(400, { error: 'Invalid row' });
         ids.add(row[6]);
       }
       const { error } = await db.rpc('eqfit_commit_sync', { p_owner: config.owner_id, p_rows: body.rows, p_full: body.full });

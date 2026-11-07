@@ -6,10 +6,10 @@ import { serializeBackup, validateBackup } from '../src/lib/backup';
 
 const payload = (km = '5', title = 'Run', id = '123') => [['Running', '2026-11-03 04:00:00', title, km, '00:30:00', '6:00', id, '140']];
 describe('private Garmin ingestion', () => {
-  it('imports mixed trial sessions idempotently while keeping owner sync run-only',async()=>{
+  it('imports mixed trial sessions idempotently for both owner and trial sync',async()=>{
     const repo=await freshRepo();
     const rows=[['Strength Training','2026-11-03 04:00:00','Lift','','00:45:00','','321',''],['Cardio','2026-11-03 05:00:00','Cardio','','00:20:00','','322','140']];
-    await expect(prepareCloudRows(rows,repo)).rejects.toThrow();
+    expect(await prepareCloudRows(rows,repo)).toHaveLength(2);
     for(let i=0;i<2;i++)await applyCloudRows(repo,await prepareTrialRows(rows,repo),'local-trial');
     expect(await repo.countActivities()).toBe(2);
     expect((await repo.db.activities.toArray()).map(a=>a.original_type).sort()).toEqual(['Cardio','Strength Training']);
@@ -28,8 +28,11 @@ describe('private Garmin ingestion', () => {
     const original = (await repo.db.activities.toArray())[0];
     const w = await repo.createWorkout({ date: original.date, name: 'Run', kind: 'run' });
     await repo.linkActivity(w.id, original.id);
+    await repo.db.activities.update(original.id,{body_parts:['Legs'],session_activity:'Walking'});
     await applyCloudRows(repo, await prepareCloudRows(payload('6', 'Edited'), repo), 'owner');
     expect(await repo.countActivities()).toBe(1);
+    expect((await repo.db.activities.get(original.id))?.session_activity).toBe('Walking');
+    expect((await repo.db.activities.get(original.id))?.body_parts).toEqual(['Legs']);
     expect((await repo.db.activities.get(original.id))?.distance_km).toBe(6);
     expect((await repo.getWorkout(w.id))?.linked_activity_id).toBe(original.id);
     expect(validateBackup(serializeBackup(await repo.exportBackup())).ok).toBe(true);

@@ -25,6 +25,8 @@ export interface ImportBatch extends Base {
 
 export interface Activity extends Base {
   body_parts?: string[];
+  /** User allocation; original Garmin type remains unchanged. Empty means as recorded. */
+  session_activity?: string;
   batch_id: string;
   source_file_sha256: string;
   row_index: number; // 0-based position in source file
@@ -69,6 +71,8 @@ export type WorkoutStatus = 'planned' | 'done';
 
 export interface Workout extends Base {
   body_parts?: string[];
+  /** User allocation; original Garmin type remains unchanged. Empty means as recorded. */
+  session_activity?: string;
   date: string; // YYYY-MM-DD (date-only; multiple workouts per date allowed)
   name: string;
   kind: WorkoutKind;

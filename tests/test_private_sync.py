@@ -48,12 +48,14 @@ class SyncTests(unittest.TestCase):
         self.assertEqual(retry(call, delays.append), 'ok')
         self.assertEqual(delays, [1, 2])
 
-    def test_normalizes_runs_only_and_missing_hr(self):
+    def test_normalizes_training_and_missing_hr(self):
         class Client:
             def search_activities(self, **kwargs):
-                return [dict(activityType={'typeKey': 'trail_running'}, activityId=123, startTimeLocal='2026-11-03T04:00:00', distance=5000, duration=1800, averageSpeed=2.5), dict(activityType={'typeKey': 'cycling'})]
+                return [dict(activityType={'typeKey': 'trail_running'}, activityId=123, startTimeLocal='2026-11-03T04:00:00', distance=5000, duration=1800, averageSpeed=2.5), dict(activityType={'typeKey':'walking'},activityId=124,startTimeLocal='2026-11-03T08:00:00',duration=1200,averageSpeed=1.2),dict(activityType={'typeKey':'strength_training'},activityId=125,startTimeLocal='2026-11-03T09:00:00',duration=1800)]
         rows = gather(Client(), '2026-11-01', '2026-11-04')
-        self.assertEqual(len(rows), 1); self.assertEqual(rows[0][3], '5.0000'); self.assertEqual(rows[0][5], '6:40'); self.assertEqual(rows[0][-1], '')
+        self.assertEqual(len(rows), 3); self.assertEqual(rows[0][3], '5.0000'); self.assertEqual(rows[0][5], '6:40'); self.assertEqual(rows[0][-1], '')
+        self.assertEqual(rows[1][0], 'Walking'); self.assertEqual(rows[1][5], '')
+        self.assertEqual(rows[2][0], 'Strength Training'); self.assertEqual(rows[2][3], '')
 
     def test_invalid_response_is_not_an_empty_success(self):
         class Client:

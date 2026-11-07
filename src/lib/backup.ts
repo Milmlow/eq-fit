@@ -157,9 +157,9 @@ const BASE = { id, owner_id: strOrNull(200) };
 const SCHEMAS: Record<TableName, { fields: Record<string, Check>; optional?: string[] }> = {
   batches: { fields: { ...BASE, file_sha256: str(200), file_name: strOrNull(1000), imported_at: iso, headers: strArray(2000), source_row_count: count, new_row_count: count, skipped_duplicate_count: count } },
   activities: {
-    optional: ['body_parts'],
+    optional: ['body_parts','session_activity'],
     fields: {
-      ...BASE, body_parts: strArray(6), batch_id: id, source_file_sha256: str(200), row_index: count, row_hash: str(200), dedupe_key: str(300), raw_row: strArray(2000), raw_fields: strRecord, parsed: cellRecord,
+      ...BASE, session_activity: oneOf('','Strength','Walking','Running','Cycling','Rowing','Swimming','HIIT','Other cardio'), body_parts: strArray(6), batch_id: id, source_file_sha256: str(200), row_index: count, row_hash: str(200), dedupe_key: str(300), raw_row: strArray(2000), raw_fields: strRecord, parsed: cellRecord,
       timestamp_local: str(40), date: (v) => (validDate(v) ? null : 'must be YYYY-MM-DD'), original_type: str(500), mapping_override: groupOrNull, title: str(),
       distance_km: numOrNull, duration_seconds: numOrNull, calories: numOrNull, avg_hr: numOrNull, avg_pace_sec_per_km: numOrNull,
     },
@@ -167,9 +167,9 @@ const SCHEMAS: Record<TableName, { fields: Record<string, Check>; optional?: str
   type_mappings: { fields: { ...BASE, original_type: str(500), target: group, updated_at: iso } },
   exercises: { fields: { ...BASE, name: str(500), equipment: str(500), primary_muscles: strArray(50), rep_min: optRep, rep_max: optRep, exercise_key: str(1100), created_at: iso }, optional: ['rep_min', 'rep_max'] },
   workouts: {
-    optional: ['body_parts'],
+    optional: ['body_parts','session_activity'],
     fields: {
-      ...BASE, body_parts: strArray(6), date: (v) => (validDate(v) ? null : 'must be YYYY-MM-DD'), name: str(500), kind: oneOf('weights', 'run', 'other'), status: oneOf('planned', 'done'),
+      ...BASE, session_activity: oneOf('','Strength','Walking','Running','Cycling','Rowing','Swimming','HIIT','Other cardio'), body_parts: strArray(6), date: (v) => (validDate(v) ? null : 'must be YYYY-MM-DD'), name: str(500), kind: oneOf('weights', 'run', 'other'), status: oneOf('planned', 'done'),
       notes: str(MAX_TEXT * 8), planned_exercise_ids: strArray(500), linked_activity_id: strOrNull(100), created_at: iso,
     },
   },
