@@ -11,3 +11,4 @@ screenshots/
 .DS_Store
 eq-fit-backup*.json
 __pycache__/
+.claude/settings.local.json
