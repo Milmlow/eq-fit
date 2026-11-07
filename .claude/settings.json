@@ -222,5 +222,21 @@
       "mcp__Google_Drive",
       "mcp__claude-artifacts"
     ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/stop-tests.mjs"
+            ],
+            "timeout": 120
+          }
+        ]
+      }
+    ]
   }
 }
