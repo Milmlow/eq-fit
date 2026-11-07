@@ -59,7 +59,20 @@ Not verified, stated plainly:
 
 ## Skill checks on real history
 
-(Filled in below from the actual runs.)
+Each skill was run headless in a scratch worktree at the parent of a real commit, given only the PR title. Nothing was committed or pushed; the worktrees were discarded. "Real files" are the files the real commit changed.
+
+| Skill | Real task | Real files | What the skill run changed | Result |
+|---|---|---|---|---|
+| `garmin-sync` | #28 `cc97434` "Distinguish Garmin download, validation and device save failures" | `syncFailure.ts`, `CloudSync.tsx`, `syncFailure.test.ts` | the same 3 files, plus a docs line | **Pass.** Failing test first, then fix; tests 440 passed / 12 skipped, tsc, lint, Python (16) clean. Reviewer caught that non-storage errors were blamed on storage; fixed and tested. |
+| `coach-content` | #38 `9969ec3` "Balance news humour topics and prevent repeated events" | `coach.ts`, `coachNews.ts`, `CoachEQ.tsx`, `generate_coach_news.py`, `docs/coach-eq.md`, `coachNews.test.ts`, `test_coach_news.py` | 5 of the 7 (missed `coachNews.ts` and `CoachEQ.tsx`) | **Pass with caveats.** Failing test first, then fix; 488 passed / 12 skipped, tsc and lint clean, no live API call. Caveats: the run reverted its own edits to get a before-fix failure and had to re-apply them by hand (it said so); it ran only `test_coach_news` (10 tests), not the full Python suite. |
+| `ui-change` | #24 `f16c43f` "Reduce Today scrolling with collapsed tools" | `Routines.tsx`, `Today.tsx`, `today.css` | `today.ts`, `Today.tsx`, `today.css`, a test, a docs paragraph (2 of 3 real files) | **Partial, not a pass.** Logic + test + contrast + tsc + lint fine (427 passed / 12 skipped), but it skipped the 390 px screenshot, which the skill requires. That step is possible here (I confirmed `playwright-core` plus the preinstalled Chromium takes one), so I rewrote step 6 with exact instructions. **The rewritten step has not been re-run.** The worktree also showed edits to `bigFour.ts`, `ActivityPulse.tsx`, `bigFour.test.ts` that the run says it did not make; I could not trace where they came from, so treat that run's file list as unreliable. |
+
+What this does and does not show:
+
+- In all three runs the nested `verifier` agent was denied Bash (the headless workspace was untrusted, so the allow list was ignored), so each run ran the checks itself. Once you accept the trust dialog the verifier's commands are allowed by `settings.json`; that path was shown working earlier only with `--allowedTools`.
+- The `reviewer` agent ran in two of the three and gave useful findings (docs missing; storage blamed for non-storage errors).
+- Matching the real commit's file list is a rough signal, not proof the change is as good. I did not compare the code line by line.
+- No run built the app (`npm run build`), opened it in a browser, or used real data.
 
 ## Rules for the future
 

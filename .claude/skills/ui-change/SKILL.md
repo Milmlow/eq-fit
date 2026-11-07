@@ -12,7 +12,7 @@ When: any edit to `src/ui/*.tsx`, `src/ui/*.css`, or the pure logic behind a scr
 3. Colours only from tokens in `src/ui/themes.css` (blocks: dark, light, crazy, girl-power; system follows the OS). New colour = add the token to every block.
 4. All imported or typed text is rendered as React text. No `innerHTML` / `dangerouslySetInnerHTML` (`tests/pwa.test.ts` scans for it).
 5. Unknown values show "-" or "unknown", never 0.
-6. Phone first: the screen must work at 390 px wide. Take a Playwright screenshot at 390x844 (`deviceScaleFactor` 1, `chromium.launch()` with no options) of the changed screen in dark and one other theme, and look at it. Do not claim "fits on a phone" without it.
+6. Phone first: you MUST look at the screen at 390 px wide; this step is not optional and needs no install. `playwright-core` is already a devDependency and Chromium is preinstalled in cloud sessions. Build and serve: `npm run build` then `npm run preview` (127.0.0.1:4173). Then, with node: `chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] })` (on Windows omit `executablePath` and use `channel: 'chrome'`), `newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 })`, open the preview URL with `?today=YYYY-MM-DD` if the date matters, and `screenshot()` the changed screen in dark and one other theme (set `localStorage['eqfit.theme']`). Open the PNGs and look. If you could not do this, say "not checked at 390 px" and do not claim it fits.
 7. Prefer fewer taps and less scrolling; this repo's history is mostly simplifying (collapse, compact, one primary action).
 
 ## How to check
