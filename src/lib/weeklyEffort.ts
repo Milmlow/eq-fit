@@ -10,7 +10,6 @@ export function weeklyEffort(week:TrainingEntry[]) {
   strength:week.filter(e=>e.category==='strength').length,
   cardio:week.filter(e=>e.category==='cardio'||e.category==='run').length,
   runs:runs.length,
-  days:new Set(week.map(e=>e.date)).size,
   minutes:timed.length?Math.round(timed.reduce((sum,e)=>sum+e.activity!.duration_seconds!,0)/60):null,
   missingDuration:week.length-timed.length,
   km:measured.length?Math.round(measured.reduce((sum,e)=>sum+e.activity!.distance_km!,0)*10)/10:null,

@@ -6,7 +6,7 @@ const act=(type:string,extra:Partial<Activity>={}):Activity=>({id:type,date:'202
 const entry=(a:Activity,category:TrainingEntry['category'],date='2026-11-04'):TrainingEntry=>({id:a.id+date,date,order:'',title:a.original_type,category,sets:[],activity:a});
 it('totals a week and leaves unknown time and distance unknown, never 0',()=>{
  const e=weeklyEffort([entry(act('Strength Training'),'strength'),entry(act('Cycling'),'cardio')]);
- expect(e).toMatchObject({sessions:2,strength:1,cardio:1,runs:0,days:1,minutes:null,missingDuration:2,km:null,missingDistance:0});
+ expect(e).toMatchObject({sessions:2,strength:1,cardio:1,runs:0,minutes:null,missingDuration:2,km:null,missingDistance:0});
 });
 it('sums known minutes and kilometres and counts what is missing',()=>{
  const e=weeklyEffort([
@@ -15,10 +15,10 @@ it('sums known minutes and kilometres and counts what is missing',()=>{
   entry(act('Strength Training',{duration_seconds:3000}),'strength','2026-11-05'),
   entry(act('Walking'),'cardio','2026-11-06'),
  ]);
- expect(e).toMatchObject({sessions:4,strength:1,cardio:3,runs:2,days:3,minutes:120,missingDuration:1,km:5,missingDistance:1});
+ expect(e).toMatchObject({sessions:4,strength:1,cardio:3,runs:2,minutes:120,missingDuration:1,km:5,missingDistance:1});
 });
 it('an empty week is all unknown',()=>{
- expect(weeklyEffort([])).toMatchObject({sessions:0,minutes:null,km:null,days:0});
+ expect(weeklyEffort([])).toMatchObject({sessions:0,minutes:null,km:null});
 });
 it('needs input until the activity is known, and strength also until it is tagged',()=>{
  expect(needsInput(entry(act('Yoga'),'other'),[])).toBe(true);

@@ -68,7 +68,7 @@ export function FreeTraining({repo,today,entries,days,onChanged}:{repo:Repo;toda
     {pending.map(renderSession)}
     {settled.length>0&&<details className="settled-sessions"><summary>{pending.length?`Sorted sessions · ${settled.length}`:`All sorted · ${settled.length} session${settled.length===1?'':'s'}`}</summary>{settled.map(renderSession)}</details>}
     {older.length>0&&<details><summary>Earlier sessions · {older.length} sessions</summary>{older.map(renderSession)}</details>}
-    <details className="coverage-fold" key={pending.length?'open':'closed'} open={pending.length>0}><summary>Whole-body coverage <small>· last 14 days</small></summary>
+    <details className="coverage-fold" open={pending.length>0}><summary>Whole-body coverage <small>· last 14 days</small></summary>
     <div className="body-tiles">{BODY_PARTS.map(p=>{const count=recent.filter(e=>partsFor(e).includes(p)).length;return <div key={p} className={count?'body-covered':''}><strong>{p}</strong><small>{count?`${count} session${count===1?'':'s'}`:'Not tagged yet'}</small></div>;})}</div>
     {untagged>0&&<p className="muted small">{untagged} strength session{untagged===1?' needs':'s need'} tags. Coverage shows what you’ve tagged, not everything you’ve trained.</p>}
     </details>

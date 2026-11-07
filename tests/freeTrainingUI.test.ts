@@ -33,5 +33,11 @@ it('keeps sessions that still need input visible above the collapsed rest',()=>{
  expect(html).toContain('1 session needs your input');expect(html).toMatch(/<details class="coverage-fold" open/);
 });
 it('shows unknown time as - and not 0 min when nothing has a duration',()=>{
- const html=render(entry('cardio',[]));expect(html).not.toContain('0 min');expect(html).toContain('Active time</span>');
+ const html=render(entry('cardio',[]));expect(html).not.toContain('0 min');expect(html).toContain('Active time</span>');expect(html.match(/<strong>-<\/strong>/g)).toHaveLength(2);
+});
+it('says how many sessions and runs the time and distance cover',()=>{
+ const run=(id:string,extra:object):TrainingEntry=>({id,date:'2026-11-04',order:'',title:'Running',category:'run',sets:[],activity:{id,date:'2026-11-04',original_type:'Running',...extra} as TrainingEntry['activity']});
+ const html=renderMany([cycling(),run('r1',{duration_seconds:1500,distance_km:5}),run('r2',{})]);
+ expect(html).toContain('<strong>1h 25m</strong>');expect(html).toContain('<strong>5.0 km</strong>');
+ expect(html).toContain('from 2 of 3 sessions');expect(html).toContain('from 1 of 2 runs');
 });
