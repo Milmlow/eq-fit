@@ -28,7 +28,7 @@ Used from both Linux cloud sessions and Windows. Built with both ChatGPT/Codex a
 ## Style
 - Unknown values show as "-" or "unknown", never 0. Badges say where a figure came from (reported, measured, computed, proposed).
 - Render all imported or typed text as React text. No `innerHTML` or `dangerouslySetInnerHTML`.
-- Phone first: usable at 390 px wide. Check all four themes (System, Light, Dark, Crazy); `tests/contrast.test.ts` enforces WCAG AA.
+- Phone first: usable at 390 px wide. Check every theme (System, Light, Dark, Crazy, Girl Power); `tests/contrast.test.ts` enforces WCAG AA.
 - Error messages name the stage and never include keys, tokens or payloads.
 
 ## Never touch
