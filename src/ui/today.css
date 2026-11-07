@@ -355,3 +355,10 @@ label.inline select { min-width: 0; max-width: 100%; }
 .activity-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 .activity-tags button{min-height:44px;font-size:.8rem}
 .activity-tags button[aria-pressed="true"]{background:var(--fg);color:var(--paper)}
+.session-week-totals small{display:block;font-size:.7rem}
+.settled-sessions>summary,.coverage-fold>summary{min-height:44px;padding:12px 0;cursor:pointer}
+.coverage-fold>summary{font-weight:700}
+.settled-sessions>summary,.coverage-fold>summary{list-style:none}
+.settled-sessions>summary::-webkit-details-marker,.coverage-fold>summary::-webkit-details-marker{display:none}
+.settled-sessions>summary::after,.coverage-fold>summary::after{content:"\25BE";content:"\25BE" / "";margin-left:.5em;display:inline-block}
+.settled-sessions[open]>summary::after,.coverage-fold[open]>summary::after{transform:rotate(180deg)}
