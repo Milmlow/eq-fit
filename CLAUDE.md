@@ -16,7 +16,8 @@ Used from both Linux cloud sessions and Windows. Built with both ChatGPT/Codex a
 - One branch -> one PR -> squash merge. Commit title: `Verb the thing` (sentence case, no prefix), e.g. `Simplify Today with collapsed tools`.
 - Add or update a test with every `src/` change (33 of the last 48 commits did).
 - Merging to `main` auto-deploys GitHub Pages and may trigger the hourly private Garmin sync. Never merge, never push to `main`, never force-push.
-- Ask before: `git push`, opening a PR, deleting anything, installing, editing `.github/workflows/**`, any Supabase write, any live API call.
+- Pushing to a `claude/*` branch is pre-approved in `.claude/settings.json`; any other push is not. Never push to `main`.
+- Ask before: opening a PR, deleting anything, installing, editing `.github/workflows/**`, any Supabase write, any live API call.
 
 ## Folder map
 - `src/lib` pure logic (parsers, coach, progress, backup). Put logic here, not in JSX.
