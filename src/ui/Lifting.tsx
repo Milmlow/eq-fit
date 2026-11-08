@@ -39,13 +39,13 @@ export function Lifting({ repo, version, onChanged }: { repo: Repo; version: num
       <p className="eyebrow">YOUR STRENGTH</p><h2 id="lift-h">Small steps. Real progress.</h2>
       <p className="muted small">Saved on this device · back up from More.</p>
       {error && <p role="alert">{error}</p>}
-      <div className="exercise-cards">{exercises.map(ex=>{
+      {exercises.length>0&&<div className="exercise-cards">{exercises.map(ex=>{
         const sessions=history[ex.id]??[];
         const last=sessions.at(-1),working=last?.sets.filter(s=>!s.warmup)??[];
         const best=working.at(-1);
 
         return <button key={ex.id} className={`exercise-progress-card ${sel===ex.id?'selected':''}`} aria-pressed={sel===ex.id} onClick={()=>setSel(ex.id)}><MovementArt name={ex.name}/><span><strong>{ex.name}</strong><small>{ex.equipment||'Equipment unspecified'}</small><b>{best?formatSet(best):'Log your first set'}</b><small>{last?`${last.workout.date} · ${sessions.length} ${sessions.length===1?'session':'sessions'}`:'No history yet'}</small></span><span aria-hidden="true">↗</span></button>;
-      })}</div>
+      })}</div>}
       {sel && exercises.find(ex=>ex.id===sel) && <section className="card"><h3>{exercises.find(ex=>ex.id===sel)!.name}</h3><StrengthChart key={sel} exercise={exercises.find(ex=>ex.id===sel)!} sessions={history[sel]??[]} today={localToday()}/></section>}
 
 
@@ -74,7 +74,7 @@ export function Lifting({ repo, version, onChanged }: { repo: Repo; version: num
 
       <div className="card">
         <h3>Exercise history</h3>
-        {exercises.length === 0 ? <p className="empty">No exercises yet. Add one from the Today screen.</p> : (
+        {exercises.length === 0 ? <p className="empty">No exercises yet. Tap Start lifting above, then ＋ Add to log your first exercise.</p> : (
           <label className="field">Exercise
             <select value={sel} onChange={(e) => setSel(e.target.value)} data-testid="ex-select">
               <option value="">Choose...</option>

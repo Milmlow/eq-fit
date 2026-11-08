@@ -5,8 +5,10 @@ import { applyCloudRows, prepareCloudRows, garminId, type PendingRun } from '../
 import { backupFileName, serializeBackup } from '../lib/backup';
 import { syncFailure, type SyncStage } from '../lib/syncFailure';
 import { saveTextFile } from '../lib/download';
+import { dismissSyncNote, syncNoteDismissed } from '../lib/syncNote';
 
 export function CloudSync({ repo, onChanged, showControls = false }: { repo: Repo; onChanged: () => void; showControls?: boolean }) {
+  const [noteHidden, setNoteHidden] = useState(() => syncNoteDismissed(typeof localStorage === 'undefined' ? null : localStorage));
   const [signedIn, setSignedIn] = useState(false);
   const [connectionChecked, setConnectionChecked] = useState(false);
   const [email, setEmail] = useState('');
@@ -77,7 +79,7 @@ export function CloudSync({ repo, onChanged, showControls = false }: { repo: Rep
     const timer = window.setInterval(resume, 60_000);
     return () => { clearInterval(timer); window.removeEventListener('online', resume); document.removeEventListener('visibilitychange', resume); };
   }, [signedIn, refresh]);
-  if (!cloud) return <p className="muted small">Garmin automatic sync is not connected. Running figures use records saved on this device.</p>;
+  if (!cloud) return noteHidden ? null : <p className="muted small sync-note">Garmin automatic sync is not connected. Running figures use records saved on this device. <button type="button" onClick={() => { dismissSyncNote(localStorage); setNoteHidden(true); }}>Got it</button></p>;
   async function login(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setMessage('');
     try {

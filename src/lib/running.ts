@@ -62,3 +62,8 @@ export function formatPace(sec: number | null): string {
   const rounded = Math.round(sec);
   return `${Math.floor(rounded / 60)}:${String(rounded % 60).padStart(2, '0')} /km`;
 }
+
+/** True when any outdoor or treadmill run exists. Drives the empty state; no figures are invented. */
+export function hasRuns(rows: RunInput[]): boolean {
+  return rows.some(r => r.group === 'outdoor_run' || r.group === 'treadmill_run');
+}

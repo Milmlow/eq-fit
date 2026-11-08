@@ -29,12 +29,13 @@ export function ActivityPulse({repo,today,version,onOpen,onChanged,trainingActio
  {error&&<p role="alert">{error}</p>}
  {!data?<p>Loading activity…</p>:<>
  <CoachEQ session={coachSession} today={today} scope={repo.db.name} history={data.sessions} exercises={data.exercises}/>
+ {focus==='free'&&<MyFour key={repo.db.name} repo={repo} today={today} sessions={data.sessions} exercises={data.exercises} onOpen={onOpen} onChanged={onChanged} checkIn={focus==='free'}/>}
  <div className="pulse-training-layout"><div>
  {focus!=='running'&&focus!=='free'&&dashboard&&<FocusDashboard data={dashboard} exercises={data.exercises} onOpen={onOpen}/>}
  {focus==='free'&&dashboard&&<FreeTraining repo={repo} today={today} entries={dashboard.entries} days={dashboard.days} onChanged={onChanged}/>}
  {(focus==='running'||focus==='free')&&<><div className="pulse-averages"><p className="eyebrow">RUNNING · 4-WEEK AVERAGES</p><div className="pulse-numbers running-averages"><div><b>{paceMinSec(data.running.paceSecPerKm)}</b><span>pace / km</span></div><div><b>{data.weeklyKm?.toFixed(1)??'—'}</b><span>km / week</span></div></div><details><summary>Through today · Details</summary><p>{data.start} to {today}, including saved runs today. Outdoor running only; pace is distance-weighted. Weekly distance divides these 28 days by four, including rest days. Missing history is not estimated.</p></details></div>
  {data.latest?.kind === 'run' && <div className="pulse-latest"><div className="visual-heading"><div><p className="eyebrow">LATEST RUN · {data.latest.date===today?'TODAY':formatTodayLabel(data.latest.date)}</p><h2>{data.latest.title || 'Run'}</h2></div><IconRun/></div><Numbers session={data.latest}/>{data.signal&&<details className="pulse-signal"><summary>{data.signal.title}</summary><p>{data.signal.detail}</p></details>}</div>}
- </>}<MyFour key={repo.db.name} repo={repo} today={today} sessions={data.sessions} exercises={data.exercises} onOpen={onOpen} onChanged={onChanged} checkIn={focus==='free'}/> </div></div>
+ </>}{focus!=='free'&&<MyFour key={repo.db.name} repo={repo} today={today} sessions={data.sessions} exercises={data.exercises} onOpen={onOpen} onChanged={onChanged}/>} </div></div>
  {focus==='running'&&data.sessions.length>0&&<details className="pulse-recent"><summary>Recent activities · {Math.min(3,data.sessions.length)}</summary>{data.sessions.slice(0,3).map(s=><div key={s.id}><p><strong>{s.kind==='run'?'Run':'Lift'}</strong> · {formatTodayLabel(s.date)} · {s.title}</p><Numbers session={s}/>{s.workout&&<button onClick={()=>onOpen(s.workout!.id)}>Open session</button>}</div>)}</details>}
  </>}
  </section>;
