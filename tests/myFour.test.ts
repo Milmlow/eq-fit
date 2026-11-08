@@ -36,7 +36,7 @@ describe('Max day tile',()=>{
  });
  it('never invents numbers when there is no history; bodyweight shows reps',()=>{
   const t=crackTile('external',null,null,null,21);
-  expect(t.headline).toBe('Set a baseline');expect(t.hint).toBe('No effort logged yet');expect(t.cta).toBe('Have a crack');
+  expect(t.headline).toBe('Set a baseline');expect(t.hint).toBe('');expect(t.label).toBe('');expect(t.cta).toBe('Have a crack');
   expect(crackTile('bodyweight',r(null,9),null,3,21).headline).toBe('9 reps');
  });
 });
