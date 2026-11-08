@@ -48,3 +48,15 @@
 - Out-of-scope ideas (not built): a scheduled reminder via notifications, export a backup straight to a cloud folder, encrypt backups with a passphrase, an in-app install button, a diff view before restore, remembering the last restore time, a compact CSV of activities.
 - `npm audit` dev-dependency advisories are unchanged from Stage 3.
 - Windows: after pulling this branch run `npm install` (no new dependencies were added, but `package.json` is now version 0.4.0). `npm run build` writes `dist/sw.js`.
+
+## Max day and phone cleanup notes (PR #44)
+- Max day replaces the "Strength check-ins" heading on the Train freely dashboard. Each of the four pinned lifts shows the last effort (not the all-time best) with a "Have a crack →" prompt that opens the one-set quick log; Best only appears when it differs from the last effort. Empty tiles show just the lift name, "Set a baseline" and the prompt; unknown values are never shown as 0. The tile text is `crackTile` in `src/lib/myFour.ts`.
+- Max day now renders directly under the Coach EQ card on Train freely (it is not inside `pulse-training-layout`); other dashboard focuses keep it at the bottom as "My Four". Switching focus remounts it, so an open picker or quick log is lost.
+- Coach EQ first-run setup ("Choose your corner of the commentary box") is a collapsed `<details>`. The tone picker is unchanged once opened.
+- Lift: the exercise grid only renders when there are exercises (its margin left an empty gap). The empty history message points to Start lifting, then Add.
+- Run: with no outdoor or treadmill runs (`hasRuns` in `src/lib/running.ts`) the tab shows one "No runs yet" message. Activities mapped to `other` (walks etc.) do not count as runs. Custom period fields are `type="date"` with `max` set to today, so future end dates can no longer be entered. Table headers are "Dates" and "Runs"; the explanation moved to the note under the table.
+- The "Garmin automatic sync is not connected" note can be dismissed (`src/lib/syncNote.ts`, localStorage key `eqfit.sync-note-dismissed`). It is a local preference, not part of backups, so no backup schema change.
+- Tap targets: Coach settings button and the backup file picker are at least 44 px. The demo-mode checkbox is still 24 px; its label is 48 px tall and toggles it.
+- `.claude/settings.json`: pushes to `claude/*` branches no longer prompt (the general `git push` ask rule was removed). Deny rules cover `--force`, `-f`, `--mirror`, `--delete`, `:main` and a trailing `main`. Untested against real pushes. `pkill -f vite` is allowed and matches any process with "vite" in its command line.
+- Not seen with real data: Max day with history, the Run screen with real runs and the date pickers. Layout was only checked at 390 px on an empty database. Light and Crazy were checked for overflow and tap targets only.
+- Ideas not built: PR flag on a new best, warm-up ramp and estimated 1RM for Max day, a Max day shortcut on the Lift tab.
