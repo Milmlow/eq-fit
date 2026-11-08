@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatPace, lastCompleteMonth, recentCompleteWeeks, summariseRuns, type RunInput } from '../src/lib/running';
+import { formatPace, hasRuns, lastCompleteMonth, recentCompleteWeeks, summariseRuns, type RunInput } from '../src/lib/running';
 
 const run = (date: string, km: number | null, pace: number | null, group: RunInput['group'] = 'outdoor_run'): RunInput => ({ date, group, distance_km: km, avg_pace_sec_per_km: pace });
 
@@ -51,5 +51,14 @@ describe('periods', () => {
     expect(formatPace(380)).toBe('6:20 /km');
     expect(formatPace(333.07)).toBe('5:33 /km');
     expect(formatPace(null)).toBe('-');
+  });
+});
+
+describe('hasRuns', () => {
+  it('is false with no activities or only non-run activities, true for outdoor or treadmill runs', () => {
+    expect(hasRuns([])).toBe(false);
+    expect(hasRuns([run('2026-10-05', 5, 300, 'strength' as RunInput['group'])])).toBe(false);
+    expect(hasRuns([run('2026-10-05', null, null)])).toBe(true);
+    expect(hasRuns([run('2026-10-05', 5, 300, 'treadmill_run')])).toBe(true);
   });
 });

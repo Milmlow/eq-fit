@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Repo } from '../db/repo';
-import { formatPace, lastCompleteMonth, recentCompleteWeeks, summariseRuns, type RunInput, type RunPeriod } from '../lib/running';
+import { formatPace, hasRuns, lastCompleteMonth, recentCompleteWeeks, summariseRuns, type RunInput, type RunPeriod } from '../lib/running';
 import { addDays } from '../lib/summary';
 import { Badge } from './Badge';
 import { RunProgress } from './RunProgress';
@@ -31,6 +31,15 @@ export function Running({ repo, today, version }: { repo: Repo; today: string; v
 
   if (!rows) return <p role={err ? "alert" : undefined}>{err || "Loading..."}</p>;
 
+  if (!hasRuns(rows)) {
+    return (
+      <section aria-labelledby="run-h">
+        <h2 id="run-h">Your running</h2>
+        <p className="empty">No runs yet. Once Garmin syncs or you import your history, your distance, pace and weekly comparison will appear here.</p>
+      </section>
+    );
+  }
+
   const weeks = recentCompleteWeeks(today, 4);
   const month = lastCompleteMonth(today);
   const periods: RunPeriod[] = [
@@ -41,7 +50,7 @@ export function Running({ repo, today, version }: { repo: Repo; today: string; v
   ];
 
   function addCustom() {
-    if (!ISO.test(cs) || !ISO.test(ce) || Number.isNaN(Date.parse(cs)) || Number.isNaN(Date.parse(ce))) return setErr('Enter both dates as YYYY-MM-DD.');
+    if (!ISO.test(cs) || !ISO.test(ce) || Number.isNaN(Date.parse(cs)) || Number.isNaN(Date.parse(ce))) return setErr('Choose both a start and an end date.');
     if (cs > ce) return setErr('Start must be on or before end.');
     setErr(null);
     setCustoms([...customs, { id: Date.now(), start: cs, end: ce }]);
@@ -82,8 +91,8 @@ export function Running({ repo, today, version }: { repo: Repo; today: string; v
 
       <h3>Custom period</h3>
       <div className="row gap wrap">
-        <label className="field">Start<input placeholder="YYYY-MM-DD" value={cs} onChange={(e) => setCs(e.target.value)} /></label>
-        <label className="field">End<input placeholder="YYYY-MM-DD" value={ce} onChange={(e) => setCe(e.target.value)} /></label>
+        <label className="field">Start<input type="date" max={today} value={cs} onChange={(e) => setCs(e.target.value)} /></label>
+        <label className="field">End<input type="date" max={today} value={ce} onChange={(e) => setCe(e.target.value)} /></label>
         <button onClick={addCustom}>Add period</button>
       </div>
       {err && <p role="alert" className="error">{err}</p>}
