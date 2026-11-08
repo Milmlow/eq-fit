@@ -34,6 +34,10 @@ describe('Max day tile',()=>{
   expect(t.headline).toBe('100 kg × 5');expect(t.best).toBe('Best: 110 kg × 3');expect(t.cta).toBe('Have a crack');expect(t.hint).toBe('Check-in due');
   expect(crackTile('external',last,last,10,21).best).toBe('');expect(crackTile('external',last,last,10,21).hint).toBe('Next check-in in 11 days');
  });
+ it('hides a duplicate Best by value and ignores a malformed date',()=>{
+  expect(crackTile('external',r(100,5),r(100,5),10,21).best).toBe('');
+  expect(crackTile('external',r(100,5),r(100,5),NaN,21).hint).toBe('');
+ });
  it('never invents numbers when there is no history; bodyweight shows reps',()=>{
   const t=crackTile('external',null,null,null,21);
   expect(t.headline).toBe('Set a baseline');expect(t.hint).toBe('');expect(t.label).toBe('');expect(t.cta).toBe('Have a crack');

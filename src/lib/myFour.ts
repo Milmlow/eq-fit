@@ -40,6 +40,6 @@ export type CrackLift=NonNullable<ReturnType<typeof liftRecord>['last']>;
 /** Max day tile text: show the last effort to beat and always invite a go. Unknown stays unknown. */
 export function crackTile(mode:ReturnType<typeof liftRecord>['mode'],last:CrackLift|null,best:CrackLift|null,daysSinceLast:number|null,interval:number){
  const fmt=(x:CrackLift)=>mode==='bodyweight'?`${x.set.reps} reps`:`${x.set.load_kg} kg × ${x.set.reps}`;
- const hint=last===null||daysSinceLast===null?'':daysSinceLast>=interval?'Check-in due':`Next check-in in ${interval-daysSinceLast} days`;
- return {headline:last?fmt(last):'Set a baseline',label:last?'Last effort':'',best:best&&best!==last?`Best: ${fmt(best)}`:'',cta:'Have a crack',hint};
+ const hint=last===null||daysSinceLast===null||!Number.isFinite(daysSinceLast)?'':daysSinceLast>=interval?'Check-in due':`Next check-in in ${interval-daysSinceLast} days`;
+ return {headline:last?fmt(last):'Set a baseline',label:last?'Last effort':'',best:best&&(!last||fmt(best)!==fmt(last))?`Best: ${fmt(best)}`:'',cta:'Have a crack',hint};
 }
