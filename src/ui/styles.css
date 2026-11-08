@@ -76,3 +76,6 @@ details.add-ex { margin: 12px 0; }
 .quick-lifts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
 .quick-lifts button { display:flex; justify-content:space-between; text-align:left; min-height:58px; }
 @media(max-width:520px) { .progress-panel { padding:18px 14px; } .progress-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } .progress-metrics > div:last-child { grid-column:1/-1; } .day-strip { gap:4px; } .trend { gap:10px; } }
+.check input { flex: 0 0 24px; }
+.file input[type=file] { min-height: 44px; }
+.sync-note button { min-height: 44px; min-width: 44px; margin-left: 6px; }

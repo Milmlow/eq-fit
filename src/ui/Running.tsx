@@ -71,7 +71,7 @@ export function Running({ repo, today, version }: { repo: Repo; today: string; v
           <caption>{treadmill ? 'Outdoor and treadmill runs' : 'Outdoor runs only'}</caption>
           <thead>
             <tr>
-              <th scope="col">Period</th><th scope="col">Dates (MM-DD)</th><th scope="col">Runs (with pace)</th><th scope="col">km</th><th scope="col">Pace</th>
+              <th scope="col">Period</th><th scope="col">Dates</th><th scope="col">Runs</th><th scope="col">km</th><th scope="col">Pace</th>
             </tr>
           </thead>
           <tbody>
@@ -87,7 +87,7 @@ export function Running({ repo, today, version }: { repo: Repo; today: string; v
           </tbody>
         </table>
       </div>
-      <p className="muted">Avg pace is distance-weighted (long runs count more), not a mean of paces. Runs with no pace or distance are left out of the pace figure and are never filled in. "-" means no data.</p>
+      <p className="muted">Dates are month-day. Runs show how many were counted, then (how many had pace). Avg pace is distance-weighted (long runs count more), not a mean of paces. Runs with no pace or distance are left out of the pace figure and are never filled in. "-" means no data.</p>
 
       <h3>Custom period</h3>
       <div className="row gap wrap">
