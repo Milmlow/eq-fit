@@ -9,7 +9,7 @@ export function NumberPicker({label,value,onChange,step,min,max,optional=false}:
  function change(by:number){const current=Number(value);onChange(String(Math.round(Math.min(max,Math.max(min,(Number.isFinite(current)?current:0)+by))*100)/100));}
  return <label className="number-picker"><span>{label}</span><span className="picker-control"><button type="button" aria-label={`Decrease ${label}`} onClick={()=>change(-step)}>−</button><input aria-label={label} type="number" inputMode={step===1?'numeric':'decimal'} min={min} max={max} step={step===1?1:'any'} required={!optional} value={value} onChange={e=>onChange(e.target.value)}/><button type="button" aria-label={`Increase ${label}`} onClick={()=>change(step)}>+</button></span></label>;
 }
-export function QuickLift({repo,today,movement,exercises,onClose,onSaved,checkIn=false}:{repo:Repo;today:string;movement:QuickMovement;exercises:Exercise[];onClose:()=>void;onSaved:(workout:string,count:number)=>void;checkIn?:boolean}) {
+export function QuickLift({repo,today,movement,exercises,onClose,onSaved,checkIn=false}:{repo:Repo;today:string;movement:QuickMovement;exercises:Exercise[];onClose:()=>void;onSaved:(workout:string,count:number,saved?:{load_kg:number|null;reps:number;warmup:boolean})=>void;checkIn?:boolean}) {
  const exact=exercises.find(ex=>ex.exercise_key===exerciseKey(movement.name,movement.equipment));
  const [exerciseId,setExerciseId]=useState(exact?.id??''),[weight,setWeight]=useState(''),[reps,setReps]=useState('8'),[sets,setSets]=useState(checkIn?'1':'3'),[warmup,setWarmup]=useState(false),[previous,setPrevious]=useState(''),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const dialog=useRef<HTMLDialogElement>(null),lock=useRef(false);
@@ -24,7 +24,7 @@ export function QuickLift({repo,today,movement,exercises,onClose,onSaved,checkIn
   const count=Number(sets),load=weight.trim()===''?null:Number(weight),rep=Number(reps);
   if(load===null&&mode!=='bodyweight')throw new Error('Enter the weight or assistance used.');
   const {workout}=await repo.quickLogLift(today,movement,exerciseId||null,{load_kg:load,reps:rep,rir:null,warmup,pain_note:null},count,checkIn);
-  onSaved(workout.id,count);
+  onSaved(workout.id,count,{load_kg:load,reps:rep,warmup});
  }catch(e){setError(e instanceof Error?e.message:'Sets were not saved. Please retry.');}finally{lock.current=false;setBusy(false);}}
  return <dialog ref={dialog} className="quick-lift-dialog" aria-labelledby="quick-lift-title" onCancel={e=>{if(busy)e.preventDefault();else onClose();}}><div className="quick-lift-heading"><MovementArt name={movement.name}/><div><p className="eyebrow">{checkIn?'PROGRESS CHECK-IN':'QUICK LOG'}</p><h2 id="quick-lift-title">{exercise?.name??movement.name}</h2><small>{exercise?.equipment??movement.equipment}</small></div><button type="button" aria-label="Close quick log" disabled={busy} onClick={onClose}>×</button></div>
  <form onSubmit={e=>void save(e)}><fieldset disabled={busy||loading} className="quick-lift-fields"><legend className="muted small">{loading?'Loading previous values…':'Log sets you have completed.'}</legend>

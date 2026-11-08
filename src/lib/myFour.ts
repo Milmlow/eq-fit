@@ -43,3 +43,16 @@ export function crackTile(mode:ReturnType<typeof liftRecord>['mode'],last:CrackL
  const hint=last===null||daysSinceLast===null||!Number.isFinite(daysSinceLast)?'':daysSinceLast>=interval?'Check-in due':`Next check-in in ${interval-daysSinceLast} days`;
  return {headline:last?fmt(last):'Set a baseline',label:last?'Last effort':'',best:best&&(!last||fmt(best)!==fmt(last))?`Best: ${fmt(best)}`:'',cta:'Have a crack',hint};
 }
+export interface SetValue { load_kg: number | null; reps: number | null }
+/** Did a newly logged working set beat the previous best? Mirrors `liftRecord` ordering. 'first' is a baseline, not a PR; null means no or not comparable. */
+export function beatsBest(mode: ReturnType<typeof liftRecord>['mode'], best: SetValue | null, next: SetValue): 'pr' | 'first' | null {
+ if (next.reps === null || !Number.isInteger(next.reps) || next.reps < 1) return null;
+ if (mode === 'bodyweight') {
+  if (next.load_kg !== null && next.load_kg !== 0) return null;
+  return !best ? 'first' : next.reps > (best.reps ?? 0) ? 'pr' : null;
+ }
+ if (next.load_kg === null || !Number.isFinite(next.load_kg) || next.load_kg < 0) return null;
+ if (!best || best.load_kg === null || best.reps === null) return 'first';
+ const better = mode === 'assisted' ? next.load_kg < best.load_kg : next.load_kg > best.load_kg;
+ return better || (next.load_kg === best.load_kg && next.reps > best.reps) ? 'pr' : null;
+}
