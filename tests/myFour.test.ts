@@ -1,5 +1,5 @@
 import {describe,it,expect,vi,afterEach} from 'vitest';
-import {liftRecord,readFour,saveFour,defaultFour} from '../src/lib/myFour';
+import {liftRecord,readFour,saveFour,defaultFour,crackTile} from '../src/lib/myFour';
 import {exerciseKey} from '../src/lib/training';
 import type {Exercise,SetRecord,Workout} from '../src/db/types';
 import type {Session} from '../src/lib/activityPulse';
@@ -24,5 +24,19 @@ describe('My Four records',()=>{
   expect(defaultFour([ex('b','Bench','Barbell')])[1].name).toBe('Bench');
   saveFour('emma',[pick]);expect(readFour('emma',[])).toEqual([pick]);expect(readFour('royce',[])).toHaveLength(4);
   values.set('eqfit.my-four:emma','garbage');expect(readFour('emma',[])).toHaveLength(4);
+ });
+});
+describe('Max day tile',()=>{
+ const r=(load:number|null,reps:number)=>({set:set('x',load,reps),session:session('2026-11-01',[])});
+ it('shows last effort, always says have a crack, and flags due check-ins',()=>{
+  const last=r(100,5),best=r(110,3);
+  const t=crackTile('weighted',last,best,30,21);
+  expect(t.headline).toBe('100 kg × 5');expect(t.best).toBe('Best: 110 kg × 3');expect(t.cta).toBe('Have a crack');expect(t.hint).toBe('Check-in due');
+  expect(crackTile('weighted',last,last,10,21).best).toBe('');expect(crackTile('weighted',last,last,10,21).hint).toBe('Next check-in in 11 days');
+ });
+ it('never invents numbers when there is no history; bodyweight shows reps',()=>{
+  const t=crackTile('weighted',null,null,null,21);
+  expect(t.headline).toBe('Set a baseline');expect(t.hint).toBe('No effort logged yet');expect(t.cta).toBe('Have a crack');
+  expect(crackTile('bodyweight',r(null,9),null,3,21).headline).toBe('9 reps');
  });
 });
