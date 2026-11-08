@@ -363,3 +363,4 @@ label.inline select { min-width: 0; max-width: 100%; }
 .settled-sessions>summary::after,.coverage-fold>summary::after{content:"\25BE";content:"\25BE" / "";margin-left:.5em;display:inline-block}
 .settled-sessions[open]>summary::after,.coverage-fold[open]>summary::after{transform:rotate(180deg)}
 .crack-cta{font-weight:700;font-size:.85rem;margin-top:2px}
+.pr-flag{align-self:flex-start;width:fit-content;background:var(--accent);color:var(--on-accent);font-size:.7rem;font-weight:800;letter-spacing:.04em;padding:2px 8px;border-radius:999px;text-transform:uppercase}

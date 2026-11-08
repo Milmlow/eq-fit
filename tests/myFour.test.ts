@@ -1,5 +1,5 @@
 import {describe,it,expect,vi,afterEach} from 'vitest';
-import {liftRecord,readFour,saveFour,defaultFour,crackTile} from '../src/lib/myFour';
+import {liftRecord,readFour,saveFour,defaultFour,crackTile,beatsBest} from '../src/lib/myFour';
 import {exerciseKey} from '../src/lib/training';
 import type {Exercise,SetRecord,Workout} from '../src/db/types';
 import type {Session} from '../src/lib/activityPulse';
@@ -42,5 +42,29 @@ describe('Max day tile',()=>{
   const t=crackTile('external',null,null,null,21);
   expect(t.headline).toBe('Set a baseline');expect(t.hint).toBe('');expect(t.label).toBe('');expect(t.cta).toBe('Have a crack');
   expect(crackTile('bodyweight',r(null,9),null,3,21).headline).toBe('9 reps');
+ });
+});
+describe('PR flag',()=>{
+ const s=(load:number|null,reps:number)=>({load_kg:load,reps});
+ it('flags a heavier weight, or the same weight for more reps, as a PR',()=>{
+  expect(beatsBest('external',s(100,5),s(102.5,1))).toBe('pr');
+  expect(beatsBest('external',s(100,5),s(100,6))).toBe('pr');
+  expect(beatsBest('external',s(100,5),s(100,5))).toBeNull();
+  expect(beatsBest('external',s(100,5),s(97.5,12))).toBeNull();
+ });
+ it('treats the first ever effort as a baseline, not a PR',()=>{
+  expect(beatsBest('external',null,s(60,5))).toBe('first');
+  expect(beatsBest('bodyweight',null,s(null,8))).toBe('first');
+ });
+ it('scores bodyweight by unweighted reps and assisted by least assistance',()=>{
+  expect(beatsBest('bodyweight',s(null,8),s(null,9))).toBe('pr');
+  expect(beatsBest('bodyweight',s(null,8),s(10,20))).toBeNull();
+  expect(beatsBest('assisted',s(30,8),s(25,5))).toBe('pr');
+  expect(beatsBest('assisted',s(30,8),s(35,12))).toBeNull();
+ });
+ it('ignores invalid sets',()=>{
+  expect(beatsBest('external',s(100,5),s(null,5))).toBeNull();
+  expect(beatsBest('external',s(100,5),s(110,0))).toBeNull();
+  expect(beatsBest('external',s(100,5),s(110,2.5))).toBeNull();
  });
 });
