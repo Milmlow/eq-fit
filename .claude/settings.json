@@ -24,6 +24,8 @@
       "Bash(git fetch *)",
       "Bash(git add *)",
       "Bash(git commit *)",
+      "Bash(git push -u origin claude/*)",
+      "Bash(git push origin claude/*)",
       "Bash(mkdir -p *)",
       "Bash(pkill -f vite)",
       "mcp__github__pull_request_read",
@@ -50,8 +52,6 @@
       "mcp__Supabase__list_branches"
     ],
     "ask": [
-      "Bash(git push *)",
-      "Bash(git push)",
       "Bash(git checkout -B *)",
       "Bash(git rebase *)",
       "Bash(git reset *)",
