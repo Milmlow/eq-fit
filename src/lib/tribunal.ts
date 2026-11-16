@@ -83,3 +83,24 @@ export function tribunalPrompt(facts: string[], voice: Voice, reply: string, pre
     JSON.stringify({ facts, reply, previous }),
   ].join('\n');
 }
+
+export function recapStats(review: ReturnType<typeof reviewWeek>) {
+  const labels = { strength: 'Strength', run: 'Runs', cardio: 'Other cardio', other: 'Unclassified' };
+  return (Object.keys(labels) as (keyof typeof labels)[]).flatMap(category => {
+    const count = review.rows.filter(row => row.category === category).length;
+    return category === 'other' && !count ? [] : [{ label: labels[category], count }];
+  });
+}
+
+export function backPageHeadlines(review: ReturnType<typeof reviewWeek>) {
+  if (!review.rows.length) return [];
+  return review.win
+    ? ['Extra reps spark unscheduled press conference', 'Gym improvement confirmed. Trophy budget under review.', 'Athlete improves. Sponsors reportedly circling.']
+    : ['Sessions logged. Athlete declines further comment.', 'Training completed despite lack of broadcast deal', 'Local athlete puts another week on the record'];
+}
+
+export function raceCall(review: ReturnType<typeof reviewWeek>) {
+  const stats = recapStats(review).filter(stat => stat.count > 0)
+    .map(stat => `${stat.count} ${stat.label.toLowerCase()}`).join(', ');
+  return stats ? `Here’s the week on the board. ${stats}. ${verdict(review, 'race')}` : verdict(review, 'race');
+}

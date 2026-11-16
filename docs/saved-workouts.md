@@ -106,3 +106,14 @@ The model receives the weekly counts, activity categories by date, any verified
 lift comparison, the user's question and the immediately preceding model exchange.
 Elsewhere the app prepares the same prompt for manual review and copying to
 ChatGPT. It omits activity titles and routes and does not transmit the prompt.
+
+### Tribunal design trial
+
+Open the Tribunal on Today and switch between Scoreboard and Case File. Both
+use the same week, evidence and commentary. The app remembers the chosen layout
+in this browser. Hear the call plays the race commentary through a local English
+device voice when available and shows a transcript otherwise.
+
+Back Page previews a square PNG with a rotating headline and the selected
+week's summary. Review the image, then share it through the device share sheet
+where supported or download it. Session titles and routes are excluded.
