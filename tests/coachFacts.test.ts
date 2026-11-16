@@ -1,7 +1,7 @@
 import {describe,it,expect,vi,afterEach} from 'vitest';
 import type {Session} from '../src/lib/activityPulse';
 import type {Exercise,SetRecord} from '../src/db/types';
-import {coachFacts} from '../src/lib/coachFacts';
+import {coachFacts, extraReps} from '../src/lib/coachFacts';
 import {choose,freshCoach,contextFor,JOKES,observeCoach,readCoach,saveCoach} from '../src/lib/coach';
 const ex={id:'bench',name:'Bench press',equipment:'barbell'} as Exercise;
 const set=(reps:number,extra:Partial<SetRecord>={}):SetRecord=>({id:'s',exercise_id:'bench',workout_id:'w',ordinal:1,load_kg:60,reps,warmup:false,pain_note:null,...extra} as SetRecord);
@@ -9,8 +9,15 @@ const session=(date:string,reps=9):Session=>({id:date,date,order:date,title:'Lif
 const current=session('2026-11-03'),prior=session('2026-10-30',8);
 describe('verified coach context',()=>{
  it('compares the best reps at identical load in the preceding completed session',()=>{
+  expect(extraReps(current,[prior],[ex])).toMatchObject({ load: 60, reps: 9, previousReps: 8 });
   expect(coachFacts(current,[prior],[ex])['more-reps']).toContain('best 8 reps');
   expect(coachFacts(current,[{...prior,sets:[set(8),set(10)]}],[ex])['more-reps']).toBeUndefined();
+ });
+ it('reports the date of the comparison when another workout was logged today', () => {
+  const sameDay = { ...session(current.date, 10), id: 'earlier-today' };
+  expect(extraReps(current, [sameDay, prior], [ex])).toMatchObject({
+   previousReps: 8, previousDate: '2026-10-30',
+  });
  });
  it('does not treat targets, warmups, pain notes, assisted or unknown equipment as improvement evidence',()=>{
   const variants=[{...current,workout:{...current.workout!,status:'planned' as const}},{...current,sets:[set(9,{warmup:true})]},{...current,sets:[set(9,{pain_note:'sore'})]},{...current,sets:[set(9,{load_kg:65})]}];

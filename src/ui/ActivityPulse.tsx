@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Exercise } from '../db/types';
 import type { Repo } from '../db/repo';
 import { activityPulse, type Session } from '../lib/activityPulse';
@@ -7,6 +7,8 @@ import { IconRun } from './Icons';
 import { CoachEQ } from './CoachEQ';
 import { MyFour } from './MyFour';
 import { FreeTraining } from './FreeTraining';
+import { reviewWeek } from '../lib/tribunal';
+import { Tribunal } from './Tribunal';
 import { FocusDashboard } from './FocusDashboard';
 import { FOCUS_OPTIONS, readFocus, saveFocus, trainingDashboard, type DashboardFocus } from '../lib/dashboardFocus';
 
@@ -19,6 +21,14 @@ export function ActivityPulse({repo,today,version,onOpen,onChanged,trainingActio
  const [data,setData]=useState<(ReturnType<typeof activityPulse>&{exercises:Exercise[];training:Parameters<typeof trainingDashboard>})|null>(null),[error,setError]=useState('');
  useEffect(()=>{let live=true;Promise.all([repo.activitiesBetween('0000-01-01',today),repo.db.workouts.toArray(),repo.db.sets.toArray(),repo.listExercises()]).then(([a,w,s,e])=>{if(live){setData({...activityPulse(a,w,s,e,today),exercises:e,training:[a,w,s,today,'all']});setError('');}}).catch(()=>{if(live)setError('Could not refresh recent activity. Reopen the app to retry.');});return()=>{live=false;};},[repo,today,version]);
  const dashboard=data?trainingDashboard(data.training[0],data.training[1],data.training[2],today,focus):null;
+ const tribunalWeeks = useMemo(() => {
+  if (!data) return null;
+  const entries = trainingDashboard(...data.training).entries;
+  return {
+   current: reviewWeek(entries, data.sessions, data.exercises, today),
+   previous: reviewWeek(entries, data.sessions, data.exercises, today, true),
+  };
+ }, [data, today]);
  const latestTraining=dashboard?.entries[0];
  const coachSession=focus==='running'?data?.latest:latestTraining&&(latestTraining.category==='strength'||latestTraining.category==='run')?data?.sessions.find(s=>s.id===latestTraining.id):undefined;
  return <section className="activity-pulse" aria-label="Latest activity and averages">
@@ -29,6 +39,7 @@ export function ActivityPulse({repo,today,version,onOpen,onChanged,trainingActio
  {error&&<p role="alert">{error}</p>}
  {!data?<p>Loading activity…</p>:<>
  <CoachEQ session={coachSession} today={today} scope={repo.db.name} history={data.sessions} exercises={data.exercises}/>
+ {tribunalWeeks && <Tribunal {...tribunalWeeks} />}
  {focus==='free'&&<MyFour key={repo.db.name} repo={repo} today={today} sessions={data.sessions} exercises={data.exercises} onOpen={onOpen} onChanged={onChanged} checkIn={focus==='free'}/>}
  <div className="pulse-training-layout"><div>
  {focus!=='running'&&focus!=='free'&&dashboard&&<FocusDashboard data={dashboard} exercises={data.exercises} onOpen={onOpen}/>}

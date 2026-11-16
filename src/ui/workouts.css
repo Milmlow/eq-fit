@@ -94,3 +94,38 @@
 .focused-workout .session-end{position:sticky;bottom:82px;background:var(--card);padding:8px 0;margin:0;z-index:2}
 .focused-workout .session-end>details{font-size:.75rem}
 .focused-workout .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+.repeat-shortcut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  text-align: left;
+}
+.repeat-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.repeat-label small {
+  display: block;
+  margin-top: 3px;
+}
+.repeat-pictures {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 4px;
+}
+.repeat-pictures svg {
+  width: 30px;
+  height: 26px;
+}
+.finish-win {
+  border-inline-start: 3px solid var(--acc);
+  padding-inline-start: 12px;
+  overflow-wrap: anywhere;
+}
+.finish-win span {
+  display: block;
+  margin-top: 4px;
+}

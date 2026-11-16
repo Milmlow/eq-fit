@@ -77,3 +77,32 @@ covered multi-selection, tile removal, unticking, ordering, save/reopen, custom
 selection cancellation and Save & start. Native iOS usability still needs a trial.
 
 ![Expanded checkbox list and selected-tile review on two phone widths](workout-checklist.jpg)
+
+## Repeat shortcuts and finish highlight
+
+Today and Lift identify the last workout by name and up to two movements. When
+there is no workout to continue, a second shortcut offers the latest session
+whose ordered exercise plan differs, with a distinguishing movement shown when
+the difference is further down the list. Both use the same exercise order as Repeat,
+including older sessions with movements recorded only in their saved sets.
+
+The finish screen shows one recorded improvement when a working set beats the
+best reps at the same load in that exercise's most recent session on an earlier
+date. The comparison shows that date. It uses the
+same evidence as Coach EQ. The optional sledge and sharing appear before the
+expandable set history. Sessions without a comparable improvement still show a
+saved confirmation and their working-set count.
+
+## The Monday Tribunal
+
+The collapsed Today card reviews this week or last week using the same linked,
+deduplicated activity records as the training dashboard. The evidence lists the
+recorded sessions, and highlights an extra-rep comparison when verified. Three
+local voices, challenge choices and replies such as “Check Friday” work without
+a model connection.
+
+Talk back uses a supported browser's built-in language model where available.
+The model receives the weekly counts, activity categories by date, any verified
+lift comparison, the user's question and the immediately preceding model exchange.
+Elsewhere the app prepares the same prompt for manual review and copying to
+ChatGPT. It omits activity titles and routes and does not transmit the prompt.

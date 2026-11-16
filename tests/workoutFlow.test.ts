@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { SetRecord, Workout } from '../src/db/types';
-import { entryDefaults, resumeExercise, workoutChoices } from '../src/lib/workoutFlow';
+import { entryDefaults, repeatExerciseIds, resumeExercise, workoutChoices } from '../src/lib/workoutFlow';
 
 const workout = (id: string, date: string, status: 'planned' | 'done', ids: string[] = []): Workout => ({
   id, date, status, planned_exercise_ids: ids, kind: 'weights', name: '', notes: '', owner_id: null,
@@ -25,6 +25,14 @@ describe('low-friction workout choices', () => {
     const result = workoutChoices([...rows, workout('empty', '2026-11-03', 'done', ['bench'])], sets, '2026-11-03');
     expect(result.recent.map(w => w.id)).toEqual(['6', '5', '4', '3', '2']);
     expect(result.counts.get('6')).toBe(1);
+  });
+  it('finds the latest different exercise plan across repeated and older workouts', () => {
+    const rows = Array.from({ length: 7 }, (_, i) => workout(String(i), `2026-10-${20 + i}`, 'done'));
+    const sets = rows.map(w => set(w.id, w.id === '0' ? 'squat' : 'bench', 1, 50, 10));
+    const choices = workoutChoices(rows, sets, '2026-11-03');
+    expect(choices.alternate?.id).toBe('0');
+    expect(choices.recent[0].id).toBe('6');
+    expect(repeatExerciseIds(['bench'], [set('a', 'row', 2, 40, 8), set('a', 'bench', 1, 50, 10)])).toEqual(['bench', 'row']);
   });
   it('resumes the last actually logged exercise, not the first planned one', () => {
     expect(resumeExercise(['bench', 'row'], [set('a', 'bench', 1, 50, 10), set('a', 'row', 2, 40, 8)])).toBe(1);

@@ -12,9 +12,8 @@ export function Routines({ repo, today, version, onOpen, onChanged }: {
 }) {
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
-  const [pending, setPending] = useState<Workout[]>([]);
-  const [recent, setRecent] = useState<Workout[]>([]);
-  const [counts, setCounts] = useState<Map<string, number>>(new Map());
+  const [choices, setChoices] = useState(() => workoutChoices([], [], today));
+  const { pending, recent, counts, alternate, repeatPlans } = choices;
   const [loaded, setLoaded] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
   const [notice, setNotice] = useState('');
@@ -25,7 +24,7 @@ export function Routines({ repo, today, version, onOpen, onChanged }: {
   useEffect(() => {
     let live = true;
     Promise.all([repo.listRoutines(), repo.listExercises(), repo.workoutsBetween('0000-01-01', today), repo.db.sets.toArray()])
-      .then(([r, e, w, sets]) => { if (live) { const choices = workoutChoices(w, sets, today); setRoutines(r); setExercises(e); setPending(choices.pending); setRecent(choices.recent); setCounts(choices.counts); setLoaded(true); } })
+      .then(([r, e, w, sets]) => { if (live) { setChoices(workoutChoices(w, sets, today)); setRoutines(r); setExercises(e); setLoaded(true); } })
       .catch(() => { if (live) setError('Could not load saved workouts. Please reopen this screen.'); });
     return () => { live = false; };
   }, [repo, today, version]);
@@ -41,14 +40,39 @@ export function Routines({ repo, today, version, onOpen, onChanged }: {
   function pictures(ids: string[]) {
     return <div className="workout-pictures" aria-hidden="true">{ids.slice(0, 4).map(id => <MovementArt key={id} name={exercises.find(e => e.id === id)?.name ?? ''} />)}{ids.length > 4 && <span>+{ids.length - 4}</span>}</div>;
   }
-  function repeatCard(w: Workout, primary = false) {
-    if (primary) return <button className="primary start-training" disabled={busy} onClick={() => void start(undefined, w)}>Repeat last workout →</button>;
+  function repeatMovements(w: Workout) {
+    return (repeatPlans.get(w.id) ?? []).flatMap(id => exercises.filter(e => e.id === id));
+  }
+  function repeatShortcut(w: Workout, primary = false) {
+    const plan = repeatMovements(w);
+    const latest = primary ? plan : repeatMovements(recent[0]);
+    const difference = plan.findIndex((e, i) => e.id !== latest[i]?.id);
+    const movements = difference >= 2 ? [plan[0], plan[difference]] : plan.slice(0, 2);
+    const movementLabels = movements.map(e => latest.some(other => other.id !== e.id && other.name === e.name)
+      ? `${e.name} (${e.equipment || 'equipment unspecified'})` : e.name);
+    if (difference === -1 && plan.length < latest.length) movementLabels.push(`${plan.length} ${plan.length === 1 ? 'exercise' : 'exercises'}`);
+    return (
+      <button type="button" className={`start-training repeat-shortcut${primary ? ' primary' : ''}`}
+        disabled={busy} onClick={() => void start(undefined, w)}>
+        <span className="repeat-label">
+          <strong>Repeat {w.name.trim() || (primary ? 'last workout' : 'earlier workout')}</strong>
+          {movementLabels.length > 0 && <small>{movementLabels.join(' · ')}</small>}
+        </span>
+        <span className="repeat-pictures" aria-hidden="true">
+          {movements.map(e => <MovementArt key={e.id} name={e.name} />)} →
+        </span>
+      </button>
+    );
+  }
+  function repeatCard(w: Workout) {
     return <article key={w.id} className="routine-card">
-      {pictures(w.planned_exercise_ids)}<h3>{w.name || 'Weights session'}</h3>
+      {pictures(repeatMovements(w).map(e => e.id))}<h3>{w.name || 'Weights session'}</h3>
       <p className="muted small">{w.date} · {counts.get(w.id)} {counts.get(w.id) === 1 ? 'set' : 'sets'} recorded</p>
-      <button className={primary ? 'primary' : ''} disabled={busy} onClick={() => void start(undefined, w)}>{primary ? 'Repeat last workout →' : 'Repeat workout'}</button>
+      <button disabled={busy} onClick={() => void start(undefined, w)}>Repeat workout</button>
     </article>;
   }
+  const shortcut = pending.length === 0 ? alternate : undefined;
+  const otherRecent = recent.slice(pending.length ? 0 : 1).filter(w => w.id !== shortcut?.id);
   return <section className="card routines" aria-labelledby={editing ? 'builder-title' : 'routines-title'}>
     {!editing && <><h2 id="routines-title" className="sr-only">Your next workout</h2></>}
     {error && <p role="alert" className="error">{error}</p>}
@@ -60,7 +84,10 @@ export function Routines({ repo, today, version, onOpen, onChanged }: {
         <p className="muted small">{pending[0].name || 'Workout in progress'} · {pending[0].date === today ? 'Today' : pending[0].date}</p>
         <button className="primary start-training" onClick={() => onOpen(pending[0].id)}>Continue workout →</button>
         <p className="muted small">{counts.get(pending[0].id) ?? 0} sets saved. Pick up where you left off.</p>
-      </div> : recent[0] ? repeatCard(recent[0], true) : <>
+      </div> : recent[0] ? <>
+        {repeatShortcut(recent[0], true)}
+        {shortcut && repeatShortcut(shortcut)}
+      </> : <>
         <button className="primary start-training" disabled={busy} onClick={() => setEditing('new')}>Start lifting →</button>
       </>}
       <details className="workout-alternatives"><summary>Choose or create a workout <span aria-hidden="true">＋</span></summary>
@@ -74,9 +101,9 @@ export function Routines({ repo, today, version, onOpen, onChanged }: {
           <button disabled={busy} aria-label={`Edit ${r.name}`} onClick={() => setEditing(r)}>Edit</button></div>
         </article>)}</div>
       </details>}
-      {(pending.length > 1 || recent.length > (pending.length ? 0 : 1)) && <details className="workout-choices"><summary>Other recent workouts</summary>
+      {(pending.length > 1 || otherRecent.length > 0) && <details className="workout-choices"><summary>Other recent workouts</summary>
         {pending.slice(1).map(w => <button key={w.id} className="routine-resume" onClick={() => onOpen(w.id)}>Continue {w.name || 'workout'} · {w.date}</button>)}
-        <div className="routine-list">{recent.slice(pending.length ? 0 : 1).map(w => repeatCard(w))}</div>
+        <div className="routine-list">{otherRecent.map(repeatCard)}</div>
       </details>}
 
       </details>
