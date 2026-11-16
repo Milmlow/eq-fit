@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { TrainingEntry } from '../src/lib/dashboardFocus';
 import type { Session } from '../src/lib/activityPulse';
 import type { Exercise } from '../src/db/types';
-import { challenge, dayReply, reviewWeek, tribunalPrompt, verdict } from '../src/lib/tribunal';
+import { backPageHeadlines, challenge, raceCall, recapStats, dayReply, reviewWeek, tribunalPrompt, verdict } from '../src/lib/tribunal';
 
 const entry = (date: string, category: TrainingEntry['category']): TrainingEntry => ({
   id: date, date, category, order: date, title: 'Private activity title', sets: [],
@@ -12,6 +12,11 @@ describe('weekly Tribunal', () => {
   it('uses the selected Monday-to-Sunday window and includes walking as other cardio', () => {
     const rows = [entry('2026-11-17', 'run'), entry('2026-11-16', 'cardio'), entry('2026-11-15', 'strength'), entry('2026-11-18', 'run')];
     const current = reviewWeek(rows, [], [], '2026-11-17');
+    expect(recapStats(current)).toEqual([
+      { label: 'Strength', count: 0 }, { label: 'Runs', count: 1 }, { label: 'Other cardio', count: 1 },
+    ]);
+    expect(raceCall(current)).toContain('1 other cardio');
+    expect(backPageHeadlines(current).join(' ')).not.toContain('Extra reps');
     expect(current.facts[0]).toBe('0 strength · 1 run · 1 other cardio');
     expect(dayReply(current, 'Check Tuesday.')).toContain('Private activity title');
     expect(dayReply(current, 'Check Friday')).toContain('still ahead');
@@ -33,6 +38,7 @@ describe('weekly Tribunal', () => {
       workout: { status: 'done' }, sets: [{ exercise_id: 'bench', load_kg: 80, reps, warmup: false }],
     } as Session);
     const current = reviewWeek([entry('2026-11-17', 'strength')], [lift('2026-11-17', 9), lift('2026-11-13', 8)], [exercise], '2026-11-17');
+    expect(backPageHeadlines(current)[0]).toContain('Extra reps');
     expect(current.facts.at(-1)).toContain('80 kg × 9');
     expect(current.facts.at(-1)).toContain('8 reps');
     const prompt = tribunalPrompt([...current.facts, ...current.dailyFacts], 'race', 'Check Tuesday');
