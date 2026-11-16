@@ -92,3 +92,17 @@ date. The comparison shows that date. It uses the
 same evidence as Coach EQ. The optional sledge and sharing appear before the
 expandable set history. Sessions without a comparable improvement still show a
 saved confirmation and their working-set count.
+
+## The Monday Tribunal
+
+The collapsed Today card reviews this week or last week using the same linked,
+deduplicated activity records as the training dashboard. The evidence lists the
+recorded sessions, and highlights an extra-rep comparison when verified. Three
+local voices, challenge choices and replies such as “Check Friday” work without
+a model connection.
+
+Talk back uses a supported browser's built-in language model where available.
+The model receives the weekly counts, activity categories by date, any verified
+lift comparison, the user's question and the immediately preceding model exchange.
+Elsewhere the app prepares the same prompt for manual review and copying to
+ChatGPT. It omits activity titles and routes and does not transmit the prompt.

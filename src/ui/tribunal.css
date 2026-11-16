@@ -1,0 +1,42 @@
+.tribunal {
+  margin-block: 16px;
+}
+.tribunal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block: 12px;
+}
+.tribunal button, .tribunal select {
+  min-height: 44px;
+}
+.tribunal button[aria-pressed="true"] {
+  border-color: var(--acc);
+  background: var(--acc);
+  color: var(--on-acc);
+}
+.tribunal-verdict {
+  border-inline-start: 3px solid var(--acc);
+  padding-inline-start: 12px;
+  font-weight: 700;
+}
+.tribunal-voice {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block: 12px;
+}
+.tribunal-ask {
+  margin-block-start: 12px;
+}
+.tribunal-ask form {
+  display: grid;
+  gap: 8px;
+  margin-block: 10px;
+}
+.tribunal input, .tribunal textarea {
+  width: 100%;
+  min-width: 0;
+  font-size: 16px;
+}
