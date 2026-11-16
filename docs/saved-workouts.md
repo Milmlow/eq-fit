@@ -77,3 +77,18 @@ covered multi-selection, tile removal, unticking, ordering, save/reopen, custom
 selection cancellation and Save & start. Native iOS usability still needs a trial.
 
 ![Expanded checkbox list and selected-tile review on two phone widths](workout-checklist.jpg)
+
+## Repeat shortcuts and finish highlight
+
+Today and Lift identify the last workout by name and up to two movements. When
+there is no workout to continue, a second shortcut offers the latest session
+whose ordered exercise plan differs, with a distinguishing movement shown when
+the difference is further down the list. Both use the same exercise order as Repeat,
+including older sessions with movements recorded only in their saved sets.
+
+The finish screen shows one recorded improvement when a working set beats the
+best reps at the same load in that exercise's most recent session on an earlier
+date. The comparison shows that date. It uses the
+same evidence as Coach EQ. The optional sledge and sharing appear before the
+expandable set history. Sessions without a comparable improvement still show a
+saved confirmation and their working-set count.

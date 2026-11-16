@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import type { Repo } from '../db/repo';
 import type { Exercise } from '../db/types';
 import { activityPulse, type Session } from '../lib/activityPulse';
+import { extraReps } from '../lib/coachFacts';
 import { formatSet } from '../lib/training';
 import { localToday } from '../lib/today';
+import { formatTodayLabel } from '../lib/todayStats';
 import { CoachEQ } from './CoachEQ';
 
 export function SessionFinish({ repo, workoutId, onDone, onEdit }: { repo: Repo; workoutId: string; onDone: () => void; onEdit: () => void }) {
@@ -19,16 +21,24 @@ export function SessionFinish({ repo, workoutId, onDone, onEdit }: { repo: Repo;
       }).catch(() => { if (live) setError('Your session is saved. The summary could not load.'); });
     return () => { live = false; };
   }, [repo, workoutId, today]);
+  const win = data && extraReps(data.session, data.history, data.exercises);
+  const exerciseCount = new Set(data?.session.sets.map(s => s.exercise_id)).size;
   return <section className="card session-finish" aria-labelledby="finished-title">
     <p className="eyebrow">SAVED ✓</p><h2 id="finished-title" tabIndex={-1} ref={el => el?.focus()}>Session done.</h2>
     {error && <p role="alert">{error}</p>}
     {data && <>
       <p>{data.session.title}</p>
-      <p className="finish-count"><strong>{data.session.sets.length}</strong> working {data.session.sets.length === 1 ? 'set' : 'sets'} · <strong>{new Set(data.session.sets.map(s => s.exercise_id)).size}</strong> {new Set(data.session.sets.map(s => s.exercise_id)).size === 1 ? 'exercise' : 'exercises'}</p>
-      <details><summary>Your sets</summary>{data.exercises.filter(e => data.session.sets.some(s => s.exercise_id === e.id)).map(e => <div key={e.id}><h3>{e.name}</h3><p>{data.session.sets.filter(s => s.exercise_id === e.id).map(formatSet).join(' · ')}</p></div>)}</details>
+      {win && <p className="finish-win">
+        <strong>{win.exercise.name} · {win.load} kg × {win.reps}</strong>
+        <span>+{win.reps - win.previousReps} {win.reps - win.previousReps === 1 ? 'rep' : 'reps'} at this weight vs {formatTodayLabel(win.previousDate)}</span>
+      </p>}
+      {data.session.kind === 'weights' && <p className="finish-count">
+        <strong>{data.session.sets.length}</strong> working {data.session.sets.length === 1 ? 'set' : 'sets'}
+        {' · '}<strong>{exerciseCount}</strong> {exerciseCount === 1 ? 'exercise' : 'exercises'}
+      </p>}
       <CoachEQ session={data.session} today={today} scope={repo.db.name} history={data.history} exercises={data.exercises} share />
+      {exerciseCount > 0 && <details><summary>Your sets</summary>{data.exercises.filter(e => data.session.sets.some(s => s.exercise_id === e.id)).map(e => <div key={e.id}><h3>{e.name}</h3><p>{data.session.sets.filter(s => s.exercise_id === e.id).map(formatSet).join(' · ')}</p></div>)}</details>}
     </>}
-    <p className="muted small">Ready to repeat from Lift next time. No setup needed.</p>
     <button className="primary finish-done" onClick={onDone}>Done</button>
     <button onClick={onEdit}>View / edit session</button>
   </section>;

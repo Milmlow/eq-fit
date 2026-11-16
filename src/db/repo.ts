@@ -5,6 +5,7 @@ import { validateRepRange } from '../lib/lifting';
 import { buildBackup, restoreBackup, tableCounts, type BackupCounts, type BackupDoc } from '../lib/backup';
 import { runningCsv, setsCsv } from '../lib/csvExport';
 import { addDays } from '../lib/summary';
+import { repeatExerciseIds } from '../lib/workoutFlow';
 import { exerciseKey, validateName, validateSet, workoutOrderKey, type SetInput } from '../lib/training';
 import type { Activity, Exercise, Routine, ImportBatch, MigrationRecord, SetRecord, Workout, WorkoutKind } from './types';
 
@@ -217,7 +218,7 @@ export class Repo {
       const source = await this.getWorkout(sourceId);
       if (!source || source.kind !== 'weights') throw new Error('Choose a weights session to repeat.');
       const sets = await this.setsForWorkout(sourceId);
-      const ids = [...new Set([...source.planned_exercise_ids, ...sets.map(s => s.exercise_id)])];
+      const ids = repeatExerciseIds(source.planned_exercise_ids, sets);
       const available = await this.db.exercises.bulkGet(ids);
       const plan = ids.filter((_, i) => !!available[i]);
       if (!plan.length) throw new Error('This session has no exercises to repeat.');
