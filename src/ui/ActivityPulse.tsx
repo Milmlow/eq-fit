@@ -43,7 +43,7 @@ export function ActivityPulse({repo,today,version,onOpen,onChanged,trainingActio
    <strong>{tribunalWeeks.current.win.exercise.name} · {tribunalWeeks.current.win.exercise.equipment}</strong>
    <span>{tribunalWeeks.current.win.load} kg × {tribunalWeeks.current.win.reps} · +{tribunalWeeks.current.win.reps - tribunalWeeks.current.win.previousReps} reps at this load vs {formatTodayLabel(tribunalWeeks.current.win.previousDate)}</span>
   </p>}
-  <HomeCards repo={repo} today={today} entries={trainingDashboard(...data.training).entries}
+  <HomeCards checkIn={focus === 'free'} repo={repo} today={today} entries={trainingDashboard(...data.training).entries}
    sessions={data.sessions} exercises={data.exercises} pace={data.running.paceSecPerKm}
    onOpen={onOpen} onChanged={onChanged} onNavigate={onNavigate} />
   <Tribunal {...tribunalWeeks} />

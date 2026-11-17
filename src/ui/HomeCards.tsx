@@ -11,10 +11,10 @@ import { IconLift, IconRun } from './Icons';
 
 export type HomeDestination = 'week' | 'lift' | 'run';
 
-export function HomeCards({ repo, today, entries, sessions, exercises, pace, onOpen, onChanged, onNavigate }: {
+export function HomeCards({ repo, today, entries, sessions, exercises, pace, onOpen, onChanged, onNavigate, checkIn = false }: {
   repo: Repo; today: string; entries: TrainingEntry[]; sessions: Session[]; exercises: Exercise[];
   pace: number | null; onOpen: (id: string) => void; onChanged: () => void;
-  onNavigate?: (destination: HomeDestination) => void;
+  onNavigate?: (destination: HomeDestination) => void; checkIn?: boolean;
 }) {
   const [expanded, setExpanded] = useState<string | null>(null);
   const overview = homeOverview(entries, today);
@@ -48,7 +48,7 @@ export function HomeCards({ repo, today, entries, sessions, exercises, pace, onO
     <HomeCard title="Strength" value={overview.workingSets} caption={`working sets · ${period}`}
       open={expanded === 'strength'} onToggle={() => toggle('strength')}>
       <p className="muted small">Working sets entered in completed sessions. Watch-only sessions may have no recorded sets.</p>
-      <MyFour repo={repo} today={today} sessions={sessions} exercises={exercises} onOpen={onOpen} onChanged={onChanged} />
+      <MyFour checkIn={checkIn} repo={repo} today={today} sessions={sessions} exercises={exercises} onOpen={onOpen} onChanged={onChanged} />
       {onNavigate && <button type="button" className="home-history-link" onClick={() => onNavigate('lift')}>Open strength history →</button>}
     </HomeCard>
     <HomeCard title="Running" value={effort.km === null ? '—' : `${effort.km} km`}
