@@ -127,3 +127,25 @@ browser. The weekly totals use all completed activities and count linked session
 once. Training details contains the dashboard selector, Coach, allocations and
 progress. More training tools contains quick lifts, achievements and today's log.
 Alternate workouts remain available in Choose or create a workout.
+
+## Expandable Home cards
+
+Home now shows the existing workout entry, weekly strength/cardio counts, and
+one verified same-load rep improvement when available. This week, Strength and
+Running each show a summary, expandable details and links to the existing history
+tabs. Only one main data card is expanded at a time. The header retains keyboard
+focus and collapsed content is inert. Opening history uses the normal Week,
+Lift or Run screen; a local workout opens the existing editor.
+
+All Home card controls use the selected Pit Lane, Front Page or After Hours
+palette. The chooser includes small previews and preserves the existing browser
+preference key. Motion lasts 150–220 ms and respects reduced motion. Numeric
+transitions show the actual value. The existing explicit set-entry PR flag gets
+a brief animation; loading or importing history does not create that flag.
+
+The checks workflow runs scripts/check_home_ui.mjs against an isolated local
+browser with labelled synthetic records. It captures all three Home themes at
+390×844 and 320×844, both collapsed and expanded, and checks history navigation
+and repeat/log/pause/continue/finish. Screenshots are uploaded as the
+home-phone-screenshots artifact. Real iPhone keyboards, native sharing and
+installed/offline PWA behaviour still require a device trial.

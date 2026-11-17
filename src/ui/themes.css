@@ -134,3 +134,24 @@
   --home-glow: #8254fa66;
   --home-mask: #000;
 }
+
+.home-pit-lane {
+  --home-font: 'Archivo Variable', system-ui, sans-serif;
+  --home-surface: #1d251f;
+  --home-muted: #c4d2bd;
+  --home-error: #ffb4ac;
+  color-scheme: dark;
+}
+.home-front-page {
+  --home-surface: #fff6e5;
+  --home-muted: #645154;
+  --home-error: #9d1c35;
+  color-scheme: light;
+}
+.home-after-hours {
+  --home-font: 'Archivo Variable', system-ui, sans-serif;
+  --home-surface: #231b45;
+  --home-muted: #d6c6ec;
+  --home-error: #ffb4d0;
+  color-scheme: dark;
+}

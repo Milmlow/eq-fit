@@ -54,7 +54,7 @@ export function App({ trialRepo, trialControls }: { trialRepo?: Repo; trialContr
         )}
         {!repo && !error && tab !== 'more' && !demo && <p>Opening local database...</p>}
         {tab === 'today' && demo && <DemoToday theme={theme} onDemoOff={() => setDemo(false)} />}
-        {tab === 'today' && !demo && repo && <Today repo={repo} today={today} version={version} onChanged={bump} theme={theme} />}
+        {tab === 'today' && !demo && repo && <Today onNavigate={setTab} repo={repo} today={today} version={version} onChanged={bump} theme={theme} />}
         {repo && !demo && tab === 'today' && <BackupBanner repo={repo} version={version} lastBackup={lastBackup} onGo={() => setTab('more')} />}
         {repo && tab === 'week' && <Week repo={repo} today={today} version={version} onChanged={bump} />}
         {repo && tab === 'lift' && <Lifting repo={repo} version={version} onChanged={bump} />}

@@ -3,10 +3,10 @@ import type { Exercise } from '../db/types';
 import type { Repo } from '../db/repo';
 import { activityPulse, type Session } from '../lib/activityPulse';
 import { formatTodayLabel, paceMinSec } from '../lib/todayStats';
+import { HomeCards, type HomeDestination } from './HomeCards';
 import { HomeMasthead } from './HomeMasthead';
 import { IconRun } from './Icons';
 import { CoachEQ } from './CoachEQ';
-import { MyFour } from './MyFour';
 import { FreeTraining } from './FreeTraining';
 import { reviewWeek } from '../lib/tribunal';
 import { Tribunal } from './Tribunal';
@@ -16,7 +16,7 @@ import { FOCUS_OPTIONS, readFocus, saveFocus, trainingDashboard, type DashboardF
 function Numbers({session:s}:{session:Session}) {
  return <div className="pulse-numbers">{s.kind==='run'?<><div><b>{s.activity?.distance_km?.toFixed(2)??'—'}</b><span>km</span></div><div><b>{s.activity?.duration_seconds!=null?Math.round(s.activity.duration_seconds/60):'—'}</b><span>min</span></div><div><b>{paceMinSec(s.activity?.avg_pace_sec_per_km??null)}</b><span>/ km</span></div></>:<><div><b>{s.workout?s.sets.length:'—'}</b><span>working sets</span></div><div><b>{s.workout?new Set(s.sets.map(x=>x.exercise_id)).size:'—'}</b><span>exercises</span></div></>}</div>;
 }
-export function ActivityPulse({repo,today,version,onOpen,onChanged,trainingAction}:{repo:Repo;today:string;version:number;onOpen:(id:string)=>void;onChanged:()=>void;trainingAction?:ReactNode}) {
+export function ActivityPulse({repo,today,version,onOpen,onChanged,trainingAction,onNavigate}:{repo:Repo;today:string;version:number;onOpen:(id:string)=>void;onChanged:()=>void;trainingAction?:ReactNode;onNavigate?:(destination:HomeDestination)=>void}) {
  const [focus,setFocus]=useState<DashboardFocus>(()=>readFocus(repo.db.name,window.location.search));
  const [focusNotice,setFocusNotice]=useState('');
  const [data,setData]=useState<(ReturnType<typeof activityPulse>&{exercises:Exercise[];training:Parameters<typeof trainingDashboard>})|null>(null),[error,setError]=useState('');
@@ -38,22 +38,29 @@ export function ActivityPulse({repo,today,version,onOpen,onChanged,trainingActio
   return stats;
  }, { strength: 0, cardio: 0 });
  return <section className="activity-pulse" aria-label="Home training overview">
- <HomeMasthead today={today} stats={weeklyStats}>{trainingAction}</HomeMasthead>
+ <HomeMasthead today={today} stats={weeklyStats} panels={data && tribunalWeeks ? <>
+  {tribunalWeeks.current.win && <p className="home-progress-highlight">
+   <strong>{tribunalWeeks.current.win.exercise.name} · {tribunalWeeks.current.win.exercise.equipment}</strong>
+   <span>{tribunalWeeks.current.win.load} kg × {tribunalWeeks.current.win.reps} · +{tribunalWeeks.current.win.reps - tribunalWeeks.current.win.previousReps} reps at this load vs {formatTodayLabel(tribunalWeeks.current.win.previousDate)}</span>
+  </p>}
+  <HomeCards repo={repo} today={today} entries={trainingDashboard(...data.training).entries}
+   sessions={data.sessions} exercises={data.exercises} pace={data.running.paceSecPerKm}
+   onOpen={onOpen} onChanged={onChanged} onNavigate={onNavigate} />
+  <Tribunal {...tribunalWeeks} />
+ </> : undefined}>{trainingAction}</HomeMasthead>
  {focusNotice&&<p role="status">{focusNotice}</p>}
  {error&&<p role="alert">{error}</p>}
  {!data?<p>Loading activity…</p>:<>
- {tribunalWeeks && <Tribunal {...tribunalWeeks} />}
  <details className="card home-secondary">
- <summary>Training details</summary>
+ <summary>Training settings & allocations</summary>
  <label className="focus-picker">My dashboard <select value={focus} onChange={e=>{const next=e.target.value as DashboardFocus;setFocus(next);setFocusNotice(saveFocus(repo.db.name,next)?'':'This view could not be saved on this device.');}}>{FOCUS_OPTIONS.map(x=><option key={x.value} value={x.value}>{x.label}</option>)}</select></label>
  <CoachEQ session={coachSession} today={today} scope={repo.db.name} history={data.sessions} exercises={data.exercises}/>
- {focus==='free'&&<MyFour key={repo.db.name} repo={repo} today={today} sessions={data.sessions} exercises={data.exercises} onOpen={onOpen} onChanged={onChanged} checkIn={focus==='free'}/>}
  <div className="pulse-training-layout"><div>
  {focus!=='running'&&focus!=='free'&&dashboard&&<FocusDashboard data={dashboard} exercises={data.exercises} onOpen={onOpen}/>}
  {focus==='free'&&dashboard&&<FreeTraining repo={repo} today={today} entries={dashboard.entries} days={dashboard.days} onChanged={onChanged}/>}
  {(focus==='running'||focus==='free')&&<><div className="pulse-averages"><p className="eyebrow">RUNNING · 4-WEEK AVERAGES</p><div className="pulse-numbers running-averages"><div><b>{paceMinSec(data.running.paceSecPerKm)}</b><span>pace / km</span></div><div><b>{data.weeklyKm?.toFixed(1)??'—'}</b><span>km / week</span></div></div><details><summary>Through today · Details</summary><p>{data.start} to {today}, including saved runs today. Outdoor running only; pace is distance-weighted. Weekly distance divides these 28 days by four, including rest days. Missing history is not estimated.</p></details></div>
  {data.latest?.kind === 'run' && <div className="pulse-latest"><div className="visual-heading"><div><p className="eyebrow">LATEST RUN · {data.latest.date===today?'TODAY':formatTodayLabel(data.latest.date)}</p><h2>{data.latest.title || 'Run'}</h2></div><IconRun/></div><Numbers session={data.latest}/>{data.signal&&<details className="pulse-signal"><summary>{data.signal.title}</summary><p>{data.signal.detail}</p></details>}</div>}
- </>}{focus!=='free'&&<MyFour key={repo.db.name} repo={repo} today={today} sessions={data.sessions} exercises={data.exercises} onOpen={onOpen} onChanged={onChanged}/>} </div></div>
+ </>} </div></div>
  {focus==='running'&&data.sessions.length>0&&<details className="pulse-recent"><summary>Recent activities · {Math.min(3,data.sessions.length)}</summary>{data.sessions.slice(0,3).map(s=><div key={s.id}><p><strong>{s.kind==='run'?'Run':'Lift'}</strong> · {formatTodayLabel(s.date)} · {s.title}</p><Numbers session={s}/>{s.workout&&<button onClick={()=>onOpen(s.workout!.id)}>Open session</button>}</div>)}</details>}
  </details>
  </>}
