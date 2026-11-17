@@ -1,0 +1,188 @@
+.home-masthead {
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+  padding: clamp(18px, 4vw, 34px);
+  background: var(--home-bg);
+  color: var(--home-ink);
+  border: 1px solid var(--home-border);
+  border-radius: var(--home-radius);
+  font-family: var(--home-font);
+}
+
+
+
+.home-byline {
+  display: flex;
+  position: relative;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--home-border);
+}
+.home-byline h1 {
+  margin: 0;
+  font-size: 1.12rem;
+  letter-spacing: .14em;
+  color: inherit;
+}
+.home-byline time {
+  font: 700 .78rem system-ui, sans-serif;
+}
+.home-title {
+  position: relative;
+  max-width: 100%;
+  margin: 24px 0 16px;
+  font-size: clamp(3.15rem, 11vw, 7rem);
+  font-weight: 900;
+  line-height: .88;
+  letter-spacing: -.06em;
+}
+.home-pit-lane .home-title {
+  text-transform: uppercase;
+  font-style: italic;
+}
+.home-front-page .home-title {
+  font-size: clamp(2.65rem, 9vw, 6.3rem);
+  line-height: .92;
+}
+.home-after-hours .home-title {
+  color: var(--home-accent);
+  text-shadow: 3px 3px 0 var(--home-shadow);
+}
+.home-art {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: var(--home-radius);
+  z-index: -1;
+  pointer-events: none;
+}
+.home-pit-lane .home-art {
+  background:
+    repeating-linear-gradient(128deg, transparent 0 14px, var(--home-stripe) 14px 24px) right / 54% 100% no-repeat,
+    linear-gradient(100deg, transparent 65%, var(--home-stripe) 65% 72%, transparent 72%);
+  mask-image: linear-gradient(90deg, transparent 25%, var(--home-mask) 95%);
+}
+.home-front-page .home-art {
+  opacity: .55;
+  background: radial-gradient(var(--home-accent) 1px, transparent 1.5px) right top / 9px 9px;
+  mask-image: linear-gradient(110deg, transparent 45%, var(--home-mask) 100%);
+}
+.home-front-page .home-byline {
+  border-block: 3px double var(--home-border);
+  padding-block: 8px;
+}
+.home-after-hours .home-art i {
+  position: absolute;
+  aspect-ratio: 1;
+  width: 73%;
+  right: -28%;
+  top: 3%;
+  border: 2px solid var(--home-orbit);
+  border-radius: 50%;
+  box-shadow: 0 0 30px var(--home-glow), inset 0 0 30px var(--home-glow);
+}
+.home-after-hours .home-art i:nth-child(2) { right: -22%; top: 11%; }
+.home-after-hours .home-art i:nth-child(3) { right: -16%; top: 19%; }
+.home-totals {
+  position: relative;
+  display: flex;
+  gap: 8px;
+  margin: 0 0 14px;
+  font: 600 .8rem system-ui, sans-serif;
+}
+.home-totals div {
+  display: flex;
+  flex-direction: row-reverse;
+  gap: 6px;
+  align-items: baseline;
+  border: 1px solid var(--home-border);
+  padding: 5px 10px;
+  background: var(--home-bg);
+}
+.home-totals dd {
+  margin: 0;
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+}
+.home-workout {
+  --card: var(--home-bg);
+  --paper: var(--home-bg);
+  --line: var(--home-border);
+  --fg: var(--home-ink);
+  --muted: var(--home-ink);
+  --acc: var(--home-accent);
+  --on-acc: var(--home-button-ink);
+  --focus: var(--home-accent);
+  position: relative;
+  font-family: system-ui, sans-serif;
+}
+.home-workout .routines:not(:has(.builder-heading)) {
+  margin: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+.home-workout .primary.start-training {
+  margin: 0;
+  min-height: 60px;
+  background: var(--home-accent);
+  color: var(--home-button-ink);
+  border-color: var(--home-accent);
+  font-size: 1.05rem;
+  text-align: start;
+}
+.home-workout .workout-alternatives {
+  margin: 0;
+}
+.home-workout .workout-alternatives > summary {
+  padding-block: 5px;
+  color: var(--home-ink);
+  min-height: 44px;
+}
+.home-designs {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+.home-designs summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  font-size: .83rem;
+}
+.home-designs summary span { color: var(--fg); }
+.home-designs [role="group"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-bottom: 8px;
+}
+.home-designs button {
+  min-height: 44px;
+}
+.home-designs button[aria-pressed="true"] {
+  background: var(--acc);
+  color: var(--on-acc);
+}
+.home-secondary {
+  margin-block: 12px;
+}
+.home-secondary > summary {
+  min-height: 44px;
+  align-content: center;
+}
+.home-totals dt { color: inherit; }
+.home-workout {
+  --bg: var(--home-bg);
+  --err: var(--home-ink);
+  --warn: var(--home-ink);
+  --disabled-bg: var(--home-bg);
+  --disabled-fg: var(--home-ink);
+}
+.home-masthead:has(.builder-heading) .home-art {
+  display: none;
+}

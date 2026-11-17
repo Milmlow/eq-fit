@@ -3,6 +3,7 @@ import type { Exercise } from '../db/types';
 import type { Repo } from '../db/repo';
 import { activityPulse, type Session } from '../lib/activityPulse';
 import { formatTodayLabel, paceMinSec } from '../lib/todayStats';
+import { HomeMasthead } from './HomeMasthead';
 import { IconRun } from './Icons';
 import { CoachEQ } from './CoachEQ';
 import { MyFour } from './MyFour';
@@ -31,15 +32,21 @@ export function ActivityPulse({repo,today,version,onOpen,onChanged,trainingActio
  }, [data, today]);
  const latestTraining=dashboard?.entries[0];
  const coachSession=focus==='running'?data?.latest:latestTraining&&(latestTraining.category==='strength'||latestTraining.category==='run')?data?.sessions.find(s=>s.id===latestTraining.id):undefined;
- return <section className="activity-pulse" aria-label="Latest activity and averages">
- <header className="pulse-brand"><h1 className="wordmark sm">EQ FIT</h1><span>{formatTodayLabel(today)}</span></header>
- <label className="focus-picker">My dashboard <select value={focus} onChange={e=>{const next=e.target.value as DashboardFocus;setFocus(next);setFocusNotice(saveFocus(repo.db.name,next)?'':'This view could not be saved on this device.');}}>{FOCUS_OPTIONS.map(x=><option key={x.value} value={x.value}>{x.label}</option>)}</select></label>
- {focus!=='free'&&trainingAction}
+ const weeklyStats = tribunalWeeks?.current.rows.reduce((stats, row) => {
+  if (row.category === 'strength') stats.strength++;
+  if (row.category === 'cardio' || row.category === 'run') stats.cardio++;
+  return stats;
+ }, { strength: 0, cardio: 0 });
+ return <section className="activity-pulse" aria-label="Home training overview">
+ <HomeMasthead today={today} stats={weeklyStats}>{trainingAction}</HomeMasthead>
  {focusNotice&&<p role="status">{focusNotice}</p>}
  {error&&<p role="alert">{error}</p>}
  {!data?<p>Loading activity…</p>:<>
- <CoachEQ session={coachSession} today={today} scope={repo.db.name} history={data.sessions} exercises={data.exercises}/>
  {tribunalWeeks && <Tribunal {...tribunalWeeks} />}
+ <details className="card home-secondary">
+ <summary>Training details</summary>
+ <label className="focus-picker">My dashboard <select value={focus} onChange={e=>{const next=e.target.value as DashboardFocus;setFocus(next);setFocusNotice(saveFocus(repo.db.name,next)?'':'This view could not be saved on this device.');}}>{FOCUS_OPTIONS.map(x=><option key={x.value} value={x.value}>{x.label}</option>)}</select></label>
+ <CoachEQ session={coachSession} today={today} scope={repo.db.name} history={data.sessions} exercises={data.exercises}/>
  {focus==='free'&&<MyFour key={repo.db.name} repo={repo} today={today} sessions={data.sessions} exercises={data.exercises} onOpen={onOpen} onChanged={onChanged} checkIn={focus==='free'}/>}
  <div className="pulse-training-layout"><div>
  {focus!=='running'&&focus!=='free'&&dashboard&&<FocusDashboard data={dashboard} exercises={data.exercises} onOpen={onOpen}/>}
@@ -48,6 +55,7 @@ export function ActivityPulse({repo,today,version,onOpen,onChanged,trainingActio
  {data.latest?.kind === 'run' && <div className="pulse-latest"><div className="visual-heading"><div><p className="eyebrow">LATEST RUN · {data.latest.date===today?'TODAY':formatTodayLabel(data.latest.date)}</p><h2>{data.latest.title || 'Run'}</h2></div><IconRun/></div><Numbers session={data.latest}/>{data.signal&&<details className="pulse-signal"><summary>{data.signal.title}</summary><p>{data.signal.detail}</p></details>}</div>}
  </>}{focus!=='free'&&<MyFour key={repo.db.name} repo={repo} today={today} sessions={data.sessions} exercises={data.exercises} onOpen={onOpen} onChanged={onChanged}/>} </div></div>
  {focus==='running'&&data.sessions.length>0&&<details className="pulse-recent"><summary>Recent activities · {Math.min(3,data.sessions.length)}</summary>{data.sessions.slice(0,3).map(s=><div key={s.id}><p><strong>{s.kind==='run'?'Run':'Lift'}</strong> · {formatTodayLabel(s.date)} · {s.title}</p><Numbers session={s}/>{s.workout&&<button onClick={()=>onOpen(s.workout!.id)}>Open session</button>}</div>)}</details>}
+ </details>
  </>}
  </section>;
 }

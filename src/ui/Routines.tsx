@@ -7,8 +7,8 @@ import { nextWorkoutName } from '../lib/exerciseCatalog';
 import { MovementArt } from './MovementArt';
 import { workoutChoices } from '../lib/workoutFlow';
 
-export function Routines({ repo, today, version, onOpen, onChanged }: {
-  repo: Repo; today: string; version: number; onOpen: (id: string) => void; onChanged: () => void;
+export function Routines({ repo, today, version, onOpen, onChanged, compact = false }: {
+  repo: Repo; today: string; version: number; onOpen: (id: string) => void; onChanged: () => void; compact?: boolean;
 }) {
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -86,11 +86,12 @@ export function Routines({ repo, today, version, onOpen, onChanged }: {
         <p className="muted small">{counts.get(pending[0].id) ?? 0} sets saved. Pick up where you left off.</p>
       </div> : recent[0] ? <>
         {repeatShortcut(recent[0], true)}
-        {shortcut && repeatShortcut(shortcut)}
+        {!compact && shortcut && repeatShortcut(shortcut)}
       </> : <>
         <button className="primary start-training" disabled={busy} onClick={() => setEditing('new')}>Start lifting →</button>
       </>}
       <details className="workout-alternatives"><summary>Choose or create a workout <span aria-hidden="true">＋</span></summary>
+      {compact && shortcut && repeatShortcut(shortcut)}
       <button className={`start-fresh ${!pending.length && !recent.length ? 'primary' : ''}`} disabled={busy} onClick={() => setEditing('new')}>+ Create workout</button>
       <button className="quick-session-link" disabled={busy} onClick={() => void start()}>Quick session · no saved plan</button>
       {routines.length > 0 && <details className="workout-choices" open={showSaved || (!pending.length && !recent.length)}><summary>Saved workouts · {routines.length}</summary>
