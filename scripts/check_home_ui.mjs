@@ -1,4 +1,4 @@
-/* global process, fetch, setTimeout, localStorage, document, innerWidth */
+/* global process, fetch, setTimeout, localStorage, document, innerWidth, window */
 import { chromium } from 'playwright-core';
 import { spawn } from 'node:child_process';
 import { URL } from 'node:url';
@@ -63,7 +63,7 @@ try {
     await page.evaluate(() => {
       const label = document.createElement('p');
       label.textContent = 'SYNTHETIC PREVIEW DATA';
-      label.style.cssText = 'margin:0;padding:4px 12px;font:700 11px system-ui;color:#fff;background:#333;text-align:center';
+      label.style.cssText = 'position:sticky;top:0;z-index:9999;margin:0;padding:4px 12px;font:700 11px system-ui;color:#fff;background:#333;text-align:center';
       document.body.prepend(label);
     });
     // Open the native theme chooser through its summary.
@@ -73,6 +73,7 @@ try {
       await page.getByRole('button', { name: theme, exact: true }).click();
       await chooser.locator('summary').click();
       const filename = theme.toLowerCase().replaceAll(' ', '-');
+      await page.evaluate(() => window.scrollTo(0, 0));
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Horizontal overflow');
       await page.screenshot({ path: output + filename + '-' + width + '-compact.png', fullPage: false });
       const week = page.getByRole('button', { name: /^This week/ });
@@ -96,6 +97,23 @@ try {
       await page.getByRole('button', { name: /^Strength working sets/ }).click();
       await page.getByRole('heading', { name: 'Max day', exact: true }).waitFor();
       await page.screenshot({ path: output + filename + '-' + width + '-strength.png', fullPage: false });
+      await page.getByRole('button', { name: /Bench press, Barbell.*Record check-in/i }).click();
+      const dialog = page.getByRole('dialog', { name: 'Bench press', exact: true });
+      await dialog.getByRole('button', { name: /Save 1 completed set/ }).waitFor();
+      await page.evaluate(async () => {
+        const { Repo } = await import('/src/db/repo.ts');
+        const original = Repo.prototype.quickLogLift;
+        Repo.prototype.quickLogLift = async function () {
+          Repo.prototype.quickLogLift = original;
+          await new Promise(resolve => setTimeout(resolve, 750));
+          throw new Error('Preview save failure. Please retry.');
+        };
+      });
+      await dialog.getByRole('button', { name: /Save 1 completed set/ }).click();
+      assert(await dialog.getByRole('button', { name: 'Saving…', exact: true }).isDisabled());
+      await dialog.getByRole('alert').filter({ hasText: 'Preview save failure' }).waitFor();
+      await page.screenshot({ path: output + filename + '-' + width + '-form-error.png', fullPage: false });
+      await dialog.getByRole('button', { name: 'Close quick log', exact: true }).click();
       await page.getByRole('button', { name: 'Open strength history →', exact: true }).click();
       await page.getByRole('button', { name: 'Today', exact: true }).click();
       await page.locator('.home-designs summary').click();
@@ -110,6 +128,15 @@ try {
     await page.getByRole('button', { name: /Finish workout/ }).click();
     await page.getByRole('button', { name: 'Done', exact: true }).click();
     await page.getByRole('button', { name: /Repeat Upper body/ }).waitFor();
+    await page.getByRole('button', { name: /^Strength working sets/ }).click();
+    await page.getByRole('button', { name: /Bench press, Barbell.*Record check-in/i }).click();
+    const checkIn = page.getByRole('dialog', { name: 'Bench press', exact: true });
+    await checkIn.getByRole('spinbutton', { name: 'Reps', exact: true }).fill('11');
+    await checkIn.getByRole('button', { name: /Save 1 completed set/ }).click();
+    await page.locator('.pr-flag').filter({ hasText: 'New PR' }).waitFor();
+    await page.reload();
+    await page.getByRole('button', { name: /Repeat Upper body/ }).waitFor();
+    assert.equal(await page.locator('.pr-flag').count(), 0, 'Reload replayed a PR celebration');
     assert.equal(errors.length, 0, errors.join('\n'));
     await context.close();
   }
