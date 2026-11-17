@@ -94,3 +94,43 @@
 .flower-rain{position:fixed;inset:0;pointer-events:none;z-index:30;overflow:hidden}.flower-rain span{position:absolute;top:-60px;font-size:26px;animation:flower-fall 4.5s ease-in both;opacity:0}.flower-replay{position:fixed;right:12px;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 12px);z-index:20;border:1px solid var(--line);border-radius:50%;width:44px;height:44px;padding:0;background:var(--card);color:var(--fg);box-shadow:0 3px 14px #0005}
 @keyframes flower-fall{0%{opacity:0;transform:translateY(0) rotate(0)}10%{opacity:.8}85%{opacity:.7}100%{opacity:0;transform:translateY(calc(100dvh + 80px)) rotate(230deg)}}
 @media(prefers-reduced-motion:reduce){.flower-rain{display:none}.flower-replay{display:none}}
+
+/* Home layout palettes, independent of the selected app theme. */
+.home-pit-lane {
+  --home-bg: #121714;
+  --home-ink: #f8ffe9;
+  --home-accent: #daff3f;
+  --home-button-ink: #121714;
+  --home-border: #768b63;
+  --home-radius: 8px;
+  --home-font: Archivo, sans-serif;
+  --home-shadow: #5d378f;
+  --home-stripe: #263526;
+  --home-orbit: #7452bd;
+  --home-glow: #8254fa66;
+  --home-mask: #000;
+}
+.home-front-page {
+  --home-bg: #f6ead1;
+  --home-ink: #221517;
+  --home-accent: #9d1c35;
+  --home-button-ink: #fff8e6;
+  --home-border: #9d1c35;
+  --home-radius: 2px;
+  --home-font: Georgia, serif;
+  --home-mask: #000;
+}
+.home-after-hours {
+  --home-bg: #151031;
+  --home-ink: #f8f0ff;
+  --home-accent: #84fff0;
+  --home-button-ink: #151031;
+  --home-border: #a478ff;
+  --home-radius: 26px;
+  --home-font: Archivo, sans-serif;
+  --home-shadow: #5d378f;
+  --home-stripe: #263526;
+  --home-orbit: #7452bd;
+  --home-glow: #8254fa66;
+  --home-mask: #000;
+}

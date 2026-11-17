@@ -117,3 +117,13 @@ device voice when available and shows a transcript otherwise.
 Back Page previews a square PNG with a rotating headline and the selected
 week's summary. Review the image, then share it through the device share sheet
 where supported or download it. Session titles and routes are excluded.
+
+## Home design trial
+
+Home leads with the same continue/repeat/start workout action in all dashboard
+focuses. Pit Lane, Front Page and After Hours change its visual treatment.
+Choose one in Home design below the workout card. The preference stays in this
+browser. The weekly totals use all completed activities and count linked sessions
+once. Training details contains the dashboard selector, Coach, allocations and
+progress. More training tools contains quick lifts, achievements and today's log.
+Alternate workouts remain available in Choose or create a workout.
