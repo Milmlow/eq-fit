@@ -58,6 +58,8 @@ try {
     });
     await page.reload();
     await page.getByRole('button', { name: /Repeat Upper body/ }).waitFor();
+    const syncNote = page.getByRole('button', { name: 'Got it', exact: true });
+    if (await syncNote.count()) await syncNote.click();
     await page.evaluate(() => {
       const label = document.createElement('p');
       label.textContent = 'SYNTHETIC PREVIEW DATA';
@@ -77,9 +79,14 @@ try {
       await week.click();
       await page.getByRole('button', { name: 'Open weekly history →', exact: true }).waitFor();
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Expanded card overflow');
-      await page.screenshot({ path: output + filename + '-' + width + '-expanded.png', fullPage: true });
+      await page.screenshot({ path: output + filename + '-' + width + '-expanded.png', fullPage: false });
       const running = page.getByRole('button', { name: /^Running recorded distance/ });
       await running.click();
+      await page.waitForFunction(() => {
+        const button = [...document.querySelectorAll('.home-card-header')].find(el => el.textContent.startsWith('Running'));
+        const bounds = button?.getBoundingClientRect();
+        return bounds && bounds.top >= 0 && bounds.top < 780;
+      });
       const runningBounds = await running.boundingBox();
       assert(runningBounds && runningBounds.y >= 0 && runningBounds.y < 780, 'Tapped header moved out of view');
       assert.equal(await week.evaluate(button => document.activeElement === button), false);
@@ -88,7 +95,7 @@ try {
       await page.getByRole('button', { name: 'Today', exact: true }).click();
       await page.getByRole('button', { name: /^Strength working sets/ }).click();
       await page.getByRole('heading', { name: 'Max day', exact: true }).waitFor();
-      await page.screenshot({ path: output + filename + '-' + width + '-strength.png', fullPage: true });
+      await page.screenshot({ path: output + filename + '-' + width + '-strength.png', fullPage: false });
       await page.getByRole('button', { name: 'Open strength history →', exact: true }).click();
       await page.getByRole('button', { name: 'Today', exact: true }).click();
       await page.locator('.home-designs summary').click();

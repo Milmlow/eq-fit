@@ -41,7 +41,7 @@ export function ActivityPulse({repo,today,version,onOpen,onChanged,trainingActio
  <HomeMasthead today={today} stats={weeklyStats} panels={data && tribunalWeeks ? <>
   {tribunalWeeks.current.win && <p className="home-progress-highlight">
    <strong>{tribunalWeeks.current.win.exercise.name} · {tribunalWeeks.current.win.exercise.equipment}</strong>
-   <span>{tribunalWeeks.current.win.load} kg × {tribunalWeeks.current.win.reps} · +{tribunalWeeks.current.win.reps - tribunalWeeks.current.win.previousReps} reps at this load vs {formatTodayLabel(tribunalWeeks.current.win.previousDate)}</span>
+   <span>{tribunalWeeks.current.win.load} kg × {tribunalWeeks.current.win.reps} · +{tribunalWeeks.current.win.reps - tribunalWeeks.current.win.previousReps} {tribunalWeeks.current.win.reps - tribunalWeeks.current.win.previousReps === 1 ? 'rep' : 'reps'} at this load vs {formatTodayLabel(tribunalWeeks.current.win.previousDate)}</span>
   </p>}
   <HomeCards checkIn={focus === 'free'} repo={repo} today={today} entries={trainingDashboard(...data.training).entries}
    sessions={data.sessions} exercises={data.exercises} pace={data.running.paceSecPerKm}
