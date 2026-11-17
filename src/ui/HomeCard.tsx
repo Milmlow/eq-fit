@@ -32,6 +32,7 @@ export function HomeCard({ title, value, caption, open, onToggle, children }: {
   return <section className={`home-data-card${open ? ' is-open' : ''}`}>
     <h2>
       <button className="home-card-header" type="button" aria-expanded={open} aria-controls={id} ref={header} onClick={() => {
+        header.current?.focus({ preventScroll: true });
         anchor.current = header.current?.getBoundingClientRect().top;
         onToggle();
       }}>
