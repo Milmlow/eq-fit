@@ -3,6 +3,7 @@ import type { Exercise } from '../db/types';
 import type { Repo } from '../db/repo';
 import { activityPulse, type Session } from '../lib/activityPulse';
 import { formatTodayLabel, paceMinSec } from '../lib/todayStats';
+import { TrainingOverview } from './TrainingOverview';
 import { HomeCards, type HomeDestination } from './HomeCards';
 import { HomeMasthead } from './HomeMasthead';
 import { IconRun } from './Icons';
@@ -32,13 +33,9 @@ export function ActivityPulse({repo,today,version,onOpen,onChanged,trainingActio
  }, [data, today]);
  const latestTraining=dashboard?.entries[0];
  const coachSession=focus==='running'?data?.latest:latestTraining&&(latestTraining.category==='strength'||latestTraining.category==='run')?data?.sessions.find(s=>s.id===latestTraining.id):undefined;
- const weeklyStats = tribunalWeeks?.current.rows.reduce((stats, row) => {
-  if (row.category === 'strength') stats.strength++;
-  if (row.category === 'cardio' || row.category === 'run') stats.cardio++;
-  return stats;
- }, { strength: 0, cardio: 0 });
  return <section className="activity-pulse" aria-label="Home training overview">
- <HomeMasthead today={today} stats={weeklyStats} panels={data && tribunalWeeks ? <>
+ <HomeMasthead today={today} panels={data && tribunalWeeks ? <>
+  <details className="home-secondary"><summary>Progress &amp; history</summary>
   {tribunalWeeks.current.win && <p className="home-progress-highlight">
    <strong>{tribunalWeeks.current.win.exercise.name} · {tribunalWeeks.current.win.exercise.equipment}</strong>
    <span>{tribunalWeeks.current.win.load} kg × {tribunalWeeks.current.win.reps} · +{tribunalWeeks.current.win.reps - tribunalWeeks.current.win.previousReps} {tribunalWeeks.current.win.reps - tribunalWeeks.current.win.previousReps === 1 ? 'rep' : 'reps'} at this load vs {formatTodayLabel(tribunalWeeks.current.win.previousDate)}</span>
@@ -46,8 +43,12 @@ export function ActivityPulse({repo,today,version,onOpen,onChanged,trainingActio
   <HomeCards checkIn={focus === 'free'} repo={repo} today={today} entries={trainingDashboard(...data.training).entries}
    sessions={data.sessions} exercises={data.exercises} pace={data.running.paceSecPerKm}
    onOpen={onOpen} onChanged={onChanged} onNavigate={onNavigate} />
+  </details>
   <Tribunal {...tribunalWeeks} />
- </> : undefined}>{trainingAction}</HomeMasthead>
+ </> : undefined}>
+ {data && <TrainingOverview repo={repo} today={today} entries={trainingDashboard(...data.training).entries} onChanged={onChanged} />}
+ {trainingAction}
+ </HomeMasthead>
  {focusNotice&&<p role="status">{focusNotice}</p>}
  {error&&<p role="alert">{error}</p>}
  {!data?<p>Loading activity…</p>:<>

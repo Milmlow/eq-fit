@@ -149,3 +149,20 @@ browser with labelled synthetic records. It captures all three Home themes at
 and repeat/log/pause/continue/finish. Screenshots are uploaded as the
 home-phone-screenshots artifact. Real iPhone keyboards, native sharing and
 installed/offline PWA behaviour still require a device trial.
+
+## Garmin overview
+
+Home now leads with kilometres run and distance-weighted average pace for the
+same Monday-to-today period. Both outdoor and treadmill sessions, plus records
+explicitly labelled Running, contribute when their metrics are present. Missing
+metrics stay unknown, with coverage available under Running figures.
+
+The newest imported session needing an activity label or strength body areas is
+shown directly on Home, even when it is from an earlier week. Save session writes
+the activity label and chosen areas to both linked records in one transaction.
+A failed write preserves the selections for retry.
+
+The visible weekly split shows strength/cardio session counts and tagged-session
+counts for Chest, Back, Shoulders, Legs, Arms and Core. Multi-area sessions count
+once in each selected area. The labels explain missing tags. Progress cards and
+history remain available under Progress & history.

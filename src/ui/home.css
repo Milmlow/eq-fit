@@ -408,3 +408,30 @@
 @media(max-width:360px) {
   .home-experience .repeat-pictures svg:nth-child(2) { display: none; }
 }
+
+.training-overview { margin-block: 12px 20px; }
+.training-period { margin: 0 0 10px; font-size: .75rem; color: var(--muted); }
+.training-run-totals { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.training-run-totals > div { display: flex; flex-direction: column; min-width: 0; }
+.training-run-totals strong { font-size: clamp(2.1rem, 10vw, 3rem); font-weight: 850; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.training-run-totals > div > span { font-size: .8rem; }
+.training-metric-notes { margin-block: 8px 12px; font-size: .75rem; color: var(--muted); }
+.training-metric-notes summary { min-height: 44px; align-content: center; }
+.training-classify, .training-balance { padding: 14px; margin-block: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--home-surface); }
+.training-classify h2 { font-size: 1.1rem; margin: 6px 0; overflow-wrap: anywhere; }
+.training-classify fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.training-classify legend, .training-body-label { margin-bottom: 8px; font-size: .85rem; font-weight: 600; }
+.training-choice-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.training-choice-grid button { min-width: 0; min-height: 44px; padding: 6px 2px; font-size: .75rem; }
+.training-choice-grid button[aria-pressed="true"] { color: var(--on-acc); background: var(--acc); border-color: var(--acc); }
+.training-save { width: 100%; min-height: 48px; margin-top: 12px; }
+.training-sorted { font-size: .8rem; color: var(--muted); margin-block: 10px; }
+.training-balance h2 { font-size: 1rem; margin: 0 0 10px; }
+.training-split-totals { display: flex; gap: 16px; flex-wrap: wrap; }
+.training-split-totals p { margin: 0 0 12px; font-size: .8rem; }
+.training-split-totals strong { font-size: 1.4rem; }
+.training-split-totals small { display: block; color: var(--muted); }
+.training-area-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
+.training-area { display: grid; grid-template-columns: 1fr auto; gap: 5px; align-items: center; font-size: .8rem; }
+.training-area-track { grid-column: 1 / -1; height: 4px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.training-area-track i { display: block; height: 100%; background: var(--acc); transition: width 200ms ease; }

@@ -6,11 +6,8 @@ import { SESSION_ACTIVITIES, sessionActivity, allocatedCategory, allocateSession
 import { formatTodayLabel } from '../lib/todayStats';
 import { weeklyEffort, needsInput, formatEffortMinutes } from '../lib/weeklyEffort';
 
-export const BODY_PARTS = ['Chest', 'Back', 'Shoulders', 'Legs', 'Arms', 'Core'];
-export function sessionParts(e: TrainingEntry): string[] {
-  if (e.category !== 'strength') return [];
-  return [...new Set([...(e.activity?.body_parts ?? []), ...(e.workout?.body_parts ?? [])])].filter(p => BODY_PARTS.includes(p));
-}
+import { BODY_PARTS, sessionParts } from '../lib/trainingBalance';
+export { BODY_PARTS, sessionParts } from '../lib/trainingBalance';
 export function FreeTraining({repo,today,entries,days,onChanged}:{repo:Repo;today:string;entries:TrainingEntry[];days:number;onChanged:()=>void}) {
   const [busy,setBusy]=useState(false),[error,setError]=useState('');
   const [editing,setEditing]=useState<string|null>(null);

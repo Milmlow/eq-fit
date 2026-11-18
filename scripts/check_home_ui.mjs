@@ -42,6 +42,7 @@ try {
       for (const [id, date, type, km, seconds, pace] of [
         ['run-a', '2026-11-16', 'Running', 5, 1800, 360],
         ['run-b', '2026-11-18', 'Running', 6.2, 2108, 340],
+        ['unlabelled', '2026-11-18', 'Cardio', null, 2100, null],
         ['walk', '2026-11-17', 'Walking', 2, 1500, null],
       ]) {
         await repo.db.activities.add({
@@ -75,7 +76,12 @@ try {
       const filename = theme.toLowerCase().replaceAll(' ', '-');
       await page.evaluate(() => window.scrollTo(0, 0));
       assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Horizontal overflow');
-      await page.screenshot({ path: output + filename + '-' + width + '-compact.png', fullPage: false });
+      await page.screenshot({ path: output + 'dashboard-' + filename + '-' + width + '.png', fullPage: false });
+      await page.getByRole('button', { name: /^Save session$/ }).waitFor();
+      assert.equal(await page.locator('.training-run-totals > div').first().locator('strong').innerText(), '11.2');
+      assert.equal(await page.locator('.training-run-totals > div').last().locator('strong').innerText(), '5:49');
+      const progress = page.locator('.home-experience > .home-secondary');
+      await progress.locator(':scope > summary').click();
       const week = page.getByRole('button', { name: /^This week/ });
       await week.click();
       await page.getByRole('button', { name: 'Open weekly history →', exact: true }).waitFor();
@@ -94,6 +100,7 @@ try {
       assert.equal(await week.getAttribute('aria-expanded'), 'false');
       await page.getByRole('button', { name: 'Open running history →', exact: true }).click();
       await page.getByRole('button', { name: 'Today', exact: true }).click();
+      await page.locator('.home-experience > .home-secondary > summary').click();
       await page.getByRole('button', { name: /^Strength working sets/ }).click();
       await page.getByRole('heading', { name: 'Max day', exact: true }).waitFor();
       await page.screenshot({ path: output + filename + '-' + width + '-strength.png', fullPage: false });
@@ -119,6 +126,16 @@ try {
       await page.locator('.home-designs summary').click();
     }
     await page.locator('.home-designs summary').click();
+    const classify = page.locator('.training-classify');
+    await classify.getByRole('button', { name: 'Strength', exact: true }).click();
+    assert(await classify.getByRole('button', { name: 'Save session', exact: true }).isDisabled());
+    await classify.getByRole('button', { name: 'Chest', exact: true }).click();
+    await classify.getByRole('button', { name: 'Back', exact: true }).click();
+    await classify.getByRole('button', { name: 'Save session', exact: true }).click();
+    await page.getByText('Garmin sessions sorted ✓', { exact: true }).waitFor();
+    assert.match(await page.locator('.training-split-totals').innerText(), /2 Strength/);
+    assert.equal(await page.locator('.training-area').filter({ hasText: 'Chest' }).locator('strong').innerText(), '1');
+    await page.screenshot({ path: output + 'session-sorted-' + width + '.png', fullPage: false });
     // Normal repeat -> log -> pause -> continue -> finish -> return flow.
     await page.getByRole('button', { name: /Repeat Upper body/ }).click();
     await page.getByRole('spinbutton', { name: 'Reps', exact: true }).fill('10');
@@ -128,6 +145,7 @@ try {
     await page.getByRole('button', { name: /Finish workout/ }).click();
     await page.getByRole('button', { name: 'Done', exact: true }).click();
     await page.getByRole('button', { name: /Repeat Upper body/ }).waitFor();
+    await page.locator('.home-experience > .home-secondary > summary').click();
     await page.getByRole('button', { name: /^Strength working sets/ }).click();
     await page.getByRole('button', { name: /Bench press, Barbell.*Record check-in/i }).click();
     const checkIn = page.getByRole('dialog', { name: 'Bench press', exact: true });
