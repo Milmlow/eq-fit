@@ -1,26 +1,23 @@
-# EQ Fit Home previews
+# Garmin dashboard previews
 
-All screenshots use labelled synthetic training records. Browser viewport widths
-are 390 and 320 px, both 844 px high. These are captures of the actual app.
+All figures below are synthetic. The screenshots use the actual app at 390×844
+and 320×844. Both kilometres and weighted average pace cover the same week.
 
-| Theme | Compact | This week expanded |
+| Pit Lane | Front Page | After Hours |
 |---|---|---|
-| Pit Lane | ![Pit Lane compact](pit-lane-390-compact.png) | ![Pit Lane expanded](pit-lane-390-expanded.png) |
-| Front Page | ![Front Page compact](front-page-390-compact.png) | ![Front Page expanded](front-page-390-expanded.png) |
-| After Hours | ![After Hours compact](after-hours-390-compact.png) | ![After Hours expanded](after-hours-390-expanded.png) |
+| ![Pit Lane](dashboard-pit-lane-390.png) | ![Front Page](dashboard-front-page-390.png) | ![After Hours](dashboard-after-hours-390.png) |
+| [320 px](dashboard-pit-lane-320.png) | [320 px](dashboard-front-page-320.png) | [320 px](dashboard-after-hours-320.png) |
 
-## Additional checks
+## After saving the session
 
-| Theme | 320 px compact | 320 px expanded | Strength / Max day | Form and save error |
-|---|---|---|---|---|
-| Pit Lane | [View](pit-lane-320-compact.png) | [View](pit-lane-320-expanded.png) | [View](pit-lane-390-strength.png) | [View](pit-lane-320-form-error.png) |
-| Front Page | [View](front-page-320-compact.png) | [View](front-page-320-expanded.png) | [View](front-page-390-strength.png) | [View](front-page-320-form-error.png) |
-| After Hours | [View](after-hours-320-compact.png) | [View](after-hours-320-expanded.png) | [View](after-hours-390-strength.png) | [View](after-hours-320-form-error.png) |
+The sample Garmin Cardio session was labelled Strength with Chest and Back.
+It then appears in the weekly strength count and once in each tagged body area.
 
-The automated browser check covers one expanded main card, header visibility when
-switching cards, history links, theme changes, repeat/log/pause/continue/finish,
-disabled save controls, recovery after a simulated save failure, and a verified
-Max day PR flag that does not replay on reload.
+![Updated session split](session-sorted-390.png)
 
-Real iPhone keyboards, native sharing and installed/offline PWA behaviour need a
-device trial. Chrome was run with reduced motion for deterministic captures.
+[320 px updated split](session-sorted-320.png)
+
+The browser checks also cover the progress/history drawers, theme changes,
+repeat/log/pause/continue/finish, save errors, disabled controls and record flags.
+Real iPhone keyboards, Safari, native sharing and installed/offline PWA behaviour
+still need a device trial.
