@@ -155,3 +155,7 @@
   --home-error: #ffb4d0;
   color-scheme: dark;
 }
+
+.home-pit-lane { --home-track: #344237; }
+.home-front-page { --home-track: #ddc9ba; }
+.home-after-hours { --home-track: #463862; }

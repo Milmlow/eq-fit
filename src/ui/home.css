@@ -433,5 +433,5 @@
 .training-split-totals small { display: block; color: var(--muted); }
 .training-area-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
 .training-area { display: grid; grid-template-columns: 1fr auto; gap: 5px; align-items: center; font-size: .8rem; }
-.training-area-track { grid-column: 1 / -1; height: 4px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.training-area-track { grid-column: 1 / -1; height: 4px; border-radius: 3px; background: var(--home-track); overflow: hidden; }
 .training-area-track i { display: block; height: 100%; background: var(--acc); transition: width 200ms ease; }

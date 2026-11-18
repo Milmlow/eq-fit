@@ -19,7 +19,7 @@ describe('Home palette contrast', () => {
     it(name + ' has legible body and button text', () => {
       const block = [...css.matchAll(new RegExp('\\.home-' + name + '\\s*\\{([^}]+)', 'g'))].map(match => match[1]).join('');
       const token = (name: string) => [...block.matchAll(new RegExp('--home-' + name + ':\\s*(#[a-fA-F0-9]{6})', 'g'))].at(-1)![1];
-      for (const [foreground, background] of [['ink', 'bg'], ['ink', 'surface'], ['muted', 'bg'], ['muted', 'surface'], ['error', 'surface'], ['button-ink', 'accent']]) {
+      for (const [foreground, background] of [['ink', 'bg'], ['ink', 'surface'], ['muted', 'bg'], ['muted', 'surface'], ['error', 'surface'], ['button-ink', 'accent'], ['accent', 'track']]) {
         const values = [luminance(token(foreground)), luminance(token(background))].sort((a, b) => b - a);
         expect((values[0] + .05) / (values[1] + .05)).toBeGreaterThanOrEqual(4.5);
       }
