@@ -4,6 +4,7 @@ import type { Activity, Workout, WorkoutKind } from '../db/types';
 import { DEMO_HERO } from '../lib/demo';
 import type { ThemeName } from '../lib/theme';
 import { Badge } from './Badge';
+import type { HomeDestination } from './HomeCards';
 import { ActivityPulse } from './ActivityPulse';
 import { TodayHero } from './TodayHero';
 import { WorkoutEditor } from './WorkoutEditor';
@@ -24,7 +25,7 @@ export function DemoToday({ theme, onDemoOff }: { theme: ThemeName; onDemoOff: (
   );
 }
 
-export function Today({ repo, today, version, onChanged }: { repo: Repo; today: string; version: number; onChanged: () => void; theme: ThemeName }) {
+export function Today({ repo, today, version, onChanged, onNavigate }: { repo: Repo; today: string; version: number; onChanged: () => void; theme: ThemeName; onNavigate?: (destination: HomeDestination) => void }) {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [acts, setActs] = useState<Act[]>([]);
   const [completed, setCompleted] = useState(0);
@@ -73,7 +74,7 @@ export function Today({ repo, today, version, onChanged }: { repo: Repo; today: 
 
   return (
     <div className="today-wrap">
-      <ActivityPulse key={repo.db.name} repo={repo} today={today} version={version} onOpen={setOpen} onChanged={onChanged} trainingAction={<Routines compact repo={repo} today={today} version={version} onChanged={onChanged} onOpen={setOpen} />} />
+      <ActivityPulse onNavigate={onNavigate} key={repo.db.name} repo={repo} today={today} version={version} onOpen={setOpen} onChanged={onChanged} trainingAction={<Routines compact repo={repo} today={today} version={version} onChanged={onChanged} onOpen={setOpen} />} />
       {error && <p role="alert" className="error">{error}</p>}
       <details className="card home-secondary"><summary>More training tools</summary>
       <details className="today-drawer"><summary>Quick lifts & weekly progress <span aria-hidden="true">＋</span></summary>

@@ -1,0 +1,1 @@
+Synthetic phone checks passed at 390×844 and 320×844. All three themes, expansion, history navigation, repeat/log/pause/continue/finish flows.
