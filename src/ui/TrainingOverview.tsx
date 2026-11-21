@@ -72,7 +72,7 @@ export function TrainingOverview({ repo, today, entries, onChanged }: {
         <p><strong><MetricValue value={data.effort.cardio} /></strong> Cardio <small>includes runs</small></p>
         {data.other > 0 && <p><strong>{data.other}</strong> Other</p>}
       </div>
-      <details className="muscle-history-fold">
+      <details className="muscle-history-fold" open>
         <summary>Muscle-group history <small>· all recorded dates</small></summary>
         <div className="muscle-history-bars" aria-label="Muscle group history by category">
           {history.map(area => <button key={area.part} type="button" className="muscle-history-row"
@@ -85,14 +85,14 @@ export function TrainingOverview({ repo, today, entries, onChanged }: {
             <strong>{area.total}</strong>
           </button>)}
         </div>
-        <p className="muted small">Solid = confirmed tags · Striped = estimated allocation. Estimates do not count as evidence of exercises, sets or personal records.</p>
+        <p className="muted small">Solid = tagged by you · Striped = estimated allocation. Estimates do not count as evidence of exercises, sets or personal records.</p>
         {selectedHistory && <div className="muscle-history-detail">
           <h3>{selectedHistory.part} · {selectedHistory.total} sessions</h3>
-          <p className="muted small">{selectedHistory.confirmed} confirmed · {selectedHistory.estimated} estimated</p>
+          <p className="muted small">{selectedHistory.confirmed} user-tagged · {selectedHistory.estimated} estimated</p>
           {selectedHistory.sessions.length === 0 ? <p>No sessions tagged yet.</p> : <ul>
             {selectedHistory.sessions.slice(0,showAllHistory ? undefined : 8).map(entry => <li key={entry.id}>
               <span>{formatTodayLabel(entry.date)} · {entry.title}</span>
-              <small>{isEstimatedStrength(entry) ? 'Estimated' : 'Confirmed tag'}</small>
+              <small>{isEstimatedStrength(entry) ? 'Estimated' : 'User-tagged'}</small>
             </li>)}
           </ul>}
           {selectedHistory.sessions.length > 8 && <button type="button" className="muscle-history-more" onClick={() => setShowAllHistory(current => !current)}>
