@@ -13,7 +13,6 @@ export function TrainingOverview({ repo, today, entries, onChanged }: {
 }) {
   const data = trainingBalance(entries, today);
   const pending = data.pending[0];
-  const max = Math.max(1, ...data.areas.map(area => area.count));
   const history = muscleHistory(entries, today);
   const historyMax = Math.max(1, ...history.map(area => area.total));
   const [selectedArea, setSelectedArea] = useState<string | null>(null);
