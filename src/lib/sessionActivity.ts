@@ -24,7 +24,7 @@ export async function allocateSession(repo:Repo,entry:{activity?:Activity;workou
  if(label!==''&&!SESSION_ACTIVITIES.includes(label))throw Error('Invalid activity');
  if(!entry.activity&&!entry.workout)throw Error('Session missing');
  if(bodyParts!==undefined && (label!=='Strength'||bodyParts.some(part=>!BODY_PARTS.includes(part))))throw Error('Invalid body areas');
- const patch = bodyParts === undefined ? {session_activity:label} : {session_activity:label,body_parts:[...new Set(bodyParts)]};
+ const patch = bodyParts === undefined ? {session_activity:label} : {session_activity:label,body_parts:[...new Set(bodyParts)],body_parts_estimated:false};
  await repo.db.transaction('rw',repo.db.activities,repo.db.workouts,async()=>{
   if(entry.activity&&!(await repo.db.activities.update(entry.activity.id,patch)))throw Error('Session missing');
   if(entry.workout&&!(await repo.db.workouts.update(entry.workout.id,patch)))throw Error('Session missing');
