@@ -6,14 +6,18 @@ import { BODY_PARTS, sessionParts, trainingBalance } from '../lib/trainingBalanc
 import { allocateSession, SESSION_ACTIVITIES, sessionActivity, type SessionActivity } from '../lib/sessionActivity';
 import { formatTodayLabel, paceMinSec } from '../lib/todayStats';
 import { MetricValue } from './HomeMasthead';
+import { muscleHistory, isEstimatedStrength } from '../lib/muscleHistory';
 
 export function TrainingOverview({ repo, today, entries, onChanged }: {
   repo: Repo; today: string; entries: TrainingEntry[]; onChanged: () => void;
 }) {
   const data = trainingBalance(entries, today);
   const pending = data.pending[0];
-  const max = Math.max(1, ...data.areas.map(area => area.count));
-  const estimatedCount = entries.filter(e => e.category === 'strength' && (e.activity?.body_parts_estimated || e.workout?.body_parts_estimated)).length;
+  const history = muscleHistory(entries, today);
+  const historyMax = Math.max(1, ...history.map(area => area.total));
+  const [selectedArea, setSelectedArea] = useState<string | null>(null);
+  const [showAllHistory, setShowAllHistory] = useState(false);
+  const selectedHistory = history.find(area => area.part === selectedArea);
   const [confirmBulk, setConfirmBulk] = useState(false);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [bulkError, setBulkError] = useState('');
@@ -58,23 +62,47 @@ export function TrainingOverview({ repo, today, entries, onChanged }: {
       {bulkError && <p role="alert" className="error">{bulkError}</p>}
     </section>}
     {pending ? <ClassifySession key={pending.id} repo={repo} entry={pending} onChanged={onChanged} remaining={data.pending.length} />
-      : <p className="training-sorted">{entries.some(entry => entry.activity) ? 'Garmin sessions sorted ✓' : 'Your Garmin sessions will appear here after syncing.'}</p>}
-    <section className="training-balance" aria-label="This week’s session split">
-      <h2>Your session split</h2>
+      : <details className="training-sorted"><summary>{entries.some(entry => entry.activity) ? '✓ Garmin all caught up' : 'Garmin not connected yet'}</summary>
+          <p>{entries.some(entry => entry.activity) ? 'Nothing needs categorising. New sessions will appear here when imported.' : 'Import or sync Garmin activities to begin sorting.'}</p>
+        </details>}
+    <section className="training-balance" aria-label="Training split and muscle history">
+      <h2>Your session split <small>· this week</small></h2>
       <div className="training-split-totals">
         <p><strong><MetricValue value={data.effort.strength} /></strong> Strength</p>
         <p><strong><MetricValue value={data.effort.cardio} /></strong> Cardio <small>includes runs</small></p>
         {data.other > 0 && <p><strong>{data.other}</strong> Other</p>}
       </div>
-      <div className="training-area-grid" aria-label="Tagged strength sessions this week">
-        {data.areas.map(area => <div key={area.part} className="training-area">
-          <span>{area.part}</span><strong><MetricValue value={area.count} /></strong>
-          <span className="training-area-track" aria-hidden="true"><i style={{ width: `${area.count / max * 100}%` }} /></span>
-        </div>)}
-      </div>
-      <p className="muted small">Tagged sessions this week. A session can train several areas.
-        {estimatedCount > 0 && ` ${estimatedCount} historical strength sessions have estimated body areas.`}
-        {data.untaggedStrength > 0 && ` ${data.untaggedStrength} strength ${data.untaggedStrength === 1 ? 'session still needs' : 'sessions still need'} body areas.`}</p>
+      <details className="muscle-history-fold" open>
+        <summary>Muscle-group history <small>· all recorded dates</small></summary>
+        <div className="muscle-history-bars" aria-label="Muscle group history by category">
+          {history.map(area => <button key={area.part} type="button" className="muscle-history-row"
+            aria-pressed={selectedArea === area.part} onClick={() => { setSelectedArea(current => current === area.part ? null : area.part); setShowAllHistory(false); }}>
+            <span className="muscle-history-name">{area.part}</span>
+            <span className="muscle-history-stack" aria-hidden="true">
+              <i className="muscle-history-confirmed" style={{width:`${area.confirmed / historyMax * 100}%`}} />
+              <i className="muscle-history-estimated" style={{width:`${area.estimated / historyMax * 100}%`}} />
+            </span>
+            <strong>{area.total}</strong>
+          </button>)}
+        </div>
+        <p className="muted small">Solid = tagged by you · Striped = estimated allocation. Estimates do not count as evidence of exercises, sets or personal records.</p>
+        {selectedHistory && <div className="muscle-history-detail">
+          <h3>{selectedHistory.part} · {selectedHistory.total} sessions</h3>
+          <p className="muted small">{selectedHistory.confirmed} user-tagged · {selectedHistory.estimated} estimated</p>
+          {selectedHistory.sessions.length === 0 ? <p>No sessions tagged yet.</p> : <ul>
+            {selectedHistory.sessions.slice(0,showAllHistory ? undefined : 8).map(entry => <li key={entry.id}>
+              <span>{formatTodayLabel(entry.date)} · {entry.title}</span>
+              <small>{isEstimatedStrength(entry) ? 'Estimated' : 'User-tagged'}</small>
+            </li>)}
+          </ul>}
+          {selectedHistory.sessions.length > 8 && <button type="button" className="muscle-history-more" onClick={() => setShowAllHistory(current => !current)}>
+            {showAllHistory ? 'Show fewer' : `Show all ${selectedHistory.total}`}
+          </button>}
+        </div>}
+      </details>
+      <p className="muted small">This week: {data.areas.filter(area => area.count > 0).map(area => `${area.part} ${area.count}`).join(' · ') || 'No muscle groups tagged'}.
+        {data.untaggedStrength > 0 && ` ${data.untaggedStrength} strength ${data.untaggedStrength === 1 ? 'session needs' : 'sessions need'} tagging.`}
+      </p>
     </section>
   </section>;
 }
