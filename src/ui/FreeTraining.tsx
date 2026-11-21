@@ -33,8 +33,8 @@ export function FreeTraining({repo,today,entries,days,onChanged}:{repo:Repo;toda
     const parts=partsFor(e);const next=parts.includes(part)?parts.filter(p=>p!==part):[...parts,part];
     try {
       await repo.db.transaction('rw',repo.db.activities,repo.db.workouts,async()=>{
-        if(e.activity&&!(await repo.db.activities.update(e.activity.id,{body_parts:next})))throw Error('Session missing');
-        if(e.workout&&!(await repo.db.workouts.update(e.workout.id,{body_parts:next})))throw Error('Session missing');
+        if(e.activity&&!(await repo.db.activities.update(e.activity.id,{body_parts:next,body_parts_estimated:false})))throw Error('Session missing');
+        if(e.workout&&!(await repo.db.workouts.update(e.workout.id,{body_parts:next,body_parts_estimated:false})))throw Error('Session missing');
       });
       setSaved(previous=>({...previous,[e.id]:next}));
       onChanged();
