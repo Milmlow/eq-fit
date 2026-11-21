@@ -2,6 +2,7 @@ import {createElement} from 'react';
 import {it,expect} from 'vitest';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {FreeTraining} from '../src/ui/FreeTraining';
+import { BODY_PARTS } from '../src/lib/sessionActivity';
 import type {TrainingEntry} from '../src/lib/dashboardFocus';
 import type {Repo} from '../src/db/repo';
 const entry=(category:TrainingEntry['category'],parts:string[]):TrainingEntry=>({id:'a',date:'2026-11-05',order:'',title:'Sydney Running',category,sets:[],workout:{id:'w',body_parts:parts} as TrainingEntry['workout']});
@@ -13,7 +14,7 @@ it('collapses saved strength tags and offers Edit',()=>{
  const html=render(entry('strength',['Shoulders']));expect(html).not.toContain('body-tags');expect(html).toContain('Shoulders</span>');expect(html).toContain('Edit body parts');
 });
 it('shows choices for an untagged strength session',()=>{
- const html=render(entry('strength',[]));expect(html).toContain('body-tags');expect(html.split('class="body-tags"')[1].split('</div>')[0].match(/aria-pressed="false"/g)).toHaveLength(6);
+ const html=render(entry('strength',[]));expect(html).toContain('body-tags');expect(html.split('class="body-tags"')[1].split('</div>')[0].match(/aria-pressed="false"/g)).toHaveLength(BODY_PARTS.length);
 });
 it('shows this week before body coverage and exposes cardio allocation choices',()=>{
  const html=render(entry('cardio',[]));expect(html).toContain('Cardio · Choose activity');expect(html).toContain('Walking</button>');expect(html.indexOf('This week')).toBeLessThan(html.indexOf('Whole-body coverage'));

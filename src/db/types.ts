@@ -25,6 +25,8 @@ export interface ImportBatch extends Base {
 
 export interface Activity extends Base {
   body_parts?: string[];
+  /** Approximate bulk-assigned muscle area, not confirmed by Garmin. */
+  body_parts_estimated?: boolean;
   /** User allocation; original Garmin type remains unchanged. Empty means as recorded. */
   session_activity?: string;
   batch_id: string;
@@ -71,6 +73,8 @@ export type WorkoutStatus = 'planned' | 'done';
 
 export interface Workout extends Base {
   body_parts?: string[];
+  /** Approximate bulk-assigned muscle area, not confirmed by Garmin. */
+  body_parts_estimated?: boolean;
   /** User allocation; original Garmin type remains unchanged. Empty means as recorded. */
   session_activity?: string;
   date: string; // YYYY-MM-DD (date-only; multiple workouts per date allowed)

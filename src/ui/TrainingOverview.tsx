@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { bulkBalanceStrength, previewStrengthDistribution, untaggedImportedStrength, undoBulkBalanceStrength, type BulkStrengthUndo } from '../lib/bulkStrength';
 import type { Repo } from '../db/repo';
 import type { TrainingEntry } from '../lib/dashboardFocus';
 import { BODY_PARTS, sessionParts, trainingBalance } from '../lib/trainingBalance';
@@ -12,6 +13,26 @@ export function TrainingOverview({ repo, today, entries, onChanged }: {
   const data = trainingBalance(entries, today);
   const pending = data.pending[0];
   const max = Math.max(1, ...data.areas.map(area => area.count));
+  const estimatedCount = entries.filter(e => e.category === 'strength' && (e.activity?.body_parts_estimated || e.workout?.body_parts_estimated)).length;
+  const [confirmBulk, setConfirmBulk] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkError, setBulkError] = useState('');
+  const [bulkUndo, setBulkUndo] = useState<BulkStrengthUndo>([]);
+  const eligible = untaggedImportedStrength(entries);
+  async function applyBulk() {
+    if (bulkBusy || !eligible.length) return;
+    setBulkBusy(true); setBulkError('');
+    try { const snapshot = await bulkBalanceStrength(repo, eligible); setBulkUndo(snapshot); setConfirmBulk(false); onChanged(); }
+    catch { setBulkError('Unable to categorise sessions. Nothing changed. Refresh and try again.'); }
+    finally { setBulkBusy(false); }
+  }
+  async function undoBulk() {
+    if (bulkBusy || !bulkUndo.length) return;
+    setBulkBusy(true); setBulkError('');
+    try { await undoBulkBalanceStrength(repo, bulkUndo); setBulkUndo([]); onChanged(); }
+    catch { setBulkError('Cannot safely undo because some sessions changed. Your data was left untouched.'); }
+    finally { setBulkBusy(false); }
+  }
   return <section className="training-overview" aria-label="Training dashboard">
     <p className="training-period">This week · {formatTodayLabel(data.start)} – {formatTodayLabel(today)}</p>
     <div className="training-run-totals">
@@ -23,6 +44,19 @@ export function TrainingOverview({ repo, today, entries, onChanged }: {
       <p>Pace available for {data.runs.runsWithPace} of {data.runs.runs} runs.
         {data.missingDistance > 0 && ` Distance missing for ${data.missingDistance}.`}</p>
     </details>
+    {(eligible.length > 0 || bulkUndo.length > 0) && <section className="training-classify" aria-label="Bulk strength categorisation">
+      <p className="eyebrow">SORT YOUR STRENGTH HISTORY</p>
+      {eligible.length > 0 && <><p>{eligible.length} untagged Garmin strength sessions. Spread evenly across five areas in date order.</p>
+        {!confirmBulk ? <button type="button" className="primary training-save" onClick={() => setConfirmBulk(true)}>Balance {eligible.length} sessions</button> : <>
+          <div className="training-area-grid">{previewStrengthDistribution(eligible.length).map(item => <div key={item.part} className="training-area"><span>{item.part}</span><strong>{item.count}</strong></div>)}</div>
+          <p className="muted small">These are estimates, not verified exercises. Original Garmin data and existing tags stay intact.</p>
+          <button type="button" className="primary training-save" disabled={bulkBusy} onClick={() => void applyBulk()}>{bulkBusy ? 'Saving…' : 'Confirm bulk allocation'}</button>
+          <button type="button" disabled={bulkBusy} onClick={() => setConfirmBulk(false)}>Cancel</button>
+        </>}
+      </>}
+      {bulkUndo.length > 0 && <button type="button" disabled={bulkBusy} onClick={() => void undoBulk()}>Undo last bulk allocation</button>}
+      {bulkError && <p role="alert" className="error">{bulkError}</p>}
+    </section>}
     {pending ? <ClassifySession key={pending.id} repo={repo} entry={pending} onChanged={onChanged} remaining={data.pending.length} />
       : <p className="training-sorted">{entries.some(entry => entry.activity) ? 'Garmin sessions sorted ✓' : 'Your Garmin sessions will appear here after syncing.'}</p>}
     <section className="training-balance" aria-label="This week’s session split">
@@ -39,6 +73,7 @@ export function TrainingOverview({ repo, today, entries, onChanged }: {
         </div>)}
       </div>
       <p className="muted small">Tagged sessions this week. A session can train several areas.
+        {estimatedCount > 0 && ` ${estimatedCount} historical strength sessions have estimated body areas.`}
         {data.untaggedStrength > 0 && ` ${data.untaggedStrength} strength ${data.untaggedStrength === 1 ? 'session still needs' : 'sessions still need'} body areas.`}</p>
     </section>
   </section>;
