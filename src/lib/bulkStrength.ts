@@ -6,7 +6,7 @@ import { sessionParts } from './trainingBalance';
 export const BULK_STRENGTH_AREAS = ['Chest', 'Back', 'Shoulders', 'Legs', 'Full body'] as const;
 export type StrengthArea = typeof BULK_STRENGTH_AREAS[number];
 
-type Snapshot = { id: string; target: 'activity' | 'workout'; body_parts: string[] | undefined; applied: StrengthArea };
+type Snapshot = { id: string; target: 'activity' | 'workout'; body_parts: string[] | undefined; estimated: boolean | undefined; applied: StrengthArea };
 export type BulkStrengthUndo = Snapshot[];
 
 /** Only imported, untagged, recognised strength sessions; never overwrite user classifications. */
@@ -36,8 +36,8 @@ export async function bulkBalanceStrength(repo: Repo, entries: TrainingEntry[]):
         const table = target === 'activity' ? repo.db.activities : repo.db.workouts;
         const record = await table.get(id);
         if (!record || (record.body_parts?.length ?? 0) !== 0) throw Error('Sessions changed. Refresh before bulk categorising.');
-        undo.push({ id, target, body_parts: record.body_parts ? [...record.body_parts] : undefined, applied: area });
-        if (!(await table.update(id, { body_parts: [area] }))) throw Error('Session missing');
+        undo.push({ id, target, body_parts: record.body_parts ? [...record.body_parts] : undefined, estimated: record.body_parts_estimated, applied: area });
+        if (!(await table.update(id, { body_parts: [area], body_parts_estimated: true }))) throw Error('Session missing');
       }
     }
     return undo;
@@ -51,9 +51,9 @@ export async function undoBulkBalanceStrength(repo: Repo, snapshots: BulkStrengt
       if (!record) throw Error('Session missing');
       // Do not erase a manual change made after the bulk operation.
       if (!record.body_parts || record.body_parts.length !== 1 ||
-          record.body_parts[0] !== s.applied)
+          record.body_parts[0] !== s.applied || !record.body_parts_estimated)
         throw Error('A session was edited after allocation. Undo cancelled.');
-      if (!(await table.update(s.id, { body_parts: s.body_parts }))) throw Error('Session missing');
+      if (!(await table.update(s.id, { body_parts: s.body_parts, body_parts_estimated: s.estimated }))) throw Error('Session missing');
     }
   });
 }
