@@ -132,9 +132,9 @@ try {
     await classify.getByRole('button', { name: 'Chest', exact: true }).click();
     await classify.getByRole('button', { name: 'Back', exact: true }).click();
     await classify.getByRole('button', { name: 'Save session', exact: true }).click();
-    await page.getByText('Garmin sessions sorted ✓', { exact: true }).waitFor();
+    await page.getByText('✓ Garmin all caught up', { exact: true }).waitFor();
     assert.match(await page.locator('.training-split-totals').innerText(), /2 Strength/);
-    assert.equal(await page.locator('.training-area').filter({ hasText: 'Chest' }).locator('strong').innerText(), '1');
+    assert.equal(await page.locator('.muscle-history-row').filter({ hasText: 'Chest' }).locator('strong').innerText(), '1');
     await page.screenshot({ path: output + 'session-sorted-' + width + '.png', fullPage: false });
     // Normal repeat -> log -> pause -> continue -> finish -> return flow.
     await page.getByRole('button', { name: /Repeat Upper body/ }).click();
