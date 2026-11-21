@@ -1,7 +1,7 @@
 import type {Activity, Workout} from '../db/types';
 import type {TrainingCategory} from './dashboardFocus';
 import type {Repo} from '../db/repo';
-export const BODY_PARTS = ['Chest', 'Back', 'Shoulders', 'Legs', 'Arms', 'Core'];
+export const BODY_PARTS = ['Chest', 'Back', 'Shoulders', 'Legs', 'Arms', 'Core', 'Full body'];
 export const SESSION_ACTIVITIES=['Strength','Walking','Running','Cycling','Rowing','Swimming','HIIT','Other cardio'] as const;
 export type SessionActivity=typeof SESSION_ACTIVITIES[number];
 export function sessionActivity(a?:Activity,w?:Workout):SessionActivity|undefined {
