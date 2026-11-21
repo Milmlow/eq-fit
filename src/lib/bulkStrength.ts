@@ -6,7 +6,7 @@ import { sessionParts } from './trainingBalance';
 export const BULK_STRENGTH_AREAS = ['Chest', 'Back', 'Shoulders', 'Legs', 'Full body'] as const;
 export type StrengthArea = typeof BULK_STRENGTH_AREAS[number];
 
-type Snapshot = { id: string; target: 'activity' | 'workout'; body_parts: string[] | undefined };
+type Snapshot = { id: string; target: 'activity' | 'workout'; body_parts: string[] | undefined; applied: StrengthArea };
 export type BulkStrengthUndo = Snapshot[];
 
 /** Only imported, untagged, recognised strength sessions; never overwrite user classifications. */
@@ -36,7 +36,7 @@ export async function bulkBalanceStrength(repo: Repo, entries: TrainingEntry[]):
         const table = target === 'activity' ? repo.db.activities : repo.db.workouts;
         const record = await table.get(id);
         if (!record || (record.body_parts?.length ?? 0) !== 0) throw Error('Sessions changed. Refresh before bulk categorising.');
-        undo.push({ id, target, body_parts: record.body_parts ? [...record.body_parts] : undefined });
+        undo.push({ id, target, body_parts: record.body_parts ? [...record.body_parts] : undefined, applied: area });
         if (!(await table.update(id, { body_parts: [area] }))) throw Error('Session missing');
       }
     }
@@ -51,7 +51,7 @@ export async function undoBulkBalanceStrength(repo: Repo, snapshots: BulkStrengt
       if (!record) throw Error('Session missing');
       // Do not erase a manual change made after the bulk operation.
       if (!record.body_parts || record.body_parts.length !== 1 ||
-          !BULK_STRENGTH_AREAS.includes(record.body_parts[0] as StrengthArea))
+          record.body_parts[0] !== s.applied)
         throw Error('A session was edited after allocation. Undo cancelled.');
       if (!(await table.update(s.id, { body_parts: s.body_parts }))) throw Error('Session missing');
     }
