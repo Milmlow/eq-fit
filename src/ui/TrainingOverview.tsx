@@ -13,6 +13,7 @@ export function TrainingOverview({ repo, today, entries, onChanged }: {
   const data = trainingBalance(entries, today);
   const pending = data.pending[0];
   const max = Math.max(1, ...data.areas.map(area => area.count));
+  const estimatedCount = entries.filter(e => e.category === 'strength' && (e.activity?.body_parts_estimated || e.workout?.body_parts_estimated)).length;
   const [confirmBulk, setConfirmBulk] = useState(false);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [bulkError, setBulkError] = useState('');
@@ -72,6 +73,7 @@ export function TrainingOverview({ repo, today, entries, onChanged }: {
         </div>)}
       </div>
       <p className="muted small">Tagged sessions this week. A session can train several areas.
+        {estimatedCount > 0 && ` ${estimatedCount} historical strength sessions have estimated body areas.`}
         {data.untaggedStrength > 0 && ` ${data.untaggedStrength} strength ${data.untaggedStrength === 1 ? 'session still needs' : 'sessions still need'} body areas.`}</p>
     </section>
   </section>;
